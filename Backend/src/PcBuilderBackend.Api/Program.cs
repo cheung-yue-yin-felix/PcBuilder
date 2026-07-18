@@ -1,6 +1,19 @@
+using InfisicalConfiguration;
 using PcBuilderBackend.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddInfisical(
+    new InfisicalConfigBuilder()
+        .SetProjectId(builder.Configuration["Infisical:ProjectId"] ?? "")
+        .SetEnvironment(builder.Environment.EnvironmentName)
+        .SetAuth(new InfisicalAuthBuilder()
+            .SetUniversalAuth(
+                builder.Configuration["Infisical:ClientId"] ?? "",
+                builder.Configuration["Infisical:ClientSecret"] ?? "")
+            .Build()
+        ).Build()
+    ).Build();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
