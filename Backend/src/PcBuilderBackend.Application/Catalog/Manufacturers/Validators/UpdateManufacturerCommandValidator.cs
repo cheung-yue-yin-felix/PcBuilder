@@ -1,6 +1,13 @@
-﻿namespace PcBuilderBackend.Application.Catalog.Manufacturers.Validators;
+﻿using FluentValidation;
+using PcBuilderBackend.Application.Catalog.Manufacturers.Commands.UpdateManufacturer;
 
-public class UpdateManufacturerCommandValidator
+namespace PcBuilderBackend.Application.Catalog.Manufacturers.Validators;
+
+public class UpdateManufacturerCommandValidator: AbstractValidator<UpdateManufacturerCommand>
 {
-    
+    public  UpdateManufacturerCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required");
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required").MaximumLength(200);
+    }
 }

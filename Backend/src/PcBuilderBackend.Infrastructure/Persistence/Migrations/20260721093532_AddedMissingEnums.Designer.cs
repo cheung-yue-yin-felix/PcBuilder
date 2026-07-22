@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PcBuilderBackend.Domain.Enums;
@@ -13,9 +14,11 @@ using PcBuilderBackend.Infrastructure.Persistence;
 namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PcBuilderDbContext))]
-    partial class PcBuilderDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721093532_AddedMissingEnums")]
+    partial class AddedMissingEnums
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -395,8 +398,9 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("SeriesId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("Series")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("SocketId")
                         .HasColumnType("uuid");
@@ -410,8 +414,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ManufacturerId");
-
-                    b.HasIndex("SeriesId");
 
                     b.HasIndex("SocketId");
 
@@ -499,39 +501,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.ToTable("CpuCoolerSockets");
                 });
 
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.CpuSeries", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConcurrencyToken")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("ManufacturerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SocketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CpuSeries");
-                });
-
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Gpu", b =>
                 {
                     b.Property<Guid>("Id")
@@ -550,16 +519,15 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ManufacturerId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ManufacturerId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("SeriesId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("Series")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -568,38 +536,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ManufacturerId");
 
-                    b.HasIndex("ManufacturerId1");
-
-                    b.HasIndex("SeriesId");
-
                     b.ToTable("Gpus");
-                });
-
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GpuSeries", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConcurrencyToken")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GpuSeries");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCard", b =>
@@ -1311,12 +1248,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("PcBuilderBackend.Domain.Entities.CpuSeries", "Series")
-                        .WithMany()
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("PcBuilderBackend.Domain.Entities.Socket", "Socket")
                         .WithMany("Cpus")
                         .HasForeignKey("SocketId")
@@ -1324,8 +1255,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Manufacturer");
-
-                    b.Navigation("Series");
 
                     b.Navigation("Socket");
                 });
@@ -1367,20 +1296,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ManufacturerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("PcBuilderBackend.Domain.Entities.Manufacturer", "Manufacturer")
-                        .WithMany()
-                        .HasForeignKey("ManufacturerId1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PcBuilderBackend.Domain.Entities.GpuSeries", null)
-                        .WithMany("Gpus")
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Manufacturer");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCard", b =>
@@ -1550,11 +1465,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Chipset", b =>
                 {
                     b.Navigation("Motherboards");
-                });
-
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GpuSeries", b =>
-                {
-                    b.Navigation("Gpus");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCard", b =>

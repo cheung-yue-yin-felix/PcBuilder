@@ -1,6 +1,12 @@
-﻿namespace PcBuilderBackend.Application.Catalog.Cpus.Validators;
+﻿using FluentValidation;
+using PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
 
-public class DeleteCpuCommandValidator
+namespace PcBuilderBackend.Application.Catalog.Cpus.Validators;
+
+public class DeleteCpuCommandValidator: AbstractValidator<DeleteCpuCommand>
 {
-    
+    public DeleteCpuCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required");
+    }
 }

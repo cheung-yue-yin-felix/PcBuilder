@@ -2,11 +2,30 @@
 
 namespace PcBuilderBackend.Domain.Entities;
 
-public class Gpu : BaseEntity
+public class Gpu : ProductEntity
 {
-    public Guid ManufacturerId { get; set; }
+    public Guid SeriesId { get; set; }
     
-    public string Name { get; set; } = string.Empty;
+    protected Gpu() {}
     
-    public string Series { get; set; } = string.Empty;
+    public Gpu(string name, Guid manufacturerId, Guid seriesId)
+    {
+        SetName(name);
+        SetManufacturer(manufacturerId);
+        SetSeries(seriesId);
+    }
+
+    public void UpdateSeries(Guid seriesId)
+    {
+        SetSeries(seriesId);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+    
+    private void SetSeries(Guid seriesId)
+    {
+        if (seriesId == Guid.Empty)
+            throw new ArgumentException("Series id can't be empty");
+        
+        SeriesId = seriesId;
+    }
 }

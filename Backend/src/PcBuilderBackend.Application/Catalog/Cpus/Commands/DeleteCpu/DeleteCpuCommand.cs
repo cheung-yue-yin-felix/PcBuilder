@@ -1,3 +1,5 @@
-﻿namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
+﻿using MediatR;
 
-public record DeleteCpuCommand();
+namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
+
+public record DeleteCpuCommand(Guid Id): IRequest<bool>;

@@ -11,6 +11,18 @@ public abstract class BaseEntity<TKey>
     public bool IsActive { get; set; } = true;
 
     public Guid ConcurrencyToken { get; set; } = Guid.NewGuid();
+
+    public void Activate()
+    {
+        IsActive = true;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+    
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
 }
 
 public abstract class BaseEntity : BaseEntity<Guid>

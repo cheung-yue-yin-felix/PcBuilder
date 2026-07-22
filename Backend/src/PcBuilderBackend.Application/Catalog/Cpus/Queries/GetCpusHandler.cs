@@ -7,9 +7,9 @@ using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Queries;
 
-public class GetCpuHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetCpuQuery, List<CpuDto>>
+public class GetCpusHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetCpusQuery, List<CpuDto>>
 {
-    public async Task<List<CpuDto>> Handle(GetCpuQuery request, CancellationToken cancellationToken)
+    public async Task<List<CpuDto>> Handle(GetCpusQuery request, CancellationToken cancellationToken)
     {
         var entities = context.Cpus.AsNoTracking().Where(c => c.IsActive);
 

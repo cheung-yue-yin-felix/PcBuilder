@@ -1,6 +1,6 @@
-﻿namespace PcBuilderBackend.Application.Catalog.Cpus.Queries;
+﻿using MediatR;
+using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 
-public class GetCpuByIdQuery
-{
-    
-}
+namespace PcBuilderBackend.Application.Catalog.Cpus.Queries;
+
+public record GetCpuByIdQuery(Guid Id): IRequest<CpuDto>;

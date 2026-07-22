@@ -1,6 +1,12 @@
-﻿namespace PcBuilderBackend.Application.Catalog.Manufacturers.Validators;
+﻿using FluentValidation;
+using PcBuilderBackend.Application.Catalog.Manufacturers.Commands.DeleteManufacturer;
 
-public class DeleteManufacturerCommandValidator
+namespace PcBuilderBackend.Application.Catalog.Manufacturers.Validators;
+
+public class DeleteManufacturerCommandValidator: AbstractValidator<DeleteManufacturerCommand>
 {
-    
+    public DeleteManufacturerCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required");
+    }
 }

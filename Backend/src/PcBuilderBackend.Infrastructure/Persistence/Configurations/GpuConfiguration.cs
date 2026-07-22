@@ -14,9 +14,10 @@ internal sealed class GpuConfiguration : IEntityTypeConfiguration<Gpu>
             .IsRequired()
             .HasMaxLength(200);
 
-        builder.Property(gpu => gpu.Series)
-            .IsRequired()
-            .HasMaxLength(200);
+        builder.HasOne<GpuSeries>()
+            .WithMany(gpuSeries => gpuSeries.Gpus)
+            .HasForeignKey(gpu => gpu.SeriesId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Manufacturer>()
             .WithMany(manufacturer => manufacturer.Gpus)

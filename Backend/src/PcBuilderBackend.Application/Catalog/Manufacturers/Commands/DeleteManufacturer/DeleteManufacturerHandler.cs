@@ -11,8 +11,7 @@ public class DeleteManufacturerHandler(IApplicationDbContext context): IRequestH
         var entity = await context.Manufacturers.FirstOrDefaultAsync(m => m.Id == request.Id && m.IsActive, cancellationToken);
         if (entity == null) return false;
         
-        entity.IsActive = false;
-        entity.UpdatedAtUtc = DateTime.UtcNow;
+        entity.Deactivate();
         await context.SaveChangesAsync(cancellationToken);
         return true;
     }
