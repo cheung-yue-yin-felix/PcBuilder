@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Infrastructure.Persistence;
+using PcBuilderBackend.Infrastructure.Services;
 
 namespace PcBuilderBackend.Infrastructure;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString, npgsql => npgsql.MapDomainEnums()));
         
         services.AddScoped<IApplicationDbContext>(provider => provider.GetService<PcBuilderDbContext>() ?? throw new InvalidOperationException());
+        services.AddScoped<IExcelImportService, ClosedXmlExcelImportService>();
 
         return services;
     }

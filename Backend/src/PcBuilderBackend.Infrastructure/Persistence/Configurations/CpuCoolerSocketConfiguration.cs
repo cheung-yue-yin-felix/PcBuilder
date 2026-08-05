@@ -11,13 +11,16 @@ internal sealed class CpuCoolerSocketConfiguration : IEntityTypeConfiguration<Cp
         builder.ConfigureGuidBaseEntity();
 
         builder.HasOne(c => c.CpuCooler)
-            .WithMany()
+            .WithMany(cs => cs.CpuCoolerSockets)
             .HasForeignKey(c => c.CpuCoolerId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(c => c.Socket)
-            .WithMany()
+            .WithMany(cs => cs.CpuCoolerSockets)
             .HasForeignKey(c => c.SocketId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(c => new { c.CpuCoolerId, c.SocketId })
+            .IsUnique();
     }
 }

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -7,19 +7,26 @@ using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Queries;
 
-public class GetCpusByMotherboardHandler(IApplicationDbContext context, IMapper mapper): IRequestHandler<GetCpusByMotherboardQuery, List<CpuDto>>
+public class GetCpusByMotherboardHandler(IApplicationDbContext context, IMapper mapper)
+    : IRequestHandler<GetCpusByMotherboardQuery, List<CpuListItemDto>>
 {
-    public async Task<List<CpuDto>> Handle(GetCpusByMotherboardQuery request, CancellationToken cancellationToken)
+    public async Task<List<CpuListItemDto>> Handle(
+        GetCpusByMotherboardQuery request,
+        CancellationToken cancellationToken)
     {
-        var motherboard = context.Motherboards.AsNoTracking()
-            .FirstOrDefault(x => x.Id == request.MotherboardId && x.IsActive);
+        var motherboard = await context.Motherboards.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.MotherboardId && x.IsActive, cancellationToken);
 
-        if (motherboard == null) return new List<CpuDto>();
-        
+        if (motherboard == null)
+            return [];
+
         return await context.Cpus.AsNoTracking()
-            .Where(x => x.SocketId == motherboard.SocketId && x.DdrGeneration == motherboard.DdrGeneration)
+            .Where(x =>
+                x.IsActive &&
+                x.SocketId == motherboard.SocketId &&
+                x.RamCompats.Any(r => r.IsActive && r.DdrGeneration == motherboard.DdrGeneration))
             .OrderBy(x => x.Name)
-            .ProjectTo<CpuDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken: cancellationToken);
+            .ProjectTo<CpuListItemDto>(mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
     }
 }

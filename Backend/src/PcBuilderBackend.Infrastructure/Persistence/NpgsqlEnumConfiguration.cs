@@ -32,6 +32,7 @@ internal static class NpgsqlEnumConfiguration
         options.MapEnum<WifiStandard>("wifi_standard");
         options.MapEnum<WirelessHostInterface>("wireless_host_interface");
         options.MapEnum<WiredHostInterface>("wired_host_interface");
+        options.MapEnum<RamRank>("ram_rank");
     }
 
     public static void ConfigurePostgresEnums(this ModelBuilder modelBuilder)
@@ -60,5 +61,6 @@ internal static class NpgsqlEnumConfiguration
         modelBuilder.HasPostgresEnum<WifiStandard>(name: "wifi_standard");
         modelBuilder.HasPostgresEnum<WirelessHostInterface>(name: "wireless_host_interface");
         modelBuilder.HasPostgresEnum<WiredHostInterface>(name: "wired_host_interface");
+        modelBuilder.HasPostgresEnum<RamRank>(name: "ram_rank");
     }
 }

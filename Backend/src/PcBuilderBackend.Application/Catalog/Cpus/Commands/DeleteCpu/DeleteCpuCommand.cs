@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
 

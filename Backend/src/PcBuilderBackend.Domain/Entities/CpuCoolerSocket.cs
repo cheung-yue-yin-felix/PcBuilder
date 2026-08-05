@@ -1,12 +1,34 @@
-﻿namespace PcBuilderBackend.Domain.Entities;
+namespace PcBuilderBackend.Domain.Entities;
 
 public class CpuCoolerSocket : BaseEntity
 {
     public Guid CpuCoolerId { get; set; }
-    
     public Guid SocketId { get; set; }
+    public CpuCooler CpuCooler { get; set; } = null!;
+    public Socket Socket { get; set; } = null!;
     
-    public virtual CpuCooler CpuCooler { get; set; } = null!;
+    protected CpuCoolerSocket() {}
+
+    public CpuCoolerSocket(Guid cpuCoolerId, Guid socketId)
+    {
+        SetSpecs(cpuCoolerId, socketId);
+    }
+
+    public void UpdateSpecs(Guid cpuCoolerId, Guid socketId)
+    {
+        SetSpecs(cpuCoolerId, socketId);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
     
-    public virtual Socket Socket { get; set; } = null!;
+    private void SetSpecs(Guid cpuCoolerId, Guid socketId)
+    {
+        if (cpuCoolerId == Guid.Empty)
+            throw new ArgumentException("CPU Cooler ID cannot be empty");
+        
+        if (socketId == Guid.Empty)
+            throw new ArgumentException("Socket ID cannot be empty");
+        
+        CpuCoolerId = cpuCoolerId;
+        SocketId = socketId;
+    }
 }

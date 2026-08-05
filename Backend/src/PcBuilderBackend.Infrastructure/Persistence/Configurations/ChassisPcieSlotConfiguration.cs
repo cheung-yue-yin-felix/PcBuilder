@@ -13,9 +13,12 @@ internal sealed class ChassisPcieSlotConfiguration : IEntityTypeConfiguration<Ch
         builder.Property(p => p.SlotCount)
             .IsRequired();
 
-        builder.HasOne<Chassis>()
+        builder.HasOne(p => p.Chassis)
             .WithMany(c => c.PcieSlots)
             .HasForeignKey(p => p.ChassisId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(p => new { p.ChassisId, p.LowProfileSlots, p.Orientation })
+            .IsUnique();
     }
 }

@@ -19,7 +19,7 @@ internal sealed class GpuConfiguration : IEntityTypeConfiguration<Gpu>
             .HasForeignKey(gpu => gpu.SeriesId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Manufacturer>()
+        builder.HasOne(gpu => gpu.Manufacturer)
             .WithMany(manufacturer => manufacturer.Gpus)
             .HasForeignKey(gpu => gpu.ManufacturerId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -9,5 +9,16 @@ internal sealed class MotherboardPcieConfiguration : IEntityTypeConfiguration<Mo
     public void Configure(EntityTypeBuilder<MotherboardPcie> builder)
     {
         builder.ConfigureGuidBaseEntity();
+
+        builder.Property(p => p.SlotCount)
+            .IsRequired();
+
+        builder.HasOne<Motherboard>()
+            .WithMany(m => m.PcieSlots)
+            .HasForeignKey(p => p.MotherboardId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(p => new { p.MotherboardId, p.SlotType, p.SlotLanes, p.Generation })
+            .IsUnique();
     }
 }

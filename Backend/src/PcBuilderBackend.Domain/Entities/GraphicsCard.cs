@@ -1,4 +1,4 @@
-﻿using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -8,14 +8,15 @@ public class GraphicsCard : ProductEntity
     public int VideoMemoryGb { get; set; }
     public int PcieSlotsUsed { get; set; }
     public PcieGeneration PcieGeneration { get; set; }
+    public bool IsLowProfile { get; set; }
     public decimal LengthMm { get; set; }
     public decimal WidthMm { get; set; }
     public decimal HeightMm { get; set; }
     public decimal PowerConsumptionWatts { get; set; }
-    public virtual Gpu Gpu { get; set; } = null!;
-    public virtual ICollection<GraphicsCardPowerConnector> PowerConnectors { get; set; } = new List<GraphicsCardPowerConnector>();
+    public Gpu Gpu { get; set; } = null!;
+    public ICollection<GraphicsCardPowerConnector> PowerConnectors { get; set; } = new List<GraphicsCardPowerConnector>();
     
-    protected  GraphicsCard() {}
+    protected GraphicsCard() {}
 
     public GraphicsCard(
         string name, 
@@ -46,6 +47,22 @@ public class GraphicsCard : ProductEntity
     {
         SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, lengthMm, widthMm, heightMm, powerConsumptionWatts);
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public void AddPowerConnector(GraphicsCardPowerConnector connector)
+    {
+        if (PowerConnectors.Any(x => x.PsuCableType == connector.PsuCableType))
+            throw new InvalidOperationException("Graphics Card Power Connector already exists");
+        
+        PowerConnectors.Add(connector);
+    }
+
+    public void RemovePowerConnector(GraphicsCardPowerConnector connector)
+    {
+        if (!PowerConnectors.Any(x => x.PsuCableType == connector.PsuCableType))
+            throw new InvalidOperationException("Graphics Card Power Connector does not exist");
+        
+        PowerConnectors.Remove(connector);
     }
     
     private void SetSpecs(

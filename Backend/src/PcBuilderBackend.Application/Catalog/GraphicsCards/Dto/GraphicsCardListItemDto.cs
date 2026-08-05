@@ -1,0 +1,20 @@
+using PcBuilderBackend.Domain.Enums;
+
+namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
+
+public record GraphicsCardListItemDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public Guid ManufacturerId { get; init; }
+    public string ManufacturerName { get; init; } = string.Empty;
+    public Guid GpuId { get; init; }
+    public string GpuName { get; init; } = string.Empty;
+    public int VideoMemoryGb { get; init; }
+    public int PcieSlotsUsed { get; init; }
+    public PcieGeneration PcieGeneration { get; init; }
+    public decimal LengthMm { get; init; }
+    public decimal WidthMm { get; init; }
+    public decimal HeightMm { get; init; }
+    public decimal PowerConsumptionWatts { get; init; }
+}

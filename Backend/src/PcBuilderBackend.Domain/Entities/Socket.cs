@@ -1,14 +1,16 @@
-﻿namespace PcBuilderBackend.Domain.Entities;
+namespace PcBuilderBackend.Domain.Entities;
 
-public class Socket : BaseEntity
+public class Socket : ProductEntity
 {
-    public string Name { get; set; } = string.Empty;
+    public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
+    public ICollection<Cpu> Cpus { get; set; } = new List<Cpu>();
+    public ICollection<CpuCoolerSocket> CpuCoolerSockets { get; set; } = new List<CpuCoolerSocket>();
+    
+    protected Socket() {}
 
-    public Guid ManufacturerId { get; set; }
-
-    public virtual Manufacturer Manufacturer { get; set; } = null!;
-
-    public virtual ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
-
-    public virtual ICollection<Cpu> Cpus { get; set; } = new List<Cpu>();
+    public Socket(Guid manufacturerId, string name)
+    {
+        SetName(name);
+        SetManufacturer(manufacturerId);
+    }
 }

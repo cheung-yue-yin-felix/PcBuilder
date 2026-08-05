@@ -1,5 +1,4 @@
-﻿using PcBuilderBackend.Api.Extensions;
-using PcBuilderBackend.Api.Filters;
+﻿using PcBuilderBackend.Api.Filters;
 
 namespace PcBuilderBackend.Api.Endpoints.Catalog;
 
@@ -9,9 +8,11 @@ public static class CatalogEndpoints
     {
         var group = app.MapGroup("api/catalog")
             .AddEndpointFilterFactory(ValidationFilter.ValidationFilterFactory)
-            .WithDescription("Browse, Read, Edit, Add and Delete products/manufacturers in catalog");
-        
-        group.MapManufacturerEndpoints();
+            .WithDescription("Browse, Read, Edit, Add and Delete products in catalog");
+
         group.MapCpuEndpoints();
+        group.MapGraphicsCardEndpoints();
+        group.MapMemoryEndpoints();
+        group.MapMotherboardEndpoints();
     }
 }

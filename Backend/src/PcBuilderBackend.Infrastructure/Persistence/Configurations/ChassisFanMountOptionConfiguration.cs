@@ -13,9 +13,12 @@ internal sealed class ChassisFanMountOptionConfiguration : IEntityTypeConfigurat
         builder.Property(o => o.SlotCount)
             .IsRequired();
 
-        builder.HasOne<ChassisFanMount>()
+        builder.HasOne(o => o.Mount)
             .WithMany(m => m.Options)
             .HasForeignKey(o => o.ChassisFanMountId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(o => new { o.ChassisFanMountId, o.Diameter })
+            .IsUnique();
     }
 }

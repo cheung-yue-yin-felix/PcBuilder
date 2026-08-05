@@ -10,9 +10,17 @@ internal sealed class ChassisFanMountConfiguration : IEntityTypeConfiguration<Ch
     {
         builder.ConfigureGuidBaseEntity();
 
-        builder.HasOne<Chassis>()
+        builder.HasOne(f => f.Chassis)
             .WithMany(c => c.FanMounts)
             .HasForeignKey(f => f.ChassisId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.HasMany(f => f.Options)
+            .WithOne(o => o.Mount)
+            .HasForeignKey(o => o.ChassisFanMountId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(f => new { f.ChassisId, f.Location })
+            .IsUnique();
     }
 }

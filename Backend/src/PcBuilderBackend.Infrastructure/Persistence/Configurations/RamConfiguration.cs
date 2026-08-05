@@ -10,6 +10,8 @@ internal sealed class RamConfiguration : IEntityTypeConfiguration<Ram>
     {
         builder.ConfigureGuidBaseEntity();
 
+        builder.Property(ram => ram.HeightMm).HasPrecision(6, 2);
+
         builder.HasOne(ram => ram.Manufacturer)
             .WithMany(manufacturer => manufacturer.Rams)
             .HasForeignKey(ram => ram.ManufacturerId)

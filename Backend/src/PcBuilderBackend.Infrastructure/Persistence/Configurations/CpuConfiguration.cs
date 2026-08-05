@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PcBuilderBackend.Domain.Entities;
 
@@ -10,9 +10,23 @@ internal sealed class CpuConfiguration : IEntityTypeConfiguration<Cpu>
     {
         builder.ConfigureGuidBaseEntity();
 
+        builder.ToTable("Cpus");
+
         builder.Property(cpu => cpu.Name)
             .IsRequired()
             .HasMaxLength(200);
+
+        builder.Property(cpu => cpu.MaxMemoryGb)
+            .IsRequired();
+
+        builder.Property(cpu => cpu.ThermalDesignPower)
+            .IsRequired();
+
+        builder.Property(cpu => cpu.IntegratedGraphics)
+            .IsRequired();
+
+        builder.Property(cpu => cpu.IncludedStockCooler)
+            .IsRequired();
 
         builder.HasOne(cpu => cpu.Manufacturer)
             .WithMany(manufacturer => manufacturer.Cpus)
@@ -23,5 +37,19 @@ internal sealed class CpuConfiguration : IEntityTypeConfiguration<Cpu>
             .WithMany(socket => socket.Cpus)
             .HasForeignKey(cpu => cpu.SocketId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(cpu => cpu.Series)
+            .WithMany(series => series.Cpu)
+            .HasForeignKey(cpu => cpu.SeriesId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(cpu => cpu.RamCompats)
+            .WithOne(ramCompat => ramCompat.Cpu)
+            .HasForeignKey(ramCompat => ramCompat.CpuId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(cpu => cpu.ManufacturerId);
+        builder.HasIndex(cpu => cpu.SocketId);
+        builder.HasIndex(cpu => cpu.SeriesId);
     }
 }

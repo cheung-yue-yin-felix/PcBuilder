@@ -1,4 +1,4 @@
-﻿namespace PcBuilderBackend.Domain.Entities;
+namespace PcBuilderBackend.Domain.Entities;
 
 public abstract class BaseEntity<TKey>
 {
@@ -22,6 +22,25 @@ public abstract class BaseEntity<TKey>
     {
         IsActive = false;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not BaseEntity<TKey> other)
+            return false;
+
+        if (ReferenceEquals(this, other))
+            return true;
+
+        if (Id is null || other.Id is null)
+            return false;
+
+        return Id.Equals(other.Id);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id?.GetHashCode() ?? 0;
     }
 }
 

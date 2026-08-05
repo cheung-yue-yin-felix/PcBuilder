@@ -17,5 +17,8 @@ internal sealed class GraphicsCardPowerConnectorConfiguration : IEntityTypeConfi
             .WithMany(gc => gc.PowerConnectors)
             .HasForeignKey(g => g.GraphicsCardId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(g => new { g.GraphicsCardId, g.PsuCableType })
+            .IsUnique();
     }
 }

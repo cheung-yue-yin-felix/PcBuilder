@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using PcBuilderBackend.Application.Catalog.Manufacturers.Dto;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Common.Mappings;

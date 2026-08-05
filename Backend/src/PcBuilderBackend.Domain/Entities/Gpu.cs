@@ -1,10 +1,9 @@
-﻿using PcBuilderBackend.Domain.Enums;
-
 namespace PcBuilderBackend.Domain.Entities;
 
 public class Gpu : ProductEntity
 {
     public Guid SeriesId { get; set; }
+    public GpuSeries Series { get; set; } = null!;
     
     protected Gpu() {}
     

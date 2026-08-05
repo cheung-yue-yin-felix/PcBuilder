@@ -1,6 +1,14 @@
-﻿namespace PcBuilderBackend.Domain.Entities;
+namespace PcBuilderBackend.Domain.Entities;
 
-public class GpuSeries: NamedEntity
+public class GpuSeries: ProductEntity
 {
-    public virtual ICollection<Gpu> Gpus { get; set; } = [];
+    public ICollection<Gpu> Gpus { get; set; } = [];
+    
+    protected GpuSeries() {}
+
+    public GpuSeries(Guid manufacturerId, string name)
+    {
+        SetName(name);
+        SetManufacturer(manufacturerId);
+    }
 }

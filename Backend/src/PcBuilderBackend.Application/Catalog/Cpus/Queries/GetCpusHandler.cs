@@ -1,41 +1,33 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
+using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
+using PcBuilderBackend.Application.Common.Dto;
+using PcBuilderBackend.Application.Common.Extensions;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Queries;
 
-public class GetCpusHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetCpusQuery, List<CpuDto>>
+public class GetCpusHandler(IApplicationDbContext context, IMapper mapper)
+    : IRequestHandler<GetCpusQuery, PagedResult<CpuListItemDto>>
 {
-    public async Task<List<CpuDto>> Handle(GetCpusQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<CpuListItemDto>> Handle(GetCpusQuery request, CancellationToken cancellationToken)
     {
-        var entities = context.Cpus.AsNoTracking().Where(c => c.IsActive);
-
-        if (request.ManufacturerId != Guid.Empty)
-            entities = entities.Where(x => x.ManufacturerId == request.ManufacturerId);
-
-        if (request.SocketId != Guid.Empty)
-            entities = entities.Where(x => x.SocketId == request.SocketId);
-        
-        if (request.SeriesId != Guid.Empty)
-            entities = entities.Where(x => x.SeriesId == request.SeriesId);
-
-        if (request.DdrGeneration.HasValue && Enum.IsDefined(request.DdrGeneration.Value))
-        {
-            var ddr = request.DdrGeneration.Value;
-            entities = entities.Where(x => x.DdrGeneration == ddr);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Name))
-            entities = entities.Where(x => x.Name.Contains(request.Name, StringComparison.CurrentCultureIgnoreCase));
-
-        var list = await entities
-            .OrderBy(x => x.Name)
-            .ProjectTo<CpuDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-
-        return list;
+        return await context.Cpus
+            .AsNoTracking()
+            .WhereIf(!string.IsNullOrWhiteSpace(request.Name), x => x.Name.Contains(request.Name!))
+            .WhereIf(request.ManufacturerId.HasValue, x => x.ManufacturerId == request.ManufacturerId)
+            .WhereIf(request.SocketId.HasValue, x => x.SocketId == request.SocketId)
+            .WhereIf(request.SeriesId.HasValue, x => x.SeriesId == request.SeriesId)
+            .WhereIf(
+                request.DdrGeneration.HasValue,
+                x => x.RamCompats.Any(r => r.IsActive && r.DdrGeneration == request.DdrGeneration))
+            .Where(x => x.IsActive)
+            .ToPagedResultAsync<Cpu, CpuListItemDto>(
+                request.PageIndex,
+                request.PageSize,
+                mapper.ConfigurationProvider,
+                cancellationToken);
     }
 }

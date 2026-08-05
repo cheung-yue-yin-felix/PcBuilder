@@ -13,9 +13,12 @@ internal sealed class ChassisDriveBayConfiguration : IEntityTypeConfiguration<Ch
         builder.Property(d => d.BayCount)
             .IsRequired();
 
-        builder.HasOne<Chassis>()
+        builder.HasOne(d => d.Chassis)
             .WithMany(c => c.DriveBays)
             .HasForeignKey(d => d.ChassisId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(d => new { d.ChassisId, d.DriveBayFormFactor })
+            .IsUnique();
     }
 }

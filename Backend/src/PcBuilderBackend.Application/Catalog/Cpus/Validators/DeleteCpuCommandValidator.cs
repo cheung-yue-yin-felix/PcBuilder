@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Validators;

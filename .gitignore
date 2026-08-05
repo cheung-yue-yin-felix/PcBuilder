@@ -1,1 +1,8 @@
 ﻿.idea/
+Document/
+.infisical.json
+*.md
+appsettings.*.json
+appsettings.json
+
+!readme.md

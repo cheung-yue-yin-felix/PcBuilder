@@ -1,14 +1,41 @@
-﻿using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Domain.Entities;
 
 public class PsuCable : BaseEntity
 {
     public Guid PsuId { get; set; }
-    
     public PsuCableType Type { get; set; }
-    
     public int CablesCount { get; set; }
-    
     public int ConnectorsCount { get; set; }
+    
+    protected PsuCable() {}
+
+    public PsuCable(Guid psuId, PsuCableType type, int cablesCount, int connectorsCount)
+    {
+        SetSpecs(psuId, type, cablesCount, connectorsCount);
+    }
+
+    public void UpdateSpecs(Guid psuId, PsuCableType type, int cablesCount, int connectorsCount)
+    {
+        SetSpecs(psuId, type, cablesCount, connectorsCount);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    private void SetSpecs(Guid psuId, PsuCableType type, int cablesCount, int connectorsCount)
+    {
+        if (psuId == Guid.Empty)
+            throw new ArgumentException("PSU ID cannot be empty");
+        
+        if (!Enum.IsDefined(type))
+            throw new ArgumentException("PSU Cable Type is invalid");
+        
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(cablesCount);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(connectorsCount);
+        
+        PsuId = psuId;
+        Type = type;
+        CablesCount = cablesCount;
+        ConnectorsCount = connectorsCount;
+    }
 }

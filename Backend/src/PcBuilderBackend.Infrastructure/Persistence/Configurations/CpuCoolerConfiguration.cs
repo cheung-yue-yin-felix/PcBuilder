@@ -17,9 +17,17 @@ internal sealed class CpuCoolerConfiguration : IEntityTypeConfiguration<CpuCoole
         builder.Property(c => c.MaxTdp)
             .IsRequired();
 
+        builder.Property(c => c.CoolerHeightMm).HasPrecision(6, 2);
+        builder.Property(c => c.MaxRamHeightMm).HasPrecision(6, 2);
+
         builder.HasOne(c => c.Manufacturer)
             .WithMany(m => m.CpuCoolers)
             .HasForeignKey(c => c.ManufacturerId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.HasMany(c => c.CpuCoolerSockets)
+            .WithOne(cs => cs.CpuCooler)
+            .HasForeignKey(cs => cs.CpuCoolerId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
