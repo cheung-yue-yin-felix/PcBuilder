@@ -27,7 +27,8 @@ public class UpdateCpuHandler(IApplicationDbContext context, IMapper mapper, ILo
             request.MaxMemoryGb,
             request.IntegratedGraphics,
             request.IncludedStockCooler,
-            request.ThermalDesignPower);
+            request.ThermalDesignPower,
+            request.PowerConsumptionWatts);
 
         await context.SaveChangesAsync(cancellationToken);
 

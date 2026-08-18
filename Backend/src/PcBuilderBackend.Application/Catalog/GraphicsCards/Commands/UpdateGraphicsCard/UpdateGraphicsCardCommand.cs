@@ -17,4 +17,6 @@ public record UpdateGraphicsCardCommand : IRequest<GraphicsCardDto?>
     public decimal WidthMm { get; init; }
     public decimal HeightMm { get; init; }
     public int PowerConsumptionWatts { get; init; }
+    public PsuCableType PowerConnectorType { get; init; }
+    public int PowerConnectorCount { get; init; }
 }

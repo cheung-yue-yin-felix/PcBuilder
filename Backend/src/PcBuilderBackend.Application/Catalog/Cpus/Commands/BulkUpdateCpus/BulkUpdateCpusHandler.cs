@@ -20,6 +20,7 @@ public class BulkUpdateCpusHandler(IApplicationDbContext context, IMapper mapper
         {
             var entity = await context.Cpus
                 .Include(cpu => cpu.RamCompats)
+                .Include(cpu => cpu.SupportedChipsets)
                 .FirstOrDefaultAsync(cpu => cpu.Id == cpuDto.Id && cpu.IsActive, cancellationToken);
 
             if (entity == null)
@@ -36,7 +37,8 @@ public class BulkUpdateCpusHandler(IApplicationDbContext context, IMapper mapper
                 cpuDto.MaxMemoryGb,
                 cpuDto.IntegratedGraphics,
                 cpuDto.IncludedStockCooler,
-                cpuDto.ThermalDesignPower);
+                cpuDto.ThermalDesignPower,
+                cpuDto.PowerConsumptionWatts);
 
             entity.RamCompats.Clear();
 
@@ -48,6 +50,16 @@ public class BulkUpdateCpusHandler(IApplicationDbContext context, IMapper mapper
                     compat.RamModuleCount,
                     compat.RamRank,
                     compat.MaxSpeedMts));
+            }
+
+            entity.SupportedChipsets.Clear();
+
+            foreach (var support in cpuDto.SupportChipsets)
+            {
+                entity.AddSupportedChipset(new CpuSupportChipset(
+                    entity.Id,
+                    support.ChipsetId,
+                    support.RequiresBiosUpdate));
             }
 
             result.Add(mapper.Map<CpuDto>(entity));

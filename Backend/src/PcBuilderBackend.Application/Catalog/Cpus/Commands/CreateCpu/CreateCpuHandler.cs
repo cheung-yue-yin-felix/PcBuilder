@@ -21,7 +21,8 @@ public class CreateCpuHandler(IApplicationDbContext context, IMapper mapper, ILo
             request.MaxMemoryGb,
             request.IntegratedGraphics,
             request.IncludedStockCooler,
-            request.ThermalDesignPower);
+            request.ThermalDesignPower,
+            request.PowerConsumptionWatts);
 
         foreach (var compat in request.RamCompats)
         {
@@ -31,6 +32,14 @@ public class CreateCpuHandler(IApplicationDbContext context, IMapper mapper, ILo
                 compat.RamModuleCount,
                 compat.RamRank,
                 compat.MaxSpeedMts));
+        }
+
+        foreach (var support in request.SupportChipsets)
+        {
+            entity.AddSupportedChipset(new CpuSupportChipset(
+                entity.Id,
+                support.ChipsetId,
+                support.RequiresBiosUpdate));
         }
 
         context.Cpus.Add(entity);

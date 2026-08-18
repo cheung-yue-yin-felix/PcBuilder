@@ -10,6 +10,23 @@ public class StorageDrive : ProductEntity
     public int CapacityGb { get; set; }
     public PcieGeneration? PcieGeneration { get; set; }
     public int? Rpm { get; set; }
+
+    public bool IsM2 => FormFactor is
+        StorageFormFactor.M22230 or
+        StorageFormFactor.M22242 or
+        StorageFormFactor.M22260 or
+        StorageFormFactor.M22280 or
+        StorageFormFactor.M222110;
+
+    public M2Key? ModuleKey =>
+        !IsM2
+            ? null
+            : Interface == StorageInterface.Sata
+                ? M2Key.BM
+                : M2Key.M;
+
+    public M2FormFactor? M2FormFactor =>
+        IsM2 ? (M2FormFactor)(int)FormFactor : null;
     
     protected StorageDrive() {}
 

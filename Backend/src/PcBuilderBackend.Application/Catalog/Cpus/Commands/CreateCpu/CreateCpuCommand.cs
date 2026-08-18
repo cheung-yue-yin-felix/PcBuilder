@@ -13,5 +13,7 @@ public record CreateCpuCommand : IRequest<CpuDto>
     public bool IntegratedGraphics { get; init; }
     public bool IncludedStockCooler { get; init; }
     public int ThermalDesignPower { get; init; }
+    public int PowerConsumptionWatts { get; init; }
     public List<CpuRamCompatDto> RamCompats { get; init; } = [];
+    public List<CpuSupportChipsetDto> SupportChipsets { get; init; } = [];
 }

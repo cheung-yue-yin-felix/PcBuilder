@@ -28,5 +28,8 @@ public class UpdateCpuCommandValidator : AbstractValidator<UpdateCpuCommand>
 
         RuleFor(x => x.ThermalDesignPower)
             .GreaterThan(0).WithMessage("ThermalDesignPower must be greater than 0");
+
+        RuleFor(x => x.PowerConsumptionWatts)
+            .GreaterThan(0).WithMessage("PowerConsumptionWatts must be greater than 0");
     }
 }

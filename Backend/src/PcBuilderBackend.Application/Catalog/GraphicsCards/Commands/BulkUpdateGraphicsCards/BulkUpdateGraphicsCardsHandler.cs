@@ -41,7 +41,9 @@ public class BulkUpdateGraphicsCardsHandler(
                 item.LengthMm,
                 item.WidthMm,
                 item.HeightMm,
-                item.PowerConsumptionWatts);
+                item.PowerConsumptionWatts,
+                item.PowerConnectorType,
+                item.PowerConnectorCount);
 
             result.Add(mapper.Map<GraphicsCardDto>(entity));
         }

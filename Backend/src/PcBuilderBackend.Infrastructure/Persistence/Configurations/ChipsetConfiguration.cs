@@ -18,5 +18,13 @@ internal sealed class ChipsetConfiguration : IEntityTypeConfiguration<Chipset>
             .WithMany(manufacturer => manufacturer.Chipsets)
             .HasForeignKey(chipset => chipset.ManufacturerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(chipset => chipset.Socket)
+            .WithMany()
+            .HasForeignKey(chipset => chipset.SocketId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(chipset => chipset.ManufacturerId);
+        builder.HasIndex(chipset => chipset.SocketId);
     }
 }

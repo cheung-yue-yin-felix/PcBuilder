@@ -1,12 +1,17 @@
 using AutoMapper;
 using MediatR;
-using PcBuilderBackend.Application.MasterData.Gpus.Dto;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.ImportGpu;
 
-public class ImportGpusHandler(IApplicationDbContext context, IExcelImportService excel, IMapper mapper)
+public class ImportGpusHandler(
+    IApplicationDbContext context,
+    IExcelImportService excel,
+    IMapper mapper,
+    ICacheService cache)
     : IRequestHandler<ImportGpusCommand, List<GpuDto>>
 {
     public async Task<List<GpuDto>> Handle(ImportGpusCommand request, CancellationToken cancellationToken)
@@ -22,6 +27,7 @@ public class ImportGpusHandler(IApplicationDbContext context, IExcelImportServic
         }
 
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
 
         return [.. result.Select(mapper.Map<GpuDto>)];
     }

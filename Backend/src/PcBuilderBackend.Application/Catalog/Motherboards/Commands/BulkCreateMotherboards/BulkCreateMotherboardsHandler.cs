@@ -51,8 +51,10 @@ public class BulkCreateMotherboardsHandler(IApplicationDbContext context, IMappe
             {
                 var m2 = new MotherboardM2(
                     motherboard.Id,
+                    slot.Key,
                     slot.PcieGeneration,
-                    slot.SlotCount
+                    slot.SlotCount,
+                    slot.SupportsSata
                 );
                 
                 foreach (var formFactor in slot.FormFactors)
@@ -61,6 +63,15 @@ public class BulkCreateMotherboardsHandler(IApplicationDbContext context, IMappe
                 }
 
                 motherboard.AddM2Slot(m2);
+            }
+
+            foreach (var port in motherboardDto.UsbPorts)
+            {
+                motherboard.AddUsbPort(new MotherboardUsb(
+                    motherboard.Id,
+                    port.UsbVersion,
+                    port.UsbType,
+                    port.PortCount));
             }
 
             context.Motherboards.Add(motherboard);

@@ -7,6 +7,7 @@ public record RamDto
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }
+    public string ManufacturerName { get; init; } = string.Empty;
     public string Color { get; set; } = string.Empty;
     public DdrGeneration DdrGeneration { get; set; }
     public RamFormFactor RamFormFactor { get; set; }

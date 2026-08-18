@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.MasterData.CpuSeries.Commands.DeleteCpuSeries;
 
-public class DeleteCpuSeriesHandler(IApplicationDbContext context) : IRequestHandler<DeleteCpuSeriesCommand, bool>
+public class DeleteCpuSeriesHandler(IApplicationDbContext context, ICacheService cache)
+    : IRequestHandler<DeleteCpuSeriesCommand, bool>
 {
     public async Task<bool> Handle(DeleteCpuSeriesCommand request, CancellationToken cancellationToken)
     {
@@ -12,6 +14,7 @@ public class DeleteCpuSeriesHandler(IApplicationDbContext context) : IRequestHan
         if (cpuSeries is null) return false;
         cpuSeries.Deactivate();
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.CpuSeries.Prefix, cancellationToken);
         return true;
     }
 }

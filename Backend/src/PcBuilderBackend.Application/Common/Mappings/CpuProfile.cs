@@ -10,6 +10,11 @@ public class CpuProfile : Profile
     {
         CreateMap<CpuRamCompat, CpuRamCompatDto>();
 
+        CreateMap<CpuSupportChipset, CpuSupportChipsetDto>()
+            .ForMember(
+                dest => dest.ChipsetName,
+                opt => opt.MapFrom(src => src.Chipset != null ? src.Chipset.Name : string.Empty));
+
         CreateMap<Cpu, CpuListItemDto>()
             .ForMember(dest => dest.ManufacturerName, opt => opt.MapFrom(src => src.Manufacturer.Name))
             .ForMember(dest => dest.SocketName, opt => opt.MapFrom(src => src.Socket.Name))
@@ -19,6 +24,9 @@ public class CpuProfile : Profile
             .IncludeBase<Cpu, CpuListItemDto>()
             .ForMember(
                 dest => dest.RamCompats,
-                opt => opt.MapFrom(src => src.RamCompats.Where(s => s.IsActive)));
+                opt => opt.MapFrom(src => src.RamCompats.Where(s => s.IsActive)))
+            .ForMember(
+                dest => dest.SupportChipsets,
+                opt => opt.MapFrom(src => src.SupportedChipsets.Where(s => s.IsActive)));
     }
 }

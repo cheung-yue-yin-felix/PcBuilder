@@ -18,5 +18,7 @@ public class UpdateGraphicsCardCommandValidator : AbstractValidator<UpdateGraphi
         RuleFor(x => x.WidthMm).GreaterThan(0);
         RuleFor(x => x.HeightMm).GreaterThan(0);
         RuleFor(x => x.PowerConsumptionWatts).GreaterThan(0);
+        RuleFor(x => x.PowerConnectorType).IsInEnum();
+        RuleFor(x => x.PowerConnectorCount).GreaterThan(0);
     }
 }

@@ -11,5 +11,7 @@ public class CpuImportRow
     public bool IntegratedGraphics { get; init; }
     public bool IncludedStockCooler { get; init; }
     public int ThermalDesignPower { get; init; }
+    public int PowerConsumptionWatts { get; init; }
     public List<CpuRamCompactImportRow> RamCompats { get; init; } = [];
+    public List<CpuSupportChipsetImportRow> SupportChipsets { get; init; } = [];
 }

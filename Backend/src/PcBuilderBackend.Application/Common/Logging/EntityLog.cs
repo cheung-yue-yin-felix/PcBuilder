@@ -12,6 +12,7 @@ internal static partial class EntityLog
     public const string Gpu = "GPU";
     public const string GraphicsCard = "Graphics Card";
     public const string Motherboard = "Motherboard";
+    public const string Chassis = "Chassis";
     public const string CpuRamCompat = "CPU RAM compatibility";
 
     [LoggerMessage(
@@ -86,6 +87,12 @@ internal static partial class EntityLog
     public static partial void CpuRamCompatsUpdated(ILogger logger, Guid cpuId);
 
     [LoggerMessage(
+        EventId = 1014,
+        Level = LogLevel.Information,
+        Message = "Bulk updated supported chipset entries for CPU {CpuId} successfully.")]
+    public static partial void CpuSupportChipsetsUpdated(ILogger logger, Guid cpuId);
+
+    [LoggerMessage(
         EventId = 1012,
         Level = LogLevel.Information,
         Message = "Bulk updated PCIe slots for motherboard {MotherboardId} successfully.")]
@@ -96,4 +103,46 @@ internal static partial class EntityLog
         Level = LogLevel.Information,
         Message = "Bulk updated M.2 slots for motherboard {MotherboardId} successfully.")]
     public static partial void MotherboardM2SlotsUpdated(ILogger logger, Guid motherboardId);
+
+    [LoggerMessage(
+        EventId = 1022,
+        Level = LogLevel.Information,
+        Message = "Bulk updated USB ports for motherboard {MotherboardId} successfully.")]
+    public static partial void MotherboardUsbPortsUpdated(ILogger logger, Guid motherboardId);
+
+    [LoggerMessage(
+        EventId = 1016,
+        Level = LogLevel.Information,
+        Message = "Bulk updated drive bays for chassis {ChassisId} successfully.")]
+    public static partial void ChassisDriveBaysUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1017,
+        Level = LogLevel.Information,
+        Message = "Bulk updated fan mounts for chassis {ChassisId} successfully.")]
+    public static partial void ChassisFanMountsUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1018,
+        Level = LogLevel.Information,
+        Message = "Bulk updated PCIe slots for chassis {ChassisId} successfully.")]
+    public static partial void ChassisPcieSlotsUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1019,
+        Level = LogLevel.Information,
+        Message = "Bulk updated radiators for chassis {ChassisId} successfully.")]
+    public static partial void ChassisRadiatorsUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1020,
+        Level = LogLevel.Information,
+        Message = "Bulk updated motherboard form factors for chassis {ChassisId} successfully.")]
+    public static partial void ChassisMbFormFactorsUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1021,
+        Level = LogLevel.Information,
+        Message = "Bulk updated PSU form factors for chassis {ChassisId} successfully.")]
+    public static partial void ChassisPsuFormFactorsUpdated(ILogger logger, Guid chassisId);
 }

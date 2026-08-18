@@ -24,4 +24,5 @@ public class MotherboardImportRow
     public bool BluetoothEnabled { get; init; }
     public List<MotherboardPcieImportRow> PcieSlots { get; init; } = [];
     public List<MotherboardM2ImportRow> M2Slots { get; init; } = [];
+    public List<MotherboardUsbImportRow> UsbPorts { get; init; } = [];
 }

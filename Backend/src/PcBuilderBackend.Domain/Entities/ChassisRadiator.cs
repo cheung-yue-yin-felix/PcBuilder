@@ -12,30 +12,45 @@ public class ChassisRadiator : BaseEntity
     
     protected ChassisRadiator() {}
 
-    public ChassisRadiator(Guid chassisId, RadiatorLength length, RadiatorMountLocation mountLocation)
+    public ChassisRadiator(
+        Guid chassisId,
+        RadiatorLength length,
+        RadiatorMountLocation mountLocation,
+        int radiatorCount)
     {
-        SetSpecs(chassisId, length, mountLocation);
+        SetSpecs(chassisId, length, mountLocation, radiatorCount);
     }
 
-    public void UpdateSpecs(Guid chassisId, RadiatorLength length, RadiatorMountLocation mountLocation)
+    public void UpdateSpecs(
+        Guid chassisId,
+        RadiatorLength length,
+        RadiatorMountLocation mountLocation,
+        int radiatorCount)
     {
-        SetSpecs(chassisId, length, mountLocation);
+        SetSpecs(chassisId, length, mountLocation, radiatorCount);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    private void SetSpecs(Guid chassisId, RadiatorLength length, RadiatorMountLocation mountLocation)
+    private void SetSpecs(
+        Guid chassisId,
+        RadiatorLength length,
+        RadiatorMountLocation mountLocation,
+        int radiatorCount)
     {
         if (chassisId == Guid.Empty)
-            throw new ArgumentException($"Chassis ID is required.");
-        
+            throw new ArgumentException("Chassis ID is required.");
+
         if (!Enum.IsDefined(length))
-            throw new ArgumentException($"Radiator length is invalid.");
-        
+            throw new ArgumentException("Radiator length is invalid.");
+
         if (!Enum.IsDefined(mountLocation))
-            throw new ArgumentException($"Radiator mount location is invalid.");
-        
+            throw new ArgumentException("Radiator mount location is invalid.");
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(radiatorCount);
+
         ChassisId = chassisId;
         Length = length;
         MountLocation = mountLocation;
+        RadiatorCount = radiatorCount;
     }
 }

@@ -5,6 +5,7 @@ using PcBuilderBackend.Api.Extensions;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkCreateCpus;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkDeleteCpus;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpuRamCompats;
+using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpuSupportChipsets;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpus;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
@@ -13,7 +14,6 @@ using PcBuilderBackend.Application.Catalog.Cpus.Commands.UpdateCpu;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Catalog.Cpus.Queries;
 using PcBuilderBackend.Application.Common.Dto;
-using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Api.Endpoints.Catalog;
 
@@ -29,13 +29,22 @@ public static class CpuEndpoints
             .Produces<PagedResult<CpuListItemDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Browse CPUs")
-            .WithDescription("\n    GET /catalog/cpu");
+            .WithDescription(
+                "\n    GET /catalog/cpu" +
+                "\n    All filters are optional. When motherboardId is provided, results are limited " +
+                "to CPUs that are not physically incompatible with that motherboard " +
+                "(domain CheckCpuCompatibility; CompatibleActionRequired e.g. BIOS is still included).");
 
-        subgroup.MapGet("/motherboard/{motherboardId}", GetCpusByMotherboardId)
-            .Produces<List<CpuListItemDto>>()
+        // Complex filter-with-body: industry standard is POST .../query (OpenAPI 3.1 / Scalar have no QUERY).
+        subgroup.MapPost("/query", QueryCpus)
+            .Produces<PagedResult<CpuListItemDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Browse CPUs By Motherboard Id")
-            .WithDescription("\n    GET /catalog/cpu/motherboard/00000000-0000-0000-0000-000000000000");
+            .WithSummary("Query CPUs")
+            .WithDescription(
+                "\n    POST /api/catalog/cpu/query" +
+                "\n    All filters are optional. When motherboardId is provided, results are limited " +
+                "to CPUs that are not physically incompatible with that motherboard " +
+                "(domain CheckCpuCompatibility; CompatibleActionRequired e.g. BIOS is still included).");
 
         subgroup.MapGet("/{id}", GetCpuById)
             .Produces<CpuDto>()
@@ -104,20 +113,41 @@ public static class CpuEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace CPU RAM compatibility entries")
             .WithDescription("\n    PUT /catalog/cpu/00000000-0000-0000-0000-000000000000/ram-compats");
+
+        var supportChipsetGroup = subgroup.MapGroup("{cpuId}/support-chipsets")
+            .WithDescription("Manage CPU supported chipset entries");
+
+        supportChipsetGroup.MapGet("/", GetCpuSupportChipsets)
+            .Produces<List<CpuSupportChipsetDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Get CPU supported chipset entries")
+            .WithDescription("\n    GET /catalog/cpu/00000000-0000-0000-0000-000000000000/support-chipsets");
+
+        supportChipsetGroup.MapPut("/", UpdateCpuSupportChipsets)
+            .Produces<List<CpuSupportChipsetDto>>()
+            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Replace CPU supported chipset entries")
+            .WithDescription("\n    PUT /catalog/cpu/00000000-0000-0000-0000-000000000000/support-chipsets");
     }
 
     private static async Task<Ok<PagedResult<CpuListItemDto>>> GetCpus(
         [FromServices] ISender sender,
-        CancellationToken cancellationToken,
-        [FromQuery(Name = "name")] string? name,
-        [FromQuery(Name = "manufacturerId")] Guid? manufacturerId,
-        [FromQuery(Name = "socketId")] Guid? socketId,
-        [FromQuery(Name = "seriesId")] Guid? seriesId,
-        [FromQuery(Name = "ddrGeneration")] DdrGeneration? ddrGeneration,
-        [FromQuery(Name = "pageIndex")] int pageIndex = 0,
-        [FromQuery(Name = "pageSize")] int pageSize = 10)
+        [AsParameters] PagedRequest request,
+        CancellationToken cancellationToken
+        )
     {
-        var query = new GetCpusQuery(pageIndex, pageSize, name, manufacturerId, socketId, seriesId, ddrGeneration);
+        var query = new GetCpusQuery(request);
+        return TypedResults.Ok(await sender.Send(query, cancellationToken));
+    }
+
+    private static async Task<Ok<PagedResult<CpuListItemDto>>> QueryCpus(
+        [FromServices] ISender sender,
+        [FromBody] PagedRequest<CpuFilter> request,
+        CancellationToken cancellationToken
+    )
+    {
+        var query = new FilterCpusQuery(request);
         return TypedResults.Ok(await sender.Send(query, cancellationToken));
     }
 
@@ -128,14 +158,6 @@ public static class CpuEndpoints
     {
         var result = await sender.Send(new GetCpuByIdQuery(id), cancellationToken);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
-    }
-
-    private static async Task<Ok<List<CpuListItemDto>>> GetCpusByMotherboardId(
-        [FromRoute] Guid motherboardId,
-        [FromServices] ISender sender,
-        CancellationToken cancellationToken)
-    {
-        return TypedResults.Ok(await sender.Send(new GetCpusByMotherboardQuery(motherboardId), cancellationToken));
     }
 
     private static async Task<Created<CpuDto>> CreateCpu(
@@ -171,7 +193,7 @@ public static class CpuEndpoints
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(new GetCpuRamCompatsByCpuIdQuery(cpuId), cancellationToken));
+        return TypedResults.Ok(await sender.Send(new ListCompatibleMemoriesQuery(cpuId), cancellationToken));
     }
 
     private static async Task<Results<Ok<List<CpuRamCompatDto>>, BadRequest>> UpdateCpuRamCompats(
@@ -181,6 +203,26 @@ public static class CpuEndpoints
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(new BulkUpdateCpuRamCompatsCommand(cpuId, ramCompats), cancellationToken);
+        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+    }
+
+    private static async Task<Ok<List<CpuSupportChipsetDto>>> GetCpuSupportChipsets(
+        [FromRoute] Guid cpuId,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        return TypedResults.Ok(await sender.Send(new ListCompatibleChipsetsQuery(cpuId), cancellationToken));
+    }
+
+    private static async Task<Results<Ok<List<CpuSupportChipsetDto>>, BadRequest>> UpdateCpuSupportChipsets(
+        [FromRoute] Guid cpuId,
+        [FromBody] List<CpuSupportChipsetDto> supportChipsets,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new BulkUpdateCpuSupportChipsetsCommand(cpuId, supportChipsets),
+            cancellationToken);
         return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
     }
 

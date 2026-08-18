@@ -23,7 +23,7 @@ internal sealed class MotherboardM2Configuration : IEntityTypeConfiguration<Moth
             .HasForeignKey(ff => ff.MotherboardM2Id)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(m2 => new { m2.MotherboardId, m2.PcieGeneration })
+        builder.HasIndex(m2 => new { m2.MotherboardId, m2.Key, m2.PcieGeneration })
             .IsUnique();
     }
 }

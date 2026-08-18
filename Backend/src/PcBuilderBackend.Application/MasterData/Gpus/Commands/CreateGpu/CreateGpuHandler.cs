@@ -1,19 +1,25 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using PcBuilderBackend.Application.MasterData.Gpus.Dto;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.CreateGpu;
 
-public class CreateGpuHandler(IApplicationDbContext context, IMapper mapper, ILogger<CreateGpuHandler> logger) : IRequestHandler<CreateGpuCommand, GpuDto>
+public class CreateGpuHandler(
+    IApplicationDbContext context,
+    IMapper mapper,
+    ICacheService cache,
+    ILogger<CreateGpuHandler> logger) : IRequestHandler<CreateGpuCommand, GpuDto>
 {
     public async Task<GpuDto> Handle(CreateGpuCommand request, CancellationToken cancellationToken)
     {
         var gpu = new Domain.Entities.Gpu(request.Name, request.ManufacturerId, request.GpuSeriesId);
         context.Gpus.Add(gpu);
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
         EntityLog.Created(logger, EntityLog.Gpu, gpu.Id);
         return mapper.Map<GpuDto>(gpu);
     }

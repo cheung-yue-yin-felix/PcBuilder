@@ -12,6 +12,7 @@ public class GetMemoryByIdHandler(IApplicationDbContext context, IMapper mapper)
     {
         var entity = await context.Rams
             .AsNoTracking()
+            .Include(x => x.Manufacturer)
             .FirstOrDefaultAsync(r => r.Id == request.Id && r.IsActive, cancellationToken);
         return entity == null ? null : mapper.Map<RamDto>(entity);
     }

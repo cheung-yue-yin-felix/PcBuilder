@@ -40,6 +40,7 @@ public class BulkUpdateMotherboardsHandler(IApplicationDbContext context, IMappe
 
             entity.PcieSlots.Clear();
             entity.M2Slots.Clear();
+            entity.UsbPorts.Clear();
 
             foreach (var slot in dto.PcieSlots)
             {
@@ -58,8 +59,10 @@ public class BulkUpdateMotherboardsHandler(IApplicationDbContext context, IMappe
             {
                 var m2 = new MotherboardM2(
                     entity.Id,
+                    slot.Key,
                     slot.PcieGeneration,
-                    slot.SlotCount
+                    slot.SlotCount,
+                    slot.SupportsSata
                 );
                 
                 foreach (var formFactor in slot.FormFactors)
@@ -68,6 +71,15 @@ public class BulkUpdateMotherboardsHandler(IApplicationDbContext context, IMappe
                 }
 
                 entity.AddM2Slot(m2);
+            }
+
+            foreach (var port in dto.UsbPorts)
+            {
+                entity.AddUsbPort(new MotherboardUsb(
+                    entity.Id,
+                    port.UsbVersion,
+                    port.UsbType,
+                    port.PortCount));
             }
             
             result.Add(mapper.Map<MotherboardDto>(entity));

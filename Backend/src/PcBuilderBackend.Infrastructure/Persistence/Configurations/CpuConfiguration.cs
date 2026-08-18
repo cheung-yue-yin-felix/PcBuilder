@@ -22,6 +22,9 @@ internal sealed class CpuConfiguration : IEntityTypeConfiguration<Cpu>
         builder.Property(cpu => cpu.ThermalDesignPower)
             .IsRequired();
 
+        builder.Property(cpu => cpu.PowerConsumptionWatts)
+            .IsRequired();
+
         builder.Property(cpu => cpu.IntegratedGraphics)
             .IsRequired();
 
@@ -46,6 +49,11 @@ internal sealed class CpuConfiguration : IEntityTypeConfiguration<Cpu>
         builder.HasMany(cpu => cpu.RamCompats)
             .WithOne(ramCompat => ramCompat.Cpu)
             .HasForeignKey(ramCompat => ramCompat.CpuId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(cpu => cpu.SupportedChipsets)
+            .WithOne(support => support.Cpu)
+            .HasForeignKey(support => support.CpuId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(cpu => cpu.ManufacturerId);

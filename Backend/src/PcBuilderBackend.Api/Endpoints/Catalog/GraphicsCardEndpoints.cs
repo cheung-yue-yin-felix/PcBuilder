@@ -12,7 +12,6 @@ using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.UpdateGraphics
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Queries;
 using PcBuilderBackend.Application.Common.Dto;
-using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Api.Endpoints.Catalog;
 
@@ -29,6 +28,13 @@ public static class GraphicsCardEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Browse graphics cards")
             .WithDescription("\n    GET /catalog/graphics-card");
+        
+        // Complex filter-with-body: industry standard is POST .../query (OpenAPI 3.1 / Scalar have no QUERY).
+        subgroup.MapPost("/query", QueryGraphicsCards)
+            .Produces<PagedResult<GraphicsCardListItemDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Filter graphics cards")
+            .WithDescription("\n    POST /catalog/graphics-card/query");
 
         subgroup.MapGet("/{id:guid}", GetGraphicsCardById)
             .Produces<GraphicsCardDto>()
@@ -81,30 +87,19 @@ public static class GraphicsCardEndpoints
 
     private static async Task<Ok<PagedResult<GraphicsCardListItemDto>>> GetGraphicsCards(
         [FromServices] ISender sender,
-        CancellationToken cancellationToken,
-        [FromQuery] string? name,
-        [FromQuery] Guid? manufacturerId,
-        [FromQuery] Guid? gpuId,
-        [FromQuery] PcieGeneration? pcieGeneration,
-        [FromQuery] int? minVideoMemoryGb,
-        [FromQuery] int? maxVideoMemoryGb,
-        [FromQuery] decimal? maxLengthMm,
-        [FromQuery] decimal? maxPowerConsumptionWatts,
-        [FromQuery] int pageIndex = 0,
-        [FromQuery] int pageSize = 10)
+        [AsParameters] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var query = new GetGraphicsCardsQuery(
-            pageIndex,
-            pageSize,
-            name,
-            manufacturerId,
-            gpuId,
-            pcieGeneration,
-            minVideoMemoryGb,
-            maxVideoMemoryGb,
-            maxLengthMm,
-            maxPowerConsumptionWatts);
+        var query = new GetGraphicsCardsQuery(request);
+        return TypedResults.Ok(await sender.Send(query, cancellationToken));
+    }
 
+    private static async Task<Ok<PagedResult<GraphicsCardListItemDto>>> QueryGraphicsCards(
+        [FromServices] ISender sender,
+        [FromBody] PagedRequest<GraphicsCardFilter> request,
+        CancellationToken cancellationToken)
+    {
+        var query = new FilterGraphicsCardsQuery(request);
         return TypedResults.Ok(await sender.Send(query, cancellationToken));
     }
 

@@ -16,12 +16,19 @@ public class ClosedXmlExcelImportService : IExcelImportService
 
         var cpus = ParseCpus(workbook.Worksheet("CPUs"));
         var compats = ParseRamCompats(workbook.Worksheet("CpuRamCompats"));
+        var supportChipsets = ParseSupportChipsets(workbook.Worksheet("CpuSupportChipsets"));
 
         var cpuByRow = cpus.ToDictionary(x => x.RowNumber);
         foreach (var compat in compats)
         {
             if (cpuByRow.TryGetValue(compat.ParentRowNumber, out var cpu))
                 cpu.RamCompats.Add(compat);
+        }
+
+        foreach (var support in supportChipsets)
+        {
+            if (cpuByRow.TryGetValue(support.ParentRowNumber, out var cpu))
+                cpu.SupportChipsets.Add(support);
         }
 
         return Task.FromResult(cpus);
@@ -48,6 +55,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
         var motherboards = ParseMotherboards(workbook.Worksheet("Motherboards"));
         var pcieSlots = ParseMotherboardPcieSlots(workbook.Worksheet("MotherboardPcieSlots"));
         var m2Slots = ParseMotherboardM2Slots(workbook.Worksheet("MotherboardM2Slots"));
+        var usbPorts = ParseMotherboardUsbPorts(workbook.Worksheet("MotherboardUsbPorts"));
 
         var motherboardByRow = motherboards.ToDictionary(x => x.RowNumber);
 
@@ -61,6 +69,12 @@ public class ClosedXmlExcelImportService : IExcelImportService
         {
             if (motherboardByRow.TryGetValue(slot.ParentRowNumber, out var motherboard))
                 motherboard.M2Slots.Add(slot);
+        }
+
+        foreach (var port in usbPorts)
+        {
+            if (motherboardByRow.TryGetValue(port.ParentRowNumber, out var motherboard))
+                motherboard.UsbPorts.Add(port);
         }
 
         return Task.FromResult(motherboards);
@@ -84,7 +98,8 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     MaxMemoryGb = (int)row.Cell(5).GetDouble(),
                     IntegratedGraphics = row.Cell(6).GetBoolean(),
                     IncludedStockCooler = row.Cell(7).GetBoolean(),
-                    ThermalDesignPower = (int)row.Cell(8).GetDouble()
+                    ThermalDesignPower = (int)row.Cell(8).GetDouble(),
+                    PowerConsumptionWatts = (int)row.Cell(9).GetDouble()
                 })
         ];
     }
@@ -102,6 +117,23 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     RamModuleCount = (int)row.Cell(3).GetDouble(),
                     RamRank = Enum.Parse<RamRank>(row.Cell(4).GetString()),
                     MaxSpeedMts = (int)row.Cell(5).GetDouble()
+                })
+        ];
+    }
+
+    private static List<CpuSupportChipsetImportRow> ParseSupportChipsets(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new CpuSupportChipsetImportRow
+                {
+                    ParentRowNumber = (int)row.Cell(1).GetDouble(),
+                    ChipsetId = Guid.TryParse(row.Cell(2).GetString(), out var chipsetId)
+                        ? chipsetId
+                        : Guid.Empty,
+                    RequiresBiosUpdate = row.Cell(3).GetBoolean()
                 })
         ];
     }
@@ -210,7 +242,27 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
                     PcieGeneration = Enum.Parse<PcieGeneration>(row.Cell(2).GetString()),
                     SlotCount = (int)row.Cell(3).GetDouble(),
-                    FormFactors = ParseM2FormFactors(row.Cell(4).GetString())
+                    FormFactors = ParseM2FormFactors(row.Cell(4).GetString()),
+                    Key = row.Cell(5).IsEmpty()
+                        ? M2Key.M
+                        : Enum.Parse<M2Key>(row.Cell(5).GetString()),
+                    SupportsSata = !row.Cell(6).IsEmpty() && row.Cell(6).GetBoolean()
+                })
+        ];
+    }
+
+    private static List<MotherboardUsbImportRow> ParseMotherboardUsbPorts(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new MotherboardUsbImportRow
+                {
+                    ParentRowNumber = (int)row.Cell(1).GetDouble(),
+                    UsbVersion = Enum.Parse<UsbVersion>(row.Cell(2).GetString()),
+                    UsbType = Enum.Parse<UsbType>(row.Cell(3).GetString()),
+                    PortCount = (int)row.Cell(4).GetDouble()
                 })
         ];
     }

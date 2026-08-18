@@ -25,7 +25,8 @@ public class BulkCreateCpusHandler(IApplicationDbContext context, IMapper mapper
                 cpuDto.MaxMemoryGb,
                 cpuDto.IntegratedGraphics,
                 cpuDto.IncludedStockCooler,
-                cpuDto.ThermalDesignPower);
+                cpuDto.ThermalDesignPower,
+                cpuDto.PowerConsumptionWatts);
 
             foreach (var compat in cpuDto.RamCompats)
             {
@@ -35,6 +36,14 @@ public class BulkCreateCpusHandler(IApplicationDbContext context, IMapper mapper
                     compat.RamModuleCount,
                     compat.RamRank,
                     compat.MaxSpeedMts));
+            }
+
+            foreach (var support in cpuDto.SupportChipsets)
+            {
+                entity.AddSupportedChipset(new CpuSupportChipset(
+                    entity.Id,
+                    support.ChipsetId,
+                    support.RequiresBiosUpdate));
             }
 
             context.Cpus.Add(entity);

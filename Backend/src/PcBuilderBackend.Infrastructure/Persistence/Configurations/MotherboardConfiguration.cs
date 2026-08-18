@@ -44,5 +44,10 @@ internal sealed class MotherboardConfiguration : IEntityTypeConfiguration<Mother
             .WithOne()
             .HasForeignKey(m2Slot => m2Slot.MotherboardId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(motherboard => motherboard.UsbPorts)
+            .WithOne()
+            .HasForeignKey(usbPort => usbPort.MotherboardId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

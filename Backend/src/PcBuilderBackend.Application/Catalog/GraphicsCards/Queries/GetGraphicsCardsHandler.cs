@@ -18,18 +18,12 @@ public class GetGraphicsCardsHandler(IApplicationDbContext context, IMapper mapp
     {
         return await context.GraphicsCards
             .AsNoTracking()
-            .Where(x => x.IsActive)
-            .WhereIf(!string.IsNullOrWhiteSpace(request.Name), x => x.Name.Contains(request.Name!))
-            .WhereIf(request.ManufacturerId.HasValue, x => x.ManufacturerId == request.ManufacturerId)
-            .WhereIf(request.GpuId.HasValue, x => x.GpuId == request.GpuId)
-            .WhereIf(request.PcieGeneration.HasValue, x => x.PcieGeneration == request.PcieGeneration)
-            .WhereIf(request.MinVideoMemoryGb.HasValue, x => x.VideoMemoryGb >= request.MinVideoMemoryGb)
-            .WhereIf(request.MaxVideoMemoryGb.HasValue, x => x.VideoMemoryGb <= request.MaxVideoMemoryGb)
-            .WhereIf(request.MaxLengthMm.HasValue, x => x.LengthMm <= request.MaxLengthMm)
-            .WhereIf(request.MaxPowerConsumptionWatts.HasValue, x => x.PowerConsumptionWatts <= request.MaxPowerConsumptionWatts)
+            .Include(x => x.Gpu)
+            .ThenInclude(x => x.Series)
+            .ApplySorting(request.Request.SortFields, request.Request.SortDirection)
             .ToPagedResultAsync<GraphicsCard, GraphicsCardListItemDto>(
-                request.PageIndex,
-                request.PageSize,
+                request.Request.PageIndex,
+                request.Request.PageSize,
                 mapper.ConfigurationProvider,
                 cancellationToken);
     }

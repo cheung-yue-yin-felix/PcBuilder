@@ -1,9 +1,11 @@
-﻿using MediatR;
+using MediatR;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.MasterData.Manufacturers.Commands.BulkDeleteManufacturers;
 
-public class BulkDeleteManufacturersHandler(IApplicationDbContext context) : IRequestHandler<BulkDeleteManufacturersCommand, bool>
+public class BulkDeleteManufacturersHandler(IApplicationDbContext context, ICacheService cache)
+    : IRequestHandler<BulkDeleteManufacturersCommand, bool>
 {
     public async Task<bool> Handle(BulkDeleteManufacturersCommand request, CancellationToken cancellationToken)
     {
@@ -18,6 +20,7 @@ public class BulkDeleteManufacturersHandler(IApplicationDbContext context) : IRe
         }
 
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Manufacturers.Prefix, cancellationToken);
         return true;
     }
 }

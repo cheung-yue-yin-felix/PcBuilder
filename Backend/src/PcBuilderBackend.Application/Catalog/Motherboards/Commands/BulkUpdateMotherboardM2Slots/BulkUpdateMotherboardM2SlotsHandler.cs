@@ -31,21 +31,23 @@ public class BulkUpdateMotherboardM2SlotsHandler(
             return null;
         }
 
-        var existingByKey = motherboard.M2Slots.ToDictionary(x => x.PcieGeneration);
-        var touchedKeys = new HashSet<PcieGeneration>();
+        var existingByKey = motherboard.M2Slots.ToDictionary(x => (x.Key, x.PcieGeneration));
+        var touchedKeys = new HashSet<(M2Key Key, PcieGeneration Generation)>();
 
         foreach (var slot in request.M2Slots)
         {
-            touchedKeys.Add(slot.PcieGeneration);
+            var identity = (slot.Key, slot.PcieGeneration);
+            touchedKeys.Add(identity);
 
-            if (existingByKey.TryGetValue(slot.PcieGeneration, out var existing))
+            if (existingByKey.TryGetValue(identity, out var existing))
             {
-                existing.UpdateSpecs(slot.PcieGeneration, slot.SlotCount);
+                existing.UpdateSpecs(slot.Key, slot.PcieGeneration, slot.SlotCount, slot.SupportsSata);
                 SyncFormFactors(existing, slot.FormFactors);
             }
             else
             {
-                var m2 = new MotherboardM2(request.MotherboardId, slot.PcieGeneration, slot.SlotCount);
+                var m2 = new MotherboardM2(
+                    request.MotherboardId, slot.Key, slot.PcieGeneration, slot.SlotCount, slot.SupportsSata);
 
                 foreach (var formFactor in slot.FormFactors.Distinct())
                 {
@@ -56,7 +58,7 @@ public class BulkUpdateMotherboardM2SlotsHandler(
             }
         }
 
-        foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains(x.PcieGeneration)))
+        foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains((x.Key, x.PcieGeneration))))
         {
             motherboard.RemoveM2Slot(existing);
         }

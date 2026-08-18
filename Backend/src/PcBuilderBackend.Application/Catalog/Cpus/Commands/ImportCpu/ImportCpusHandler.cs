@@ -29,7 +29,8 @@ public class ImportCpusHandler(
                 cpu.MaxMemoryGb,
                 cpu.IntegratedGraphics,
                 cpu.IncludedStockCooler,
-                cpu.ThermalDesignPower);
+                cpu.ThermalDesignPower,
+                cpu.PowerConsumptionWatts);
 
             foreach (var compat in cpu.RamCompats)
             {
@@ -39,6 +40,14 @@ public class ImportCpusHandler(
                     compat.RamModuleCount,
                     compat.RamRank,
                     compat.MaxSpeedMts));
+            }
+
+            foreach (var support in cpu.SupportChipsets)
+            {
+                entity.AddSupportedChipset(new CpuSupportChipset(
+                    entity.Id,
+                    support.ChipsetId,
+                    support.RequiresBiosUpdate));
             }
 
             context.Cpus.Add(entity);

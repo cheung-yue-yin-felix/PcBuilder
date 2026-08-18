@@ -13,9 +13,15 @@ public interface IApplicationDbContext
     DbSet<Gpu> Gpus { get; set; }
     DbSet<Cpu> Cpus { get; set; }
     DbSet<Ram> Rams { get; set; }
+    DbSet<Chassis> Chassis { get; set; }
+    DbSet<ChassisDriveBay> ChassisDriveBays { get; set; }
+    DbSet<ChassisFanMount> ChassisFanMounts { get; set; }
+    DbSet<ChassisFanMountOption> ChassisFanMountOptions { get; set; }
+    DbSet<ChassisPcieSlot> ChassisPcieSlots { get; set; }
+    DbSet<ChassisRadiator> ChassisRadiators { get; set; }
     DbSet<CpuRamCompat> CpuRamCompats { get; set; }
+    DbSet<CpuSupportChipset> CpuSupportChipsets { get; set; }
     DbSet<Motherboard> Motherboards { get; set; }
     DbSet<GraphicsCard> GraphicsCards { get; set; }
-    DbSet<GraphicsCardPowerConnector> GraphicsCardPowerConnectors { get; set; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -22,12 +22,12 @@ public static class OpenApiSidebarExtensions
     // 2. Document Transformer with the proper data mapping paths
     public static OpenApiOptions AutoDiscoverSidebarGroups(this OpenApiOptions options)
     {
-        options.AddDocumentTransformer((document, context, cancellationToken) =>
+        options.AddDocumentTransformer((document, context, _) =>
         {
             // FIX: Dig into apiDesc.ActionDescriptor.EndpointMetadata 
             var discoveredGroupings = context.DescriptionGroups
                 .SelectMany(g => g.Items)
-                .Where(apiDesc => apiDesc.ActionDescriptor?.EndpointMetadata != null)
+                .Where(apiDesc => apiDesc.ActionDescriptor.EndpointMetadata.Count > 0)
                 .SelectMany(apiDesc => apiDesc.ActionDescriptor.EndpointMetadata.OfType<GroupSidebarMetadata>())
                 .Distinct()
                 .GroupBy(m => m.ParentName)

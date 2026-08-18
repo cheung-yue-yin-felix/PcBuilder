@@ -17,11 +17,7 @@ public class CreateGraphicsCardCommandValidator : AbstractValidator<CreateGraphi
         RuleFor(x => x.WidthMm).GreaterThan(0);
         RuleFor(x => x.HeightMm).GreaterThan(0);
         RuleFor(x => x.PowerConsumptionWatts).GreaterThan(0);
-
-        RuleForEach(x => x.PowerConnectors).ChildRules(connector =>
-        {
-            connector.RuleFor(c => c.PsuCableType).IsInEnum();
-            connector.RuleFor(c => c.ConnectorCount).GreaterThan(0);
-        });
+        RuleFor(x => x.PowerConnectorType).IsInEnum();
+        RuleFor(x => x.PowerConnectorCount).GreaterThan(0);
     }
 }

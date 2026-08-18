@@ -16,6 +16,8 @@ public class GetGraphicsCardByIdHandler(IApplicationDbContext context, IMapper m
     {
         return await context.GraphicsCards
             .AsNoTracking()
+            .Include(x => x.Gpu)
+            .ThenInclude(x => x.Series)
             .Where(x => x.Id == request.Id && x.IsActive)
             .ProjectTo<GraphicsCardDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);

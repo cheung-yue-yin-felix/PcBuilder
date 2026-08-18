@@ -12,7 +12,7 @@ using PcBuilderBackend.Application.Catalog.Memories.Commands.UpdateMemory;
 using PcBuilderBackend.Application.Catalog.Memories.Commands.ImportMemories;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Catalog.Memories.Queries;
-using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Common.Dto;
 
 namespace PcBuilderBackend.Api.Endpoints.Catalog;
 
@@ -25,16 +25,17 @@ public static class MemoryEndpoints
             .WithDescription("Browse, Read, Edit, Add and Delete RAM Modules");
 
         subgroup.MapGet("/", GetMemories)
-            .Produces<List<RamDto>>()
+            .Produces<PagedResult<RamDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Browse RAMs")
             .WithDescription("\n    GET /catalog/ram");
 
-        subgroup.MapGet("/cpu/{cpuId}", GetMemoriesByCpuId)
-            .Produces<List<RamDto>>()
+        // Complex filter-with-body: industry standard is POST .../query (OpenAPI 3.1 / Scalar have no QUERY).
+        subgroup.MapPost("/query", QueryMemories)
+            .Produces<PagedResult<RamDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Browse RAMs By CPU Id")
-            .WithDescription("\n    GET /catalog/ram/cpu/00000000-0000-0000-0000-000000000000");
+            .WithSummary("Filter RAMs")
+            .WithDescription("\n    POST /api/catalog/ram/query");
 
         subgroup.MapGet("/{id}", GetMemoryById)
             .Produces<RamDto>()
@@ -42,12 +43,6 @@ public static class MemoryEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Read a RAM By ID")
             .WithDescription("\n    GET /catalog/ram/00000000-0000-0000-0000-000000000000");
-        
-        subgroup.MapGet("/cpu/{cpuId}/motherboard/{motherboardId}", GetMemoriesByCpuIdAndMotherboardId)
-            .Produces<List<RamDto>>()
-            .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Browse RAMs By CPU Id and Motherboard Id")
-            .WithDescription("\n    GET /catalog/ram/cpu/00000000-0000-0000-0000-000000000000/motherboard/00000000-0000-0000-0000-000000000000");
 
         subgroup.MapPut("/", UpdateMemory)
             .Produces<RamDto>()
@@ -96,38 +91,23 @@ public static class MemoryEndpoints
             .WithDescription("\n    POST /catalog/ram/import");
     }
 
-    private static async Task<Ok<List<RamDto>>> GetMemories(
-        [FromQuery(Name = "name")] string? name,
-        [FromQuery(Name = "manufacturerId")] Guid? manufacturerId,
-        [FromQuery(Name = "color")] string? color,
-        [FromQuery(Name = "ddrGeneration")] DdrGeneration? ddrGeneration,
-        [FromQuery(Name = "ramFormFactor")] RamFormFactor? ramFormFactor,
-        [FromQuery(Name = "ramRank")] RamRank? ramRank,
-        [FromQuery(Name = "memorySizePerStickGb")] int? memorySizePerStickGb,
-        [FromQuery(Name = "totalMemorySizeGb")] int? totalMemorySizeGb,
-        [FromQuery(Name = "modulesCount")] int? modulesCount,
-        [FromQuery(Name = "maxMemorySpeedMts")] int? maxMemorySpeedMts,
-        [FromQuery(Name = "minHeightMm")] decimal? minHeightMm,
-        [FromQuery(Name = "maxHeightMm")] decimal? maxHeightMm,
+    private static async Task<Ok<PagedResult<RamDto>>> GetMemories(
+        [AsParameters] PagedRequest request,
         [FromServices] ISender sender,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var query = new GetMemoriesQuery
-        {
-            Name = name,
-            ManufacturerId = manufacturerId,
-            Color = color,
-            DdrGeneration = ddrGeneration,
-            RamFormFactor = ramFormFactor,
-            RamRank = ramRank,
-            MemorySizePerStickGb = memorySizePerStickGb,
-            TotalMemorySizeGb = totalMemorySizeGb,
-            ModulesCount = modulesCount,
-            MaxMemorySpeedMts = maxMemorySpeedMts,
-            MinHeightMm = minHeightMm,
-            MaxHeightMm = maxHeightMm
-        };
+        var query = new GetMemoriesQuery(request);
+        return TypedResults.Ok(await sender.Send(query, cancellationToken));
+    }
 
+    private static async Task<Ok<PagedResult<RamDto>>> QueryMemories(
+        [FromBody] PagedRequest<RamFilter> request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var query = new FilterMemoriesQuery(request);
         return TypedResults.Ok(await sender.Send(query, cancellationToken));
     }
 
@@ -138,24 +118,6 @@ public static class MemoryEndpoints
     {
         var result = await sender.Send(new GetMemoryByIdQuery(id), cancellationToken);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
-    }
-
-    private static async Task<Ok<List<RamDto>>> GetMemoriesByCpuId(
-        [FromRoute] Guid cpuId,
-        [FromServices] ISender sender,
-        CancellationToken cancellationToken)
-    {
-        return TypedResults.Ok(await sender.Send(new GetMemoriesByCpuIdQuery(cpuId), cancellationToken));
-    }
-
-    private static async Task<Ok<List<RamDto>>> GetMemoriesByCpuIdAndMotherboardId(
-        [FromRoute] Guid cpuId,
-        [FromRoute] Guid motherboardId,
-        [FromServices] ISender sender,
-        CancellationToken cancellationToken)
-    {
-        return TypedResults.Ok(
-            await sender.Send(new GetMemoriesByCpuIdAndMotherboardIdQuery(cpuId, motherboardId), cancellationToken));
     }
 
     private static async Task<Ok<RamDto>> CreateMemory(

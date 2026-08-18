@@ -1,6 +1,1392 @@
 @PcBuilderBackend.Api_HostAddress = http://localhost:5155
+@ContentType = application/json
 
-GET {{PcBuilderBackend.Api_HostAddress}}/weatherforecast/
+### Shared placeholders (replace with real IDs from GET responses)
+@manufacturerId = 392b5b1b-6f13-4116-b365-170bad4f765d
+@socketId = f8833c2a-9997-433e-b174-b6bca1a8f84f
+@chipsetId = 777d51c9-3812-420e-9386-584ea2bc944b
+@cpuSeriesId = 00000000-0000-0000-0000-000000000004
+@gpuSeriesId = 00000000-0000-0000-0000-000000000005
+@gpuId = 00000000-0000-0000-0000-000000000006
+@cpuId = 00000000-0000-0000-0000-000000000007
+@graphicsCardId = 00000000-0000-0000-0000-000000000008
+@memoryId = 00000000-0000-0000-0000-000000000009
+@motherboardId = 00000000-0000-0000-0000-00000000000a
+
+
+### Get Specification
+
+GET {{PcBuilderBackend.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
+
+###############################################################################
+# Master Data - Manufacturer
+# Routes: /api/master-data/manufacturer
+###############################################################################
+
+### Get All Manufacturers
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer
+Accept: application/json
+
+###
+
+### Get Manufacturer by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer/{{manufacturerId}}
+Accept: application/json
+
+###
+
+### Create Manufacturer
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "NVIDIA"
+}
+
+###
+
+### Update Manufacturer
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{manufacturerId}}",
+  "name": "NVIDIA"
+}
+
+###
+
+### Delete Manufacturer
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer/{{manufacturerId}}
+Accept: application/json
+
+###
+
+### Bulk Create Manufacturers
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "names": [
+    "ASUS",
+    "MSI",
+    "Gigabyte"
+  ]
+}
+
+###
+
+### Bulk Update Manufacturers
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "manufacturers": [
+    {
+      "id": "{{manufacturerId}}",
+      "name": "ASUS"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Manufacturers
+# Body is a raw Guid array (not wrapped)
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  "{{manufacturerId}}"
+]
+
+###
+
+###############################################################################
+# Master Data - Socket
+# Routes: /api/master-data/socket
+###############################################################################
+
+### Get All Sockets
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket
+Accept: application/json
+
+###
+
+### Get Socket by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket/{{socketId}}
+Accept: application/json
+
+###
+
+### Create Socket
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "manufacturerId": "{{manufacturerId}}",
+  "name": "LGA1851"
+}
+
+###
+
+### Update Socket
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{socketId}}",
+  "manufacturerId": "{{manufacturerId}}",
+  "name": "AM5"
+}
+
+###
+
+### Delete Socket
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket/{{socketId}}
+Accept: application/json
+
+###
+
+### Bulk Create Sockets
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "sockets": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "AM5"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "LGA1700"
+    }
+  ]
+}
+
+###
+
+### Bulk Update Sockets
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "sockets": [
+    {
+      "id": "{{socketId}}",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "AM5"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Sockets
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/socket/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "socketIds": [
+    "{{socketId}}"
+  ]
+}
+
+###
+
+###############################################################################
+# Master Data - Chipset
+# Routes: /api/master-data/chipset
+###############################################################################
+
+### Get All Chipsets
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset
+Accept: application/json
+
+###
+
+### Get Chipset by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset/{{chipsetId}}
+Accept: application/json
+
+###
+
+### Create Chipset
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "H610",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}"
+}
+
+###
+
+### Update Chipset
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{chipsetId}}",
+  "name": "X670E",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}"
+}
+
+###
+
+### Delete Chipset
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset/{{chipsetId}}
+Accept: application/json
+
+###
+
+### Bulk Create Chipsets
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "chipsets": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "X670E",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "B650",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Bulk Update Chipsets
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "chipsets": [
+    {
+      "id": "{{chipsetId}}",
+      "name": "X670E",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Chipsets
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/chipset/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "chipsetIds": [
+    "{{chipsetId}}"
+  ]
+}
+
+###
+
+###############################################################################
+# Master Data - CPU Series
+# Routes: /api/master-data/cpu-series
+###############################################################################
+
+### Get All CPU Series
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series
+Accept: application/json
+
+###
+
+### Get CPU Series by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series/{{cpuSeriesId}}
+Accept: application/json
+
+###
+
+### Create CPU Series
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Ryzen 9000",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}"
+}
+
+###
+
+### Update CPU Series
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuSeriesId": "{{cpuSeriesId}}",
+  "name": "Ryzen 7000",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}"
+}
+
+###
+
+### Delete CPU Series
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series/{{cpuSeriesId}}
+Accept: application/json
+
+###
+
+### Bulk Create CPU Series
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuSeries": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "Ryzen 7000",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "Ryzen 9000",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Bulk Update CPU Series
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuSeries": [
+    {
+      "id": "{{cpuSeriesId}}",
+      "name": "Ryzen 7000",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete CPU Series
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/cpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuSeriesIds": [
+    "{{cpuSeriesId}}"
+  ]
+}
+
+###
+
+###############################################################################
+# Master Data - GPU Series
+# Routes: /api/master-data/gpu-series
+###############################################################################
+
+### Get All GPU Series
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series
+Accept: application/json
+
+###
+
+### Get GPU Series by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series/{{gpuSeriesId}}
+Accept: application/json
+
+###
+
+### Create GPU Series
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "manufacturerId": "{{manufacturerId}}",
+  "name": "GeForce RTX 40"
+}
+
+###
+
+### Update GPU Series
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{gpuSeriesId}}",
+  "manufacturerId": "{{manufacturerId}}",
+  "name": "GeForce RTX 40"
+}
+
+###
+
+### Delete GPU Series
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series/{{gpuSeriesId}}
+Accept: application/json
+
+###
+
+### Bulk Create GPU Series
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "gpuSeries": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "GeForce RTX 40"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "Radeon RX 7000"
+    }
+  ]
+}
+
+###
+
+### Bulk Update GPU Series
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "gpuSeries": [
+    {
+      "id": "{{gpuSeriesId}}",
+      "manufacturerId": "{{manufacturerId}}",
+      "name": "GeForce RTX 40"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete GPU Series
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu-series/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{gpuSeriesId}}"
+  ]
+}
+
+###
+
+###############################################################################
+# Master Data - GPU (chip reference data)
+# Routes: /api/master-data/gpu
+# Enums: n/a for GPU itself
+###############################################################################
+
+### Get GPUs (paged + filters)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu?pageIndex=0&pageSize=10&name=&manufacturerId={{manufacturerId}}&gpuSeriesId={{gpuSeriesId}}
+Accept: application/json
+
+###
+
+### Get GPU by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/{{gpuId}}
+Accept: application/json
+
+###
+
+### Create GPU
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "manufacturerId": "{{manufacturerId}}",
+  "gpuSeriesId": "{{gpuSeriesId}}",
+  "name": "RTX 4070"
+}
+
+###
+
+### Update GPU
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{gpuId}}",
+  "manufacturerId": "{{manufacturerId}}",
+  "gpuSeriesId": "{{gpuSeriesId}}",
+  "name": "RTX 4070"
+}
+
+###
+
+### Delete GPU
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/{{gpuId}}
+Accept: application/json
+
+###
+
+### Bulk Create GPUs
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "gpus": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "gpuSeriesId": "{{gpuSeriesId}}",
+      "name": "RTX 4070"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "manufacturerId": "{{manufacturerId}}",
+      "gpuSeriesId": "{{gpuSeriesId}}",
+      "name": "RTX 4080"
+    }
+  ]
+}
+
+###
+
+### Bulk Update GPUs
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "gpus": [
+    {
+      "id": "{{gpuId}}",
+      "manufacturerId": "{{manufacturerId}}",
+      "gpuSeriesId": "{{gpuSeriesId}}",
+      "name": "RTX 4070"
+    }
+  ]
+}
+
+###
+
+### Bulk Delete GPUs
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "gpuIds": [
+    "{{gpuId}}"
+  ]
+}
+
+###
+
+### Import GPUs from Excel
+# Parameter name must be "file"
+POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/gpu/import
+Content-Type: multipart/form-data; boundary=----GpuImportBoundary
+Accept: application/json
+
+------GpuImportBoundary
+Content-Disposition: form-data; name="file"; filename="gpus.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./gpus.xlsx
+------GpuImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - CPU
+# Routes: /api/catalog/cpu
+# Enums: DdrGeneration (Ddr4=4, Ddr5=5), RamRank (SingleRank=1, DualRank=2)
+###############################################################################
+
+### Get CPUs (paged + filters)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu?pageIndex=0&pageSize=10&name=&manufacturerId={{manufacturerId}}&socketId={{socketId}}&seriesId={{cpuSeriesId}}&ddrGeneration=5
+Accept: application/json
+
+###
+
+### Get CPUs by Motherboard Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/motherboard/{{motherboardId}}
+Accept: application/json
+
+###
+
+### Get CPU by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/{{cpuId}}
+Accept: application/json
+
+###
+
+### Create CPU
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Ryzen 7 7800X3D",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}",
+  "seriesId": "{{cpuSeriesId}}",
+  "maxMemoryGb": 128,
+  "integratedGraphics": true,
+  "includedStockCooler": false,
+  "thermalDesignPower": 120,
+  "powerConsumptionWatts": 162,
+  "ramCompats": [
+    {
+      "ddrGeneration": 5,
+      "ramModuleCount": 2,
+      "ramRank": 1,
+      "maxSpeedMts": 5200
+    }
+  ],
+  "supportChipsets": [
+    {
+      "chipsetId": "{{chipsetId}}",
+      "requiresBiosUpdate": false
+    }
+  ]
+}
+
+###
+
+### Update CPU
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{cpuId}}",
+  "name": "Ryzen 7 7800X3D",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}",
+  "seriesId": "{{cpuSeriesId}}",
+  "maxMemoryGb": 128,
+  "integratedGraphics": true,
+  "includedStockCooler": false,
+  "thermalDesignPower": 120,
+  "powerConsumptionWatts": 162
+}
+
+###
+
+### Delete CPU
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/{{cpuId}}
+Accept: application/json
+
+###
+
+### Bulk Create CPUs
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpus": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "Ryzen 5 7600",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}",
+      "seriesId": "{{cpuSeriesId}}",
+      "maxMemoryGb": 128,
+      "integratedGraphics": true,
+      "includedStockCooler": true,
+      "thermalDesignPower": 65,
+      "powerConsumptionWatts": 88,
+      "ramCompats": [
+        {
+          "ddrGeneration": 5,
+          "ramModuleCount": 2,
+          "ramRank": 1,
+          "maxSpeedMts": 5200
+        }
+      ],
+      "supportChipsets": [
+        {
+          "chipsetId": "{{chipsetId}}",
+          "requiresBiosUpdate": false
+        }
+      ]
+    }
+  ]
+}
+
+###
+
+### Bulk Update CPUs
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpus": [
+    {
+      "id": "{{cpuId}}",
+      "name": "Ryzen 7 7800X3D",
+      "manufacturerId": "{{manufacturerId}}",
+      "socketId": "{{socketId}}",
+      "seriesId": "{{cpuSeriesId}}",
+      "maxMemoryGb": 128,
+      "integratedGraphics": true,
+      "includedStockCooler": false,
+      "thermalDesignPower": 120,
+      "powerConsumptionWatts": 162,
+      "ramCompats": [
+        {
+          "ddrGeneration": 5,
+          "ramModuleCount": 2,
+          "ramRank": 1,
+          "maxSpeedMts": 5200
+        }
+      ],
+      "supportChipsets": [
+        {
+          "chipsetId": "{{chipsetId}}",
+          "requiresBiosUpdate": false
+        }
+      ]
+    }
+  ]
+}
+
+###
+
+### Bulk Delete CPUs
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuIds": [
+    "{{cpuId}}"
+  ]
+}
+
+###
+
+### Import CPUs from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/import
+Content-Type: multipart/form-data; boundary=----CpuImportBoundary
+Accept: application/json
+
+------CpuImportBoundary
+Content-Disposition: form-data; name="file"; filename="cpus.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./cpus.xlsx
+------CpuImportBoundary--
+
+###
+
+### Get CPU RAM Compatibility Entries
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/{{cpuId}}/ram-compats
+Accept: application/json
+
+###
+
+### Replace CPU RAM Compatibility Entries
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu/{{cpuId}}/ram-compats
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "ddrGeneration": 5,
+    "ramModuleCount": 2,
+    "ramRank": 1,
+    "maxSpeedMts": 5200
+  },
+  {
+    "ddrGeneration": 5,
+    "ramModuleCount": 4,
+    "ramRank": 2,
+    "maxSpeedMts": 3600
+  }
+]
+
+###
+
+###############################################################################
+# Catalog - Graphics Card
+# Routes: /api/catalog/graphics-card
+# Enums: PcieGeneration (Gen3=3, Gen4=4, Gen5=5, Gen6=6)
+#        PsuCableType (Motherboard24Pin=1, Cpu4Plus4Pin=2, Pcie6Plus2Pin=3,
+#                      Pcie12VHighPower=4, Pcie12V2X6=5, Sata=6, Molex=7, Floppy=8)
+###############################################################################
+
+### Get Graphics Cards (paged + filters)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card?pageIndex=0&pageSize=10&name=&manufacturerId={{manufacturerId}}&gpuId={{gpuId}}&pcieGeneration=4&minVideoMemoryGb=8&maxVideoMemoryGb=24&maxLengthMm=340&maxPowerConsumptionWatts=350
+Accept: application/json
+
+###
+
+### Get Graphics Card by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/{{graphicsCardId}}
+Accept: application/json
+
+###
+
+### Create Graphics Card
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "TUF Gaming GeForce RTX 4070",
+  "manufacturerId": "{{manufacturerId}}",
+  "gpuId": "{{gpuId}}",
+  "videoMemoryGb": 12,
+  "pcieSlotsUsed": 2,
+  "pcieGeneration": 4,
+  "lengthMm": 305.0,
+  "widthMm": 138.0,
+  "heightMm": 65.0,
+  "powerConsumptionWatts": 200,
+  "powerConnectorType": 3,
+  "powerConnectorCount": 1
+}
+
+###
+
+### Update Graphics Card
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{graphicsCardId}}",
+  "name": "TUF Gaming GeForce RTX 4070",
+  "manufacturerId": "{{manufacturerId}}",
+  "gpuId": "{{gpuId}}",
+  "videoMemoryGb": 12,
+  "pcieSlotsUsed": 2,
+  "pcieGeneration": 4,
+  "lengthMm": 305.0,
+  "widthMm": 138.0,
+  "heightMm": 65.0,
+  "powerConsumptionWatts": 200,
+  "powerConnectorType": 3,
+  "powerConnectorCount": 1
+}
+
+###
+
+### Delete Graphics Card
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/{{graphicsCardId}}
+Accept: application/json
+
+###
+
+### Bulk Create Graphics Cards
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cards": [
+    {
+      "name": "TUF Gaming GeForce RTX 4070",
+      "manufacturerId": "{{manufacturerId}}",
+      "gpuId": "{{gpuId}}",
+      "videoMemoryGb": 12,
+      "pcieSlotsUsed": 2,
+      "pcieGeneration": 4,
+      "lengthMm": 305.0,
+      "widthMm": 138.0,
+      "heightMm": 65.0,
+      "powerConsumptionWatts": 200,
+      "powerConnectorType": 3,
+      "powerConnectorCount": 1
+    }
+  ]
+}
+
+###
+
+### Bulk Update Graphics Cards
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cards": [
+    {
+      "id": "{{graphicsCardId}}",
+      "name": "TUF Gaming GeForce RTX 4070",
+      "manufacturerId": "{{manufacturerId}}",
+      "gpuId": "{{gpuId}}",
+      "videoMemoryGb": 12,
+      "pcieSlotsUsed": 2,
+      "pcieGeneration": 4,
+      "lengthMm": 305.0,
+      "widthMm": 138.0,
+      "heightMm": 65.0,
+      "powerConsumptionWatts": 200,
+      "powerConnectorType": 3,
+      "powerConnectorCount": 1
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Graphics Cards
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{graphicsCardId}}"
+  ]
+}
+
+###
+
+###############################################################################
+# Catalog - RAM (Memory)
+# Routes: /api/catalog/ram
+# Enums: DdrGeneration (Ddr4=4, Ddr5=5)
+#        RamFormFactor (UDimm=1, SoDimm=2)
+#        RamRank (SingleRank=1, DualRank=2)
+###############################################################################
+
+### Get RAMs (filters)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram?name=&manufacturerId={{manufacturerId}}&color=&ddrGeneration=5&ramFormFactor=1&ramRank=1&memorySizePerStickGb=16&totalMemorySizeGb=32&modulesCount=2&maxMemorySpeedMts=6000&minHeightMm=30&maxHeightMm=50
+Accept: application/json
+
+###
+
+### Get RAMs by CPU Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/cpu/{{cpuId}}
+Accept: application/json
+
+###
+
+### Get RAMs by CPU Id and Motherboard Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/cpu/{{cpuId}}/motherboard/{{motherboardId}}
+Accept: application/json
+
+###
+
+### Get RAM by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/{{memoryId}}
+Accept: application/json
+
+###
+
+### Create RAM
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Corsair Vengeance 32GB (2x16) DDR5-6000",
+  "manufacturerId": "{{manufacturerId}}",
+  "color": "Black",
+  "ddrGeneration": 5,
+  "ramFormFactor": 1,
+  "ramRank": 1,
+  "memorySizePerStickGb": 16,
+  "totalMemorySizeGb": 32,
+  "modulesCount": 2,
+  "maxMemorySpeedMts": 6000,
+  "heightMm": 44.0
+}
+
+###
+
+### Update RAM
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{memoryId}}",
+  "name": "Corsair Vengeance 32GB (2x16) DDR5-6000",
+  "manufacturerId": "{{manufacturerId}}",
+  "color": "Black",
+  "ddrGeneration": 5,
+  "ramFormFactor": 1,
+  "ramRank": 1,
+  "memorySizePerStickGb": 16,
+  "totalMemorySizeGb": 32,
+  "modulesCount": 2,
+  "maxMemorySpeedMts": 6000,
+  "heightMm": 44.0
+}
+
+###
+
+### Delete RAM
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/{{memoryId}}
+Accept: application/json
+
+###
+
+### Bulk Create RAMs
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "memories": [
+    {
+      "id": "00000000-0000-0000-0000-000000000000",
+      "name": "Corsair Vengeance 32GB (2x16) DDR5-6000",
+      "manufacturerId": "{{manufacturerId}}",
+      "color": "Black",
+      "ddrGeneration": 5,
+      "ramFormFactor": 1,
+      "ramRank": 1,
+      "memorySizePerStickGb": 16,
+      "totalMemorySizeGb": 32,
+      "modulesCount": 2,
+      "maxMemorySpeedMts": 6000,
+      "heightMm": 44.0
+    }
+  ]
+}
+
+###
+
+### Bulk Update RAMs
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "memories": [
+    {
+      "id": "{{memoryId}}",
+      "name": "Corsair Vengeance 32GB (2x16) DDR5-6000",
+      "manufacturerId": "{{manufacturerId}}",
+      "color": "Black",
+      "ddrGeneration": 5,
+      "ramFormFactor": 1,
+      "ramRank": 1,
+      "memorySizePerStickGb": 16,
+      "totalMemorySizeGb": 32,
+      "modulesCount": 2,
+      "maxMemorySpeedMts": 6000,
+      "heightMm": 44.0
+    }
+  ]
+}
+
+###
+
+### Bulk Delete RAMs
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "memoryIds": [
+    "{{memoryId}}"
+  ]
+}
+
+###
+
+### Import RAMs from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/ram/import
+Content-Type: multipart/form-data; boundary=----RamImportBoundary
+Accept: application/json
+
+------RamImportBoundary
+Content-Disposition: form-data; name="file"; filename="rams.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./rams.xlsx
+------RamImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - Motherboard
+# Routes: /api/catalog/motherboard
+# Enums: DdrGeneration (Ddr4=4, Ddr5=5)
+#        RamFormFactor (UDimm=1, SoDimm=2)
+#        MbFormFactor (Mitx=1, Matx=2, Atx=3, Eatx=4)
+#        PcieGeneration (Gen3=3, Gen4=4, Gen5=5, Gen6=6)
+#        PcieSlotType / PcieSlotLane (X1=1, X4=4, X8=8, X16=16)
+#        M2FormFactor (M22230=1, M22242=2, M22260=3, M22280=4, M222110=5)
+#        M2Key (M=1, B=2, E=3, BM=4; slots use M/B/E only)
+#        UsbVersion (Usb20=1, Usb32Gen1=2, Usb32Gen2=3, Usb4=4)
+#        UsbType (TypeA=1, TypeC=2)
+###############################################################################
+
+### Get Motherboards (filters)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard?name=&manufacturerId={{manufacturerId}}&socketId={{socketId}}&chipsetId={{chipsetId}}&ddrGeneration=5&ramFormFactor=1&formFactor=3&wifiEnabled=true&bluetoothEnabled=true
+Accept: application/json
+
+###
+
+### Get Motherboard by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}
+Accept: application/json
+
+###
+
+### Create Motherboard
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "ROG STRIX X670E-E GAMING WIFI",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}",
+  "chipsetId": "{{chipsetId}}",
+  "ramSlots": 4,
+  "maxMemoryGb": 192,
+  "maxDimmSizeGb": 48,
+  "sataPorts": 6,
+  "fanConnectors": 7,
+  "epsConnectors": 2,
+  "widthMm": 305.0,
+  "heightMm": 244.0,
+  "ddrGeneration": 5,
+  "ramFormFactor": 1,
+  "formFactor": 3,
+  "wifiEnabled": true,
+  "bluetoothEnabled": true,
+  "pcieSlots": [
+    {
+      "slotType": 16,
+      "slotLanes": 16,
+      "generation": 5,
+      "slotCount": 1
+    },
+    {
+      "slotType": 16,
+      "slotLanes": 4,
+      "generation": 4,
+      "slotCount": 1
+    }
+  ],
+  "m2Slots": [
+    {
+      "key": 1,
+      "pcieGeneration": 5,
+      "slotCount": 1,
+      "supportsSata": false,
+      "formFactors": [4]
+    },
+    {
+      "key": 1,
+      "pcieGeneration": 4,
+      "slotCount": 3,
+      "supportsSata": true,
+      "formFactors": [4, 5]
+    },
+    {
+      "key": 3,
+      "pcieGeneration": 4,
+      "slotCount": 1,
+      "supportsSata": false,
+      "formFactors": [1]
+    }
+  ],
+  "usbPorts": [
+    {
+      "usbVersion": 2,
+      "usbType": 1,
+      "portCount": 4
+    },
+    {
+      "usbVersion": 4,
+      "usbType": 2,
+      "portCount": 2
+    }
+  ]
+}
+
+###
+
+### Update Motherboard
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{motherboardId}}",
+  "name": "ROG STRIX X670E-E GAMING WIFI",
+  "manufacturerId": "{{manufacturerId}}",
+  "socketId": "{{socketId}}",
+  "chipsetId": "{{chipsetId}}",
+  "ramSlots": 4,
+  "maxMemoryGb": 192,
+  "maxDimmSizeGb": 48,
+  "sataPorts": 6,
+  "fanConnectors": 7,
+  "epsConnectors": 2,
+  "widthMm": 305.0,
+  "heightMm": 244.0,
+  "ddrGeneration": 5,
+  "ramFormFactor": 1,
+  "formFactor": 3,
+  "wifiEnabled": true,
+  "bluetoothEnabled": true
+}
+
+###
+
+### Delete Motherboard
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}
+Accept: application/json
+
+###
+
+### Import Motherboards from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/import
+Content-Type: multipart/form-data; boundary=----MbImportBoundary
+Accept: application/json
+
+------MbImportBoundary
+Content-Disposition: form-data; name="file"; filename="motherboards.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./motherboards.xlsx
+------MbImportBoundary--
+
+###
+
+### Get Motherboard PCIe Slots
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/pcie-slot
+Accept: application/json
+
+###
+
+### Replace Motherboard PCIe Slots
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/pcie-slot
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "slotType": 16,
+    "slotLanes": 16,
+    "generation": 5,
+    "slotCount": 1
+  },
+  {
+    "slotType": 16,
+    "slotLanes": 4,
+    "generation": 4,
+    "slotCount": 1
+  }
+]
+
+###
+
+### Get Motherboard M.2 Slots
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/m2-slot
+Accept: application/json
+
+###
+
+### Replace Motherboard M.2 Slots
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/m2-slot
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "key": 1,
+    "pcieGeneration": 5,
+    "slotCount": 1,
+    "supportsSata": false,
+    "formFactors": [4]
+  },
+  {
+    "key": 1,
+    "pcieGeneration": 4,
+    "slotCount": 3,
+    "supportsSata": true,
+    "formFactors": [4, 5]
+  },
+  {
+    "key": 3,
+    "pcieGeneration": 4,
+    "slotCount": 1,
+    "supportsSata": false,
+    "formFactors": [1]
+  }
+]
+
+###
+
+### Get Motherboard USB Ports
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/usb-port
+Accept: application/json
+
+###
+
+### Replace Motherboard USB Ports
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/motherboard/{{motherboardId}}/usb-port
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "usbVersion": 2,
+    "usbType": 1,
+    "portCount": 4
+  },
+  {
+    "usbVersion": 4,
+    "usbType": 2,
+    "portCount": 2
+  }
+]
 
 ###

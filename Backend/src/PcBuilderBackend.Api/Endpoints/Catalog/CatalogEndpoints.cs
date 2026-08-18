@@ -10,9 +10,11 @@ public static class CatalogEndpoints
             .AddEndpointFilterFactory(ValidationFilter.ValidationFilterFactory)
             .WithDescription("Browse, Read, Edit, Add and Delete products in catalog");
 
-        group.MapCpuEndpoints();
-        group.MapGraphicsCardEndpoints();
-        group.MapMemoryEndpoints();
+        group.MapChassisEndpoints();
         group.MapMotherboardEndpoints();
+        group.MapCpuEndpoints();
+        group.MapMemoryEndpoints();
+        group.MapGraphicsCardEndpoints();
+        
     }
 }

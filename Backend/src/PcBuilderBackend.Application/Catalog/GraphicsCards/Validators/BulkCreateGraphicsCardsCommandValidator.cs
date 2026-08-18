@@ -20,6 +20,8 @@ public class BulkCreateGraphicsCardsCommandValidator : AbstractValidator<BulkCre
             card.RuleFor(c => c.WidthMm).GreaterThan(0);
             card.RuleFor(c => c.HeightMm).GreaterThan(0);
             card.RuleFor(c => c.PowerConsumptionWatts).GreaterThan(0);
+            card.RuleFor(c => c.PowerConnectorType).IsInEnum();
+            card.RuleFor(c => c.PowerConnectorCount).GreaterThan(0);
         });
     }
 }

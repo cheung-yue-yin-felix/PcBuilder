@@ -5,6 +5,7 @@ public class Chipset : ProductEntity
     public Guid SocketId { get; set; }
     public Socket Socket { get; set; } = null!;
     public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
+    public ICollection<CpuSupportChipset> SupportedCpus { get; set; } = new List<CpuSupportChipset>();
     
     protected Chipset() {}
 

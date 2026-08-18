@@ -16,6 +16,7 @@ public class GetMotherboardByIdHandler(IApplicationDbContext context, IMapper ma
             .Include(m => m.PcieSlots)
             .Include(m => m.M2Slots)
             .ThenInclude(m => m.FormFactors)
+            .Include(m => m.UsbPorts)
             .FirstOrDefaultAsync(m => m.Id == request.Id && m.IsActive, cancellationToken);
 
         return entity == null ? null : mapper.Map<MotherboardDto>(entity);

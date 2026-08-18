@@ -37,7 +37,8 @@ public class CreateMotherboardHandler(IApplicationDbContext context, IMapper map
 
         foreach (var slot in request.M2Slots)
         {
-            var slotEntity = new MotherboardM2(entity.Id, slot.PcieGeneration, slot.SlotCount);
+            var slotEntity = new MotherboardM2(
+                entity.Id, slot.Key, slot.PcieGeneration, slot.SlotCount, slot.SupportsSata);
 
             foreach (var formFactor in slot.FormFactors)
             {
@@ -45,6 +46,11 @@ public class CreateMotherboardHandler(IApplicationDbContext context, IMapper map
             }
             
             entity.AddM2Slot(slotEntity);
+        }
+
+        foreach (var port in request.UsbPorts)
+        {
+            entity.AddUsbPort(new MotherboardUsb(entity.Id, port.UsbVersion, port.UsbType, port.PortCount));
         }
         
         context.Motherboards.Add(entity);

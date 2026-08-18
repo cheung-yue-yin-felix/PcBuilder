@@ -9,6 +9,9 @@ public class GpuProfile : Profile
     public GpuProfile()
     {
         CreateMap<Gpu, GpuDto>()
-            .ForMember(d => d.GpuSeriesId, o => o.MapFrom(s => s.SeriesId));
+            .ForMember(d => d.GpuSeriesId, o => o.MapFrom(s => s.SeriesId))
+            .ForMember(d => d.GpuSeriesName, o => o.MapFrom(s => s.Series.Name))
+            .ForMember(d => d.ManufacturerId, o => o.MapFrom(s => s.ManufacturerId))
+            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer.Name));
     }
 }

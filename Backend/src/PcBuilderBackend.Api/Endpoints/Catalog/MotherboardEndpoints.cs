@@ -5,13 +5,14 @@ using PcBuilderBackend.Api.Extensions;
 using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardM2Slots;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardPcieSlots;
+using PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardUsbPorts;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.CreateMotherboard;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.DeleteMotherboard;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.ImportMotherboards;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.UpdateMotherboard;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Catalog.Motherboards.Queries;
-using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Common.Dto;
 
 namespace PcBuilderBackend.Api.Endpoints.Catalog;
 
@@ -24,10 +25,16 @@ public static class MotherboardEndpoints
             .WithDescription("Browse, Read, Edit, Add and Delete Motherboards");
 
         subgroup.MapGet("/", GetMotherboards)
-            .Produces<List<MotherboardDto>>()
+            .Produces<PagedResult<MotherboardListItemDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Browse Motherboards")
             .WithDescription("\n    GET /catalog/motherboard");
+
+        subgroup.MapPost("/query", FilterMotherboards)
+            .Produces<PagedResult<MotherboardListItemDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Filter Motherboards")
+            .WithDescription("\n    POST /catalog/motherboard/query");
 
         subgroup.MapGet("/{id}", GetMotherboardById)
             .Produces<MotherboardDto>()
@@ -94,35 +101,42 @@ public static class MotherboardEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace motherboard M.2 slots")
             .WithDescription("\n    PUT /catalog/motherboard/00000000-0000-0000-0000-000000000000/m2-slot");
+
+        var usbGroup = subgroup.MapGroup("{motherboardId}/usb-port")
+            .WithDescription("Manage motherboard USB ports");
+
+        usbGroup.MapGet("/", GetMotherboardUsbPorts)
+            .Produces<List<MotherboardUsbDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Get motherboard USB ports")
+            .WithDescription("\n    GET /catalog/motherboard/00000000-0000-0000-0000-000000000000/usb-port");
+
+        usbGroup.MapPut("/", UpdateMotherboardUsbPorts)
+            .Produces<List<MotherboardUsbDto>>()
+            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Replace motherboard USB ports")
+            .WithDescription("\n    PUT /catalog/motherboard/00000000-0000-0000-0000-000000000000/usb-port");
     }
 
-    private static async Task<Ok<List<MotherboardDto>>> GetMotherboards(
-        [FromQuery(Name = "name")] string? name,
-        [FromQuery(Name = "manufacturerId")] Guid? manufacturerId,
-        [FromQuery(Name = "socketId")] Guid? socketId,
-        [FromQuery(Name = "chipsetId")] Guid? chipsetId,
-        [FromQuery(Name = "ddrGeneration")] DdrGeneration? ddrGeneration,
-        [FromQuery(Name = "ramFormFactor")] RamFormFactor? ramFormFactor,
-        [FromQuery(Name = "formFactor")] MbFormFactor? formFactor,
-        [FromQuery(Name = "wifiEnabled")] bool? wifiEnabled,
-        [FromQuery(Name = "bluetoothEnabled")] bool? bluetoothEnabled,
+    private static async Task<Ok<PagedResult<MotherboardListItemDto>>> GetMotherboards(
+        [AsParameters] PagedRequest request,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
-        var query = new GetMotherboardsQuery
-        {
-            Name = name,
-            ManufacturerId = manufacturerId,
-            SocketId = socketId,
-            ChipsetId = chipsetId,
-            DdrGeneration = ddrGeneration,
-            RamFormFactor = ramFormFactor,
-            FormFactor = formFactor,
-            WifiEnabled = wifiEnabled,
-            BluetoothEnabled = bluetoothEnabled
-        };
+        var query = new GetMotherboardsQuery(request);
+        var result = await sender.Send(query, cancellationToken);
+        return TypedResults.Ok(result);
+    }
 
-        return TypedResults.Ok(await sender.Send(query, cancellationToken));
+    private static async Task<Ok<PagedResult<MotherboardListItemDto>>> FilterMotherboards(
+        [FromBody] PagedRequest<MotherboardFilter> request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var query = new FilterMotherboardsQuery(request);
+        var result = await sender.Send(query, cancellationToken);
+        return TypedResults.Ok(result);
     }
 
     private static async Task<Results<Ok<MotherboardDto>, NotFound>> GetMotherboardById(
@@ -211,6 +225,28 @@ public static class MotherboardEndpoints
     {
         var result = await sender.Send(
             new BulkUpdateMotherboardM2SlotsCommand(motherboardId, m2Slots),
+            cancellationToken);
+
+        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+    }
+
+    private static async Task<Ok<List<MotherboardUsbDto>>> GetMotherboardUsbPorts(
+        [FromRoute] Guid motherboardId,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        return TypedResults.Ok(
+            await sender.Send(new GetMotherboardUsbPortsByMotherboardIdQuery(motherboardId), cancellationToken));
+    }
+
+    private static async Task<Results<Ok<List<MotherboardUsbDto>>, BadRequest>> UpdateMotherboardUsbPorts(
+        [FromRoute] Guid motherboardId,
+        [FromBody] List<MotherboardUsbDto> usbPorts,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new BulkUpdateMotherboardUsbPortsCommand(motherboardId, usbPorts),
             cancellationToken);
 
         return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);

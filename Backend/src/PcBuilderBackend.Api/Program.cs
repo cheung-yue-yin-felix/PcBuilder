@@ -19,6 +19,7 @@ var envSlug = builder.Environment.EnvironmentName switch
 
 builder.Configuration.AddInfisical(
     new InfisicalConfigBuilder()
+        .SetInfisicalUrl(builder.Configuration["Infisical:Url"] ?? "")
         .SetProjectId(builder.Configuration["Infisical:ProjectId"] ?? "")
         .SetEnvironment(envSlug)
         .SetAuth(new InfisicalAuthBuilder()
@@ -27,7 +28,7 @@ builder.Configuration.AddInfisical(
                 builder.Configuration["Infisical:ClientSecret"] ?? "")
             .Build()
         ).Build()
-    ).Build();
+).Build();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

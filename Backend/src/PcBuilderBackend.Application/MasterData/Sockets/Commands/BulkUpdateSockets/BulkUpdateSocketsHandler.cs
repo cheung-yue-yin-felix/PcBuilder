@@ -1,12 +1,14 @@
-﻿using AutoMapper;
+using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkUpdateSockets;
 
-public class BulkUpdateSocketsHandler(IApplicationDbContext context, IMapper mapper): IRequestHandler<BulkUpdateSocketsCommand, List<SocketDto>>
+public class BulkUpdateSocketsHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+    : IRequestHandler<BulkUpdateSocketsCommand, List<SocketDto>>
 {
     public async Task<List<SocketDto>> Handle(BulkUpdateSocketsCommand request, CancellationToken cancellationToken)
     {
@@ -22,6 +24,7 @@ public class BulkUpdateSocketsHandler(IApplicationDbContext context, IMapper map
         }
 
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Sockets.Prefix, cancellationToken);
         return result;
     }
 }

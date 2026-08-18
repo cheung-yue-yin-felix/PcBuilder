@@ -24,7 +24,8 @@ public class GetMotherboardM2SlotsByMotherboardIdHandler(IApplicationDbContext c
 
         var slots = motherboard.M2Slots
             .Where(s => s.IsActive)
-            .OrderBy(s => s.PcieGeneration)
+            .OrderBy(s => s.Key)
+            .ThenBy(s => s.PcieGeneration)
             .ToList();
 
         return mapper.Map<List<MotherboardM2Dto>>(slots);

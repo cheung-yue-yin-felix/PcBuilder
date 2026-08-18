@@ -3,9 +3,25 @@ namespace PcBuilderBackend.Domain.Enums;
 public enum CompatibilityReason
 {
     None = 0,
+    SocketMismatch,
+    ChipsetNotSupported,
+    RequiresBiosUpdate,
+    RequiresIntegratedGraphics,
     NoMatchingRamConfig,
     MemorySpeedExceedsCpuSupport,
-    CapacityExceeded,
     NotEnoughPcieSlots,
     PcieGenerationReduced,
+    ExceedsPowerBudget,
+    InsufficientCpuPowerCables,
+    MissingMotherboardPowerCable,
+    InsufficientPciePowerCables,
+    MissingCpuCoolerSocket,
+    ExceedsThermalDesignPower,
+    RamHeightExceedsCoolerLimit,
+    InsufficientSataCables,
+    NoMatchingM2Slot,
+    SlotDoesNotSupportSata,
+    InsufficientSataPorts,
+    NoMatchingUsbPort,
+    UsbVersionReduced
 }

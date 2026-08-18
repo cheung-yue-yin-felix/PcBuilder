@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -50,6 +51,26 @@ public class CpuCooler : ProductEntity
             throw new ArgumentException("The cpu cooler socket does not exist.");
         
         CpuCoolerSockets.Remove(cpuCoolerSocket);
+    }
+
+    public PartsCompatibilityResult CheckCompatibility(Cpu cpu)
+    {
+        if (CpuCoolerSockets.All(x => x.SocketId != cpu.SocketId))
+            return PartsCompatibilityResult.Incompatible(CompatibilityReason.MissingCpuCoolerSocket);
+
+        return MaxTdp < cpu.ThermalDesignPower ? 
+            PartsCompatibilityResult.Incompatible(CompatibilityReason.ExceedsThermalDesignPower) : 
+            PartsCompatibilityResult.Compatible();
+    }
+
+    public PartsCompatibilityResult CheckCompatibility(Ram ram)
+    {
+        if (Type != CpuCoolerType.Air || !CoolerHeightMm.HasValue || !MaxRamHeightMm.HasValue)
+            return PartsCompatibilityResult.Compatible();
+        
+        return ram.HeightMm > MaxRamHeightMm.Value ? 
+            PartsCompatibilityResult.Incompatible(CompatibilityReason.RamHeightExceedsCoolerLimit) : 
+            PartsCompatibilityResult.Compatible();
     }
 
     private void SetAirCoolerSpecs(int maxTdp, decimal coolerHeightMm, decimal maxRamHeightMm)

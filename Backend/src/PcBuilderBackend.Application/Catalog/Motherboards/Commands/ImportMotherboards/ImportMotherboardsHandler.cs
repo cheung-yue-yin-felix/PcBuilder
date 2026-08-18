@@ -55,7 +55,8 @@ public class ImportMotherboardsHandler(
 
             foreach (var slot in row.M2Slots)
             {
-                var m2 = new MotherboardM2(entity.Id, slot.PcieGeneration, slot.SlotCount);
+                var m2 = new MotherboardM2(
+                    entity.Id, slot.Key, slot.PcieGeneration, slot.SlotCount, slot.SupportsSata);
 
                 foreach (var formFactor in slot.FormFactors)
                 {
@@ -63,6 +64,12 @@ public class ImportMotherboardsHandler(
                 }
 
                 entity.AddM2Slot(m2);
+            }
+
+            foreach (var port in row.UsbPorts)
+            {
+                entity.AddUsbPort(new MotherboardUsb(
+                    entity.Id, port.UsbVersion, port.UsbType, port.PortCount));
             }
 
             context.Motherboards.Add(entity);

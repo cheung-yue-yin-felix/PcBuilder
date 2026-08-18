@@ -1,10 +1,12 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.MasterData.Chipsets.Commands.DeleteChipset;
 
-public class DeleteChipsetHandler(IApplicationDbContext context) : IRequestHandler<DeleteChipsetCommand, bool>
+public class DeleteChipsetHandler(IApplicationDbContext context, ICacheService cache)
+    : IRequestHandler<DeleteChipsetCommand, bool>
 {
     public async Task<bool> Handle(DeleteChipsetCommand request, CancellationToken cancellationToken)
     {
@@ -12,6 +14,7 @@ public class DeleteChipsetHandler(IApplicationDbContext context) : IRequestHandl
         if (entity == null) return false;
         entity.Deactivate();
         await context.SaveChangesAsync(cancellationToken);
+        await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Chipsets.Prefix, cancellationToken);
         return true;
     }
 }

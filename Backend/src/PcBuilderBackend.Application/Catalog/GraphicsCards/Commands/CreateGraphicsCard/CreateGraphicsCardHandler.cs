@@ -28,15 +28,9 @@ public class CreateGraphicsCardHandler(
             request.LengthMm,
             request.WidthMm,
             request.HeightMm,
-            request.PowerConsumptionWatts);
-
-        foreach (var connector in request.PowerConnectors)
-        {
-            entity.AddPowerConnector(new GraphicsCardPowerConnector(
-                entity.Id,
-                connector.PsuCableType,
-                connector.ConnectorCount));
-        }
+            request.PowerConsumptionWatts,
+            request.PowerConnectorType,
+            request.PowerConnectorCount);
 
         context.GraphicsCards.Add(entity);
         await context.SaveChangesAsync(cancellationToken);

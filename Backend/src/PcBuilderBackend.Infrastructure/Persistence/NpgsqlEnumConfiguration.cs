@@ -19,6 +19,7 @@ internal static class NpgsqlEnumConfiguration
         options.MapEnum<PsuModularity>("psu_modularity");
         options.MapEnum<RamFormFactor>("ram_form_factor");
         options.MapEnum<M2FormFactor>("m2_form_factor");
+        options.MapEnum<M2Key>("m2_key");
         options.MapEnum<BluetoothVersion>("bluetooth_version");
         options.MapEnum<CpuCoolerType>("cpu_cooler_type");
         options.MapEnum<DriveBayFormFactor>("drive_bay_form_factor");
@@ -33,6 +34,8 @@ internal static class NpgsqlEnumConfiguration
         options.MapEnum<WirelessHostInterface>("wireless_host_interface");
         options.MapEnum<WiredHostInterface>("wired_host_interface");
         options.MapEnum<RamRank>("ram_rank");
+        options.MapEnum<UsbVersion>("usb_version");
+        options.MapEnum<UsbType>("usb_type");
     }
 
     public static void ConfigurePostgresEnums(this ModelBuilder modelBuilder)
@@ -48,6 +51,7 @@ internal static class NpgsqlEnumConfiguration
         modelBuilder.HasPostgresEnum<PsuModularity>(name: "psu_modularity");
         modelBuilder.HasPostgresEnum<RamFormFactor>(name: "ram_form_factor");
         modelBuilder.HasPostgresEnum<M2FormFactor>(name: "m2_form_factor");
+        modelBuilder.HasPostgresEnum<M2Key>(name: "m2_key");
         modelBuilder.HasPostgresEnum<BluetoothVersion>(name: "bluetooth_version");
         modelBuilder.HasPostgresEnum<CpuCoolerType>(name: "cpu_cooler_type");
         modelBuilder.HasPostgresEnum<DriveBayFormFactor>(name: "drive_bay_form_factor");
@@ -62,5 +66,7 @@ internal static class NpgsqlEnumConfiguration
         modelBuilder.HasPostgresEnum<WirelessHostInterface>(name: "wireless_host_interface");
         modelBuilder.HasPostgresEnum<WiredHostInterface>(name: "wired_host_interface");
         modelBuilder.HasPostgresEnum<RamRank>(name: "ram_rank");
+        modelBuilder.HasPostgresEnum<UsbVersion>(name: "usb_version");
+        modelBuilder.HasPostgresEnum<UsbType>(name: "usb_type");
     }
 }

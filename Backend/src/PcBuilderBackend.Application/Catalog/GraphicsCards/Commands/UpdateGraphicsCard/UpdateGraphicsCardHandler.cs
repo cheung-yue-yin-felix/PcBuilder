@@ -37,7 +37,9 @@ public class UpdateGraphicsCardHandler(
             request.LengthMm,
             request.WidthMm,
             request.HeightMm,
-            request.PowerConsumptionWatts);
+            request.PowerConsumptionWatts,
+            request.PowerConnectorType,
+            request.PowerConnectorCount);
 
         await context.SaveChangesAsync(cancellationToken);
 

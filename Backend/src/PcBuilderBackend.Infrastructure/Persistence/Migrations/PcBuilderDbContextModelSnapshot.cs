@@ -28,6 +28,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "fan_diameter_mm", new[] { "mm80", "mm92", "mm120", "mm140", "mm200" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "fan_mount_location", new[] { "front", "top", "bottom", "rear", "sides" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "m2_form_factor", new[] { "m22230", "m22242", "m22260", "m22280", "m222110" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "m2_key", new[] { "m", "b", "e", "bm" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mb_form_factor", new[] { "mitx", "matx", "atx", "eatx" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pcie_generation", new[] { "gen3", "gen4", "gen5", "gen6" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pcie_orientation", new[] { "vertical", "horizontal" });
@@ -43,6 +44,8 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "storage_form_factor", new[] { "m22230", "m22242", "m22260", "m22280", "m222110", "sata25", "sata35" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "storage_interface", new[] { "sata", "nvme" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "storage_media", new[] { "hdd", "ssd" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "usb_type", new[] { "type_a", "type_c" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "usb_version", new[] { "usb20", "usb32gen1", "usb32gen2", "usb4" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "wifi_standard", new[] { "wifi4", "wifi5", "wifi6", "wifi6e", "wifi7" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "wired_host_interface", new[] { "pcie", "usb" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "wireless_host_interface", new[] { "m2", "pcie", "usb" });
@@ -467,6 +470,9 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("PowerConsumptionWatts")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("SeriesId")
                         .HasColumnType("uuid");
 
@@ -653,6 +659,43 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.ToTable("CpuSeries", (string)null);
                 });
 
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.CpuSupportChipset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChipsetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CpuId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresBiosUpdate")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChipsetId");
+
+                    b.HasIndex("CpuId", "ChipsetId")
+                        .IsUnique();
+
+                    b.ToTable("CpuSupportChipsets", (string)null);
+                });
+
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Gpu", b =>
                 {
                     b.Property<Guid>("Id")
@@ -766,6 +809,12 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<int>("PcieSlotsUsed")
                         .HasColumnType("integer");
 
+                    b.Property<int>("PowerConnectorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<PsuCableType>("PowerConnectorType")
+                        .HasColumnType("psu_cable_type");
+
                     b.Property<decimal>("PowerConsumptionWatts")
                         .HasPrecision(7, 2)
                         .HasColumnType("numeric(7,2)");
@@ -787,41 +836,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.HasIndex("ManufacturerId");
 
                     b.ToTable("GraphicsCards");
-                });
-
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCardPowerConnector", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ConcurrencyToken")
-                        .IsConcurrencyToken()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("ConnectorCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GraphicsCardId")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<PsuCableType>("PsuCableType")
-                        .HasColumnType("psu_cable_type");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GraphicsCardId", "PsuCableType")
-                        .IsUnique();
-
-                    b.ToTable("GraphicsCardPowerConnectors");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Manufacturer", b =>
@@ -954,6 +968,9 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<M2Key>("Key")
+                        .HasColumnType("m2_key");
+
                     b.Property<Guid>("MotherboardId")
                         .HasColumnType("uuid");
 
@@ -963,12 +980,15 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<int>("SlotCount")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("SupportsSata")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MotherboardId", "PcieGeneration")
+                    b.HasIndex("MotherboardId", "Key", "PcieGeneration")
                         .IsUnique();
 
                     b.ToTable("MotherboardM2Slots");
@@ -1045,6 +1065,44 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("MotherboardPcieSlots");
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.MotherboardUsb", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MotherboardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PortCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<UsbType>("UsbType")
+                        .HasColumnType("usb_type");
+
+                    b.Property<UsbVersion>("UsbVersion")
+                        .HasColumnType("usb_version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MotherboardId", "UsbType", "UsbVersion")
+                        .IsUnique();
+
+                    b.ToTable("MotherboardUsbPorts");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Psu", b =>
@@ -1313,8 +1371,17 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<PcieSlotType?>("PcieSlotType")
+                        .HasColumnType("pcie_slot_type");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<UsbType?>("UsbType")
+                        .HasColumnType("usb_type");
+
+                    b.Property<UsbVersion?>("UsbVersion")
+                        .HasColumnType("usb_version");
 
                     b.HasKey("Id");
 
@@ -1344,6 +1411,12 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<M2Key?>("Key")
+                        .HasColumnType("m2_key");
+
+                    b.Property<M2FormFactor?>("M2FormFactor")
+                        .HasColumnType("m2_form_factor");
+
                     b.Property<Guid>("ManufacturerId")
                         .HasColumnType("uuid");
 
@@ -1361,8 +1434,17 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<PcieSlotType?>("PcieSlotType")
+                        .HasColumnType("pcie_slot_type");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<UsbType?>("UsbType")
+                        .HasColumnType("usb_type");
+
+                    b.Property<UsbVersion?>("UsbVersion")
+                        .HasColumnType("usb_version");
 
                     b.Property<WifiStandard>("WifiStandard")
                         .HasColumnType("wifi_standard");
@@ -1484,7 +1566,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.HasOne("PcBuilderBackend.Domain.Entities.Socket", "Socket")
                         .WithMany()
                         .HasForeignKey("SocketId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Manufacturer");
@@ -1579,6 +1661,25 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("Socket");
                 });
 
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.CpuSupportChipset", b =>
+                {
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Chipset", "Chipset")
+                        .WithMany("SupportedCpus")
+                        .HasForeignKey("ChipsetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Cpu", "Cpu")
+                        .WithMany("SupportedChipsets")
+                        .HasForeignKey("CpuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chipset");
+
+                    b.Navigation("Cpu");
+                });
+
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Gpu", b =>
                 {
                     b.HasOne("PcBuilderBackend.Domain.Entities.Manufacturer", "Manufacturer")
@@ -1626,15 +1727,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("Gpu");
 
                     b.Navigation("Manufacturer");
-                });
-
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCardPowerConnector", b =>
-                {
-                    b.HasOne("PcBuilderBackend.Domain.Entities.GraphicsCard", null)
-                        .WithMany("PowerConnectors")
-                        .HasForeignKey("GraphicsCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Motherboard", b =>
@@ -1688,6 +1780,15 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("PcBuilderBackend.Domain.Entities.Motherboard", null)
                         .WithMany("PcieSlots")
+                        .HasForeignKey("MotherboardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.MotherboardUsb", b =>
+                {
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Motherboard", null)
+                        .WithMany("UsbPorts")
                         .HasForeignKey("MotherboardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1791,11 +1892,15 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Chipset", b =>
                 {
                     b.Navigation("Motherboards");
+
+                    b.Navigation("SupportedCpus");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Cpu", b =>
                 {
                     b.Navigation("RamCompats");
+
+                    b.Navigation("SupportedChipsets");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.CpuCooler", b =>
@@ -1811,11 +1916,6 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GpuSeries", b =>
                 {
                     b.Navigation("Gpus");
-                });
-
-            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GraphicsCard", b =>
-                {
-                    b.Navigation("PowerConnectors");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Manufacturer", b =>
@@ -1858,6 +1958,8 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Navigation("M2Slots");
 
                     b.Navigation("PcieSlots");
+
+                    b.Navigation("UsbPorts");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.MotherboardM2", b =>

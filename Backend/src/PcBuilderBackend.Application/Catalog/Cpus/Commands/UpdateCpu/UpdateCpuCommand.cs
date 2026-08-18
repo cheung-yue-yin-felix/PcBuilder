@@ -14,4 +14,5 @@ public record UpdateCpuCommand : IRequest<CpuDto?>
     public bool IntegratedGraphics { get; init; }
     public bool IncludedStockCooler { get; init; }
     public int ThermalDesignPower { get; init; }
+    public int PowerConsumptionWatts { get; init; }
 }

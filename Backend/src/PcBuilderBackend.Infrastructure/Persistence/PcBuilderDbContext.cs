@@ -16,11 +16,11 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
     public DbSet<MotherboardPcie> MotherboardPcieSlots { get; set; } = null!;
     public DbSet<MotherboardM2> MotherboardM2Slots { get; set; } = null!;
     public DbSet<MotherboardM2FormFactor> MotherboardM2FormFactors { get; set; } = null!;
+    public DbSet<MotherboardUsb> MotherboardUsbPorts { get; set; } = null!;
     public DbSet<Gpu> Gpus { get; set; } = null!;
     public DbSet<GpuSeries> GpuSeries { get; set; } = null!;
     public DbSet<CpuSeries> CpuSeries { get; set; } = null!;
     public DbSet<GraphicsCard> GraphicsCards { get; set; } = null!;
-    public DbSet<GraphicsCardPowerConnector> GraphicsCardPowerConnectors { get; set; } = null!;
     public DbSet<Ram> Rams { get; set; } = null!;
     public DbSet<Psu> Psus { get; set; } = null!;
     public DbSet<PsuCable> PsuCables { get; set; } = null!;
@@ -37,6 +37,7 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
     public DbSet<CpuCooler> CpuCoolers { get; set; } = null!;
     public DbSet<CpuCoolerSocket> CpuCoolerSockets { get; set; } = null!;
     public DbSet<CpuRamCompat> CpuRamCompats { get; set; } = null!;
+    public DbSet<CpuSupportChipset> CpuSupportChipsets { get; set; } = null!;
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -19,5 +19,6 @@ public record CreateGraphicsCardItem
     public decimal WidthMm { get; init; }
     public decimal HeightMm { get; init; }
     public int PowerConsumptionWatts { get; init; }
-    public List<GraphicsCardPowerConnectorDto> PowerConnectors { get; init; } = [];
+    public PsuCableType PowerConnectorType { get; init; }
+    public int PowerConnectorCount { get; init; }
 }

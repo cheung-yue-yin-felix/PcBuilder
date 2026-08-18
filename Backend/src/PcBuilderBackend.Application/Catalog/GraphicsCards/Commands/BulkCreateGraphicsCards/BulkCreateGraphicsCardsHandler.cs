@@ -32,15 +32,9 @@ public class BulkCreateGraphicsCardsHandler(
                 item.LengthMm,
                 item.WidthMm,
                 item.HeightMm,
-                item.PowerConsumptionWatts);
-
-            foreach (var connector in item.PowerConnectors)
-            {
-                entity.AddPowerConnector(new GraphicsCardPowerConnector(
-                    entity.Id,
-                    connector.PsuCableType,
-                    connector.ConnectorCount));
-            }
+                item.PowerConsumptionWatts,
+                item.PowerConnectorType,
+                item.PowerConnectorCount);
 
             context.GraphicsCards.Add(entity);
             result.Add(mapper.Map<GraphicsCardDto>(entity));
