@@ -4,22 +4,36 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Chassis : ProductEntity
 {
-    public decimal LengthMm { get; set; }
-    public decimal WidthMm { get; set; }
-    public decimal HeightMm { get; set; }
-    public decimal MotherboardMaxWidthMm { get; set; }
-    public decimal MotherboardMaxHeightMm { get; set; }
-    public decimal MaxCpuCoolerHeightMm { get; set; }
-    public decimal MaxGraphicsCardLengthMm { get; set; }
-    public decimal MaxPsuLengthMm { get; set; }
-    public ICollection<ChassisFanMount> FanMounts { get; set; } = new List<ChassisFanMount>();
-    public ICollection<ChassisDriveBay> DriveBays { get; set; } = new List<ChassisDriveBay>();
-    public ICollection<ChassisPcieSlot> PcieSlots { get; set; } = new List<ChassisPcieSlot>();
-    public ICollection<ChassisRadiator> Radiators { get; set; } = new List<ChassisRadiator>();
-    public ICollection<ChassisPsuFormFactor> PsuFormFactors { get; set; } = new List<ChassisPsuFormFactor>();
-    public ICollection<ChassisMbFormFactor> MbFormFactors { get; set; } = new List<ChassisMbFormFactor>();
-    
-    protected Chassis() { }
+    public decimal LengthMm { get; private set; }
+    public decimal WidthMm { get; private set; }
+    public decimal HeightMm { get; private set; }
+    public decimal MotherboardMaxWidthMm { get; private set; }
+    public decimal MotherboardMaxHeightMm { get; private set; }
+    public decimal MaxCpuCoolerHeightMm { get; private set; }
+    public decimal MaxGraphicsCardLengthMm { get; private set; }
+    public decimal MaxPsuLengthMm { get; private set; }
+
+    private readonly List<ChassisFanMount> _fanMounts = [];
+    public IReadOnlyCollection<ChassisFanMount> FanMounts => _fanMounts;
+
+    private readonly List<ChassisDriveBay> _driveBays = [];
+    public IReadOnlyCollection<ChassisDriveBay> DriveBays => _driveBays;
+
+    private readonly List<ChassisPcieSlot> _pcieSlots = [];
+    public IReadOnlyCollection<ChassisPcieSlot> PcieSlots => _pcieSlots;
+
+    private readonly List<ChassisRadiator> _radiators = [];
+    public IReadOnlyCollection<ChassisRadiator> Radiators => _radiators;
+
+    private readonly List<ChassisPsuFormFactor> _psuFormFactors = [];
+    public IReadOnlyCollection<ChassisPsuFormFactor> PsuFormFactors => _psuFormFactors;
+
+    private readonly List<ChassisMbFormFactor> _mbFormFactors = [];
+    public IReadOnlyCollection<ChassisMbFormFactor> MbFormFactors => _mbFormFactors;
+
+    protected Chassis()
+    {
+    }
 
     public Chassis(
         string name,
@@ -68,111 +82,111 @@ public class Chassis : ProductEntity
 
         UpdatedAtUtc = DateTime.UtcNow;
     }
-    
+
     public void AddDriveBay(ChassisDriveBay driveBay)
     {
-        if (DriveBays.Any(x => x.DriveBayFormFactor == driveBay.DriveBayFormFactor))
-            throw new InvalidOperationException("Chassis Drive Bay already exists.");
-        
-        DriveBays.Add(driveBay);
+        if (_driveBays.Any(x => x.DriveBayFormFactor == driveBay.DriveBayFormFactor))
+            throw new ArgumentException("Chassis Drive Bay already exists.");
+
+        _driveBays.Add(driveBay);
     }
 
     public void RemoveDriveBay(ChassisDriveBay driveBay)
     {
-        if (DriveBays.All(x => x.DriveBayFormFactor != driveBay.DriveBayFormFactor))
-            throw new InvalidOperationException("Chassis Drive Bay does not exist.");
-        
-        DriveBays.Remove(driveBay);
+        if (_driveBays.All(x => x.DriveBayFormFactor != driveBay.DriveBayFormFactor))
+            throw new ArgumentException("Chassis Drive Bay does not exist.");
+
+        _driveBays.Remove(driveBay);
     }
-    
+
     public void AddFanMount(ChassisFanMount fanMount)
     {
-        if (FanMounts.Any(x => x.Location == fanMount.Location))
-            throw new InvalidOperationException("Chassis Fan Mount already exists.");
-        
-        FanMounts.Add(fanMount);
+        if (_fanMounts.Any(x => x.Location == fanMount.Location))
+            throw new ArgumentException("Chassis Fan Mount already exists.");
+
+        _fanMounts.Add(fanMount);
     }
 
     public void RemoveFanMount(ChassisFanMount fanMount)
     {
-        if (FanMounts.All(x => x.Location != fanMount.Location))
-            throw new InvalidOperationException("Chassis Fan Mount does not exist.");
-        
-        FanMounts.Remove(fanMount);
+        if (_fanMounts.All(x => x.Location != fanMount.Location))
+            throw new ArgumentException("Chassis Fan Mount does not exist.");
+
+        _fanMounts.Remove(fanMount);
     }
 
     public void AddMbFormFactor(ChassisMbFormFactor mbFormFactor)
     {
-        if (MbFormFactors.Any(x => x.MbFormFactor == mbFormFactor.MbFormFactor))
-            throw new InvalidOperationException("Chassis Motherboard Form Factor already exists.");
-        
-        MbFormFactors.Add(mbFormFactor);
+        if (_mbFormFactors.Any(x => x.MbFormFactor == mbFormFactor.MbFormFactor))
+            throw new ArgumentException("Chassis Motherboard Form Factor already exists.");
+
+        _mbFormFactors.Add(mbFormFactor);
     }
 
     public void RemoveMbFormFactor(ChassisMbFormFactor mbFormFactor)
     {
-        if (MbFormFactors.All(x => x.MbFormFactor != mbFormFactor.MbFormFactor)) 
-            throw new InvalidOperationException("Chassis Motherboard Form Factor does not exist.");
-        
-        MbFormFactors.Remove(mbFormFactor);
+        if (_mbFormFactors.All(x => x.MbFormFactor != mbFormFactor.MbFormFactor))
+            throw new ArgumentException("Chassis Motherboard Form Factor does not exist.");
+
+        _mbFormFactors.Remove(mbFormFactor);
     }
 
     public void AddPcieSlot(ChassisPcieSlot pcieSlot)
     {
-        if (PcieSlots.Any(x => x.LowProfileSlots == pcieSlot.LowProfileSlots && x.Orientation == pcieSlot.Orientation))
-            throw new InvalidOperationException("Chassis PcieSlot already exists.");
-        
-        PcieSlots.Add(pcieSlot);
+        if (_pcieSlots.Any(x => x.LowProfileSlots == pcieSlot.LowProfileSlots && x.Orientation == pcieSlot.Orientation))
+            throw new ArgumentException("Chassis PcieSlot already exists.");
+
+        _pcieSlots.Add(pcieSlot);
     }
 
     public void RemovePcieSlot(ChassisPcieSlot pcieSlot)
     {
-        if (PcieSlots.All(x => x.LowProfileSlots != pcieSlot.LowProfileSlots || x.Orientation != pcieSlot.Orientation))
-            throw new InvalidOperationException("Chassis PcieSlot does not exist.");
-        
-        PcieSlots.Remove(pcieSlot);
+        if (_pcieSlots.All(x => x.LowProfileSlots != pcieSlot.LowProfileSlots || x.Orientation != pcieSlot.Orientation))
+            throw new ArgumentException("Chassis PcieSlot does not exist.");
+
+        _pcieSlots.Remove(pcieSlot);
     }
 
     public void AddPsuFormFactor(ChassisPsuFormFactor psuFormFactor)
     {
-        if (PsuFormFactors.Any(x => x.PsuFormFactor == psuFormFactor.PsuFormFactor))
-            throw new InvalidOperationException("Chassis Psu Form Factor already exists.");
-        
-        PsuFormFactors.Add(psuFormFactor);
+        if (_psuFormFactors.Any(x => x.PsuFormFactor == psuFormFactor.PsuFormFactor))
+            throw new ArgumentException("Chassis Psu Form Factor already exists.");
+
+        _psuFormFactors.Add(psuFormFactor);
     }
 
     public void RemovePsuFormFactor(ChassisPsuFormFactor psuFormFactor)
     {
-        if (PsuFormFactors.All(x => x.PsuFormFactor != psuFormFactor.PsuFormFactor))
-            throw new InvalidOperationException("Chassis Psu Form Factor does not exist.");
-        
-        PsuFormFactors.Remove(psuFormFactor);
+        if (_psuFormFactors.All(x => x.PsuFormFactor != psuFormFactor.PsuFormFactor))
+            throw new ArgumentException("Chassis Psu Form Factor does not exist.");
+
+        _psuFormFactors.Remove(psuFormFactor);
     }
 
     public void AddRadiator(ChassisRadiator radiator)
     {
-        if (Radiators.Any(x => x.Length == radiator.Length && x.MountLocation == radiator.MountLocation))
-            throw new InvalidOperationException("Chassis Radiator already exists.");
-        
-        Radiators.Add(radiator);
+        if (_radiators.Any(x => x.Length == radiator.Length && x.MountLocation == radiator.MountLocation))
+            throw new ArgumentException("Chassis Radiator already exists.");
+
+        _radiators.Add(radiator);
     }
 
     public void RemoveRadiator(ChassisRadiator radiator)
     {
-        if (Radiators.All(x => x.Length != radiator.Length || x.MountLocation != radiator.MountLocation))
-            throw new InvalidOperationException("Chassis Radiator does not exist.");
-        
-        Radiators.Remove(radiator);
+        if (_radiators.All(x => x.Length != radiator.Length || x.MountLocation != radiator.MountLocation))
+            throw new ArgumentException("Chassis Radiator does not exist.");
+
+        _radiators.Remove(radiator);
     }
-    
+
     public bool CheckGraphicsCardCompatibility(GraphicsCard graphicsCard)
     {
-        var horizontalPcieSlots = PcieSlots
+        var horizontalPcieSlots = _pcieSlots
             .Where(x => x.Orientation == PcieOrientation.Horizontal)
             .Where(x => x.LowProfileSlots == graphicsCard.IsLowProfile)
             .Sum(x => x.SlotCount);
 
-        var verticalPcieSlots = PcieSlots
+        var verticalPcieSlots = _pcieSlots
             .Where(x => x.Orientation == PcieOrientation.Vertical)
             .Where(x => x.LowProfileSlots == graphicsCard.IsLowProfile)
             .Sum(x => x.SlotCount);
@@ -190,7 +204,7 @@ public class Chassis : ProductEntity
 
     public bool CheckPsuCompatibility(Psu psu)
     {
-        return PsuFormFactors.Any(x => x.PsuFormFactor == psu.FormFactor) &&
+        return _psuFormFactors.Any(x => x.PsuFormFactor == psu.FormFactor) &&
                psu.LengthMm <= MaxPsuLengthMm;
     }
 
@@ -199,7 +213,7 @@ public class Chassis : ProductEntity
         return cpuCooler.Type switch
         {
             CpuCoolerType.Air => cpuCooler.CoolerHeightMm <= MaxCpuCoolerHeightMm,
-            CpuCoolerType.Water => Radiators.Any(x => x.Length == cpuCooler.RadiatorLength),
+            CpuCoolerType.Water => _radiators.Any(x => x.Length == cpuCooler.RadiatorLength),
             _ => throw new ArgumentOutOfRangeException()
         };
     }

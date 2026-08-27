@@ -5,26 +5,32 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Motherboard : ProductEntity
 {
-    public Guid SocketId { get; set; }
-    public Guid ChipsetId { get; set; }
-    public int RamSlots { get; set; }
-    public int MaxMemoryGb { get; set; }
-    public int MaxDimmSizeGb { get; set; }
-    public int SataPorts { get; set; }
-    public int FanConnectors { get; set; }
-    public int EpsConnectors { get; set; }
-    public decimal WidthMm { get; set; }
-    public decimal HeightMm { get; set; }
-    public DdrGeneration DdrGeneration { get; set; }
-    public RamFormFactor RamFormFactor { get; set; }
-    public MbFormFactor FormFactor { get; set; }
-    public bool WifiEnabled { get; set; }
-    public bool BluetoothEnabled { get; set; }
-    public Chipset Chipset { get; set; } = null!;
-    public Socket Socket { get; set; } = null!;
-    public ICollection<MotherboardPcie> PcieSlots { get; set; } = new List<MotherboardPcie>();
-    public ICollection<MotherboardM2> M2Slots { get; set; } = new List<MotherboardM2>();
-    public ICollection<MotherboardUsb> UsbPorts { get; set; } = new List<MotherboardUsb>();
+    public Guid SocketId { get; private set; }
+    public Guid ChipsetId { get; private set; }
+    public int RamSlots { get; private set; }
+    public int MaxMemoryGb { get; private set; }
+    public int MaxDimmSizeGb { get; private set; }
+    public int SataPorts { get; private set; }
+    public int FanConnectors { get; private set; }
+    public int EpsConnectors { get; private set; }
+    public decimal WidthMm { get; private set; }
+    public decimal HeightMm { get; private set; }
+    public DdrGeneration DdrGeneration { get; private set; }
+    public RamFormFactor RamFormFactor { get; private set; }
+    public MbFormFactor FormFactor { get; private set; }
+    public bool WifiEnabled { get; private set; }
+    public bool BluetoothEnabled { get; private set; }
+    public Chipset Chipset { get; private set; } = null!;
+    public Socket Socket { get; private set; } = null!;
+
+    private readonly List<MotherboardPcie> _pcieSlots = [];
+    public IReadOnlyCollection<MotherboardPcie> PcieSlots => _pcieSlots.AsReadOnly();
+
+    private readonly List<MotherboardM2> _m2Slots = [];
+    public IReadOnlyCollection<MotherboardM2> M2Slots => _m2Slots.AsReadOnly();
+
+    private readonly List<MotherboardUsb> _usbPorts = [];
+    public IReadOnlyCollection<MotherboardUsb> UsbPorts => _usbPorts.AsReadOnly();
 
     protected Motherboard()
     {
@@ -32,54 +38,54 @@ public class Motherboard : ProductEntity
 
     public void AddPcieSlot(MotherboardPcie pcieSlot)
     {
-        if (PcieSlots.Any(x =>
+        if (_pcieSlots.Any(x =>
                 x.SlotType == pcieSlot.SlotType && x.SlotLanes == pcieSlot.SlotLanes &&
                 x.Generation == pcieSlot.Generation))
-            throw new InvalidOperationException("PCIe slot already exists.");
+            throw new ArgumentException("PCIe slot already exists.");
 
-        PcieSlots.Add(pcieSlot);
+        _pcieSlots.Add(pcieSlot);
     }
 
     public void RemovePcieSlot(MotherboardPcie pcieSlot)
     {
-        if (!PcieSlots.Any(x =>
+        if (!_pcieSlots.Any(x =>
                 x.SlotType == pcieSlot.SlotType && x.SlotLanes == pcieSlot.SlotLanes &&
                 x.Generation == pcieSlot.Generation))
-            throw new InvalidOperationException("PCIe slot does not exist.");
+            throw new ArgumentException("PCIe slot does not exist.");
 
-        PcieSlots.Remove(pcieSlot);
+        _pcieSlots.Remove(pcieSlot);
     }
 
     public void AddM2Slot(MotherboardM2 m2Slot)
     {
-        if (M2Slots.Any(x => x.Key == m2Slot.Key && x.PcieGeneration == m2Slot.PcieGeneration))
-            throw new InvalidOperationException("M.2 slot already exists.");
+        if (_m2Slots.Any(x => x.Key == m2Slot.Key && x.PcieGeneration == m2Slot.PcieGeneration))
+            throw new ArgumentException("M.2 slot already exists.");
 
-        M2Slots.Add(m2Slot);
+        _m2Slots.Add(m2Slot);
     }
 
     public void RemoveM2Slot(MotherboardM2 m2Slot)
     {
-        if (M2Slots.All(x => x.Key != m2Slot.Key || x.PcieGeneration != m2Slot.PcieGeneration))
-            throw new InvalidOperationException("M.2 slot does not exist.");
+        if (_m2Slots.All(x => x.Key != m2Slot.Key || x.PcieGeneration != m2Slot.PcieGeneration))
+            throw new ArgumentException("M.2 slot does not exist.");
 
-        M2Slots.Remove(m2Slot);
+        _m2Slots.Remove(m2Slot);
     }
 
     public void AddUsbPort(MotherboardUsb usbPort)
     {
-        if (UsbPorts.Any(x => x.UsbType == usbPort.UsbType && x.UsbVersion == usbPort.UsbVersion))
-            throw new InvalidOperationException("USB port already exists.");
+        if (_usbPorts.Any(x => x.UsbType == usbPort.UsbType && x.UsbVersion == usbPort.UsbVersion))
+            throw new ArgumentException("USB port already exists.");
 
-        UsbPorts.Add(usbPort);
+        _usbPorts.Add(usbPort);
     }
 
     public void RemoveUsbPort(MotherboardUsb usbPort)
     {
-        if (UsbPorts.All(x => x.UsbType != usbPort.UsbType || x.UsbVersion != usbPort.UsbVersion))
-            throw new InvalidOperationException("USB port does not exist.");
+        if (_usbPorts.All(x => x.UsbType != usbPort.UsbType || x.UsbVersion != usbPort.UsbVersion))
+            throw new ArgumentException("USB port does not exist.");
 
-        UsbPorts.Remove(usbPort);
+        _usbPorts.Remove(usbPort);
     }
 
     public bool CheckMemoryCompatibility(Ram memory)
@@ -109,10 +115,10 @@ public class Motherboard : ProductEntity
 
     public PartsCompatibilityResult CheckGraphicsCardCompatibility(GraphicsCard graphicsCard)
     {
-        if (PcieSlots.All(x => x.SlotType != PcieSlotType.X16))
+        if (_pcieSlots.All(x => x.SlotType != PcieSlotType.X16))
             return PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots);
 
-        var maxBoardGeneration = PcieSlots.Max(x => x.Generation);
+        var maxBoardGeneration = _pcieSlots.Max(x => x.Generation);
         return graphicsCard.PcieGeneration > maxBoardGeneration
             ? PartsCompatibilityResult.CompatibleReduced(
                 CompatibilityReason.PcieGenerationReduced,
@@ -133,7 +139,7 @@ public class Motherboard : ProductEntity
         if (storage.ModuleKey is not { } moduleKey || storage.M2FormFactor is not { } formFactor)
             throw new ArgumentOutOfRangeException(nameof(storage), "Storage form factor is not recognized.");
 
-        var candidates = M2Slots
+        var candidates = _m2Slots
             .Where(slot => moduleKey.FitsSlot(slot.Key))
             .Where(slot => slot.FormFactors.Any(x => x.FormFactor == formFactor))
             .ToList();
@@ -163,11 +169,11 @@ public class Motherboard : ProductEntity
         return adapter.HostInterface switch
         {
             WirelessHostInterface.Usb => CheckUsbCompatibility(adapter.UsbVersion!.Value, adapter.UsbType!.Value),
-            WirelessHostInterface.Pcie => PcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
+            WirelessHostInterface.Pcie => _pcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
                 ? PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots)
                 : PartsCompatibilityResult.Compatible(),
             WirelessHostInterface.M2 => adapter is { Key: M2Key.E, M2FormFactor: { } formFactor } &&
-                                        M2Slots.Any(slot =>
+                                        _m2Slots.Any(slot =>
                                             slot.Key == M2Key.E &&
                                             slot.FormFactors.Any(x => x.FormFactor == formFactor))
                 ? PartsCompatibilityResult.Compatible()
@@ -181,7 +187,7 @@ public class Motherboard : ProductEntity
         return adapter.HostInterface switch
         {
             WiredHostInterface.Usb => CheckUsbCompatibility(adapter.UsbVersion!.Value, adapter.UsbType!.Value),
-            WiredHostInterface.Pcie => PcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
+            WiredHostInterface.Pcie => _pcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
                 ? PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots)
                 : PartsCompatibilityResult.Compatible(),
             _ => throw new ArgumentOutOfRangeException(nameof(adapter), "Wired host interface is not recognized.")
@@ -190,7 +196,7 @@ public class Motherboard : ProductEntity
 
     private PartsCompatibilityResult CheckUsbCompatibility(UsbVersion usbVersion, UsbType usbType)
     {
-        var sameType = UsbPorts.Where(port => port.UsbType == usbType).ToList();
+        var sameType = _usbPorts.Where(port => port.UsbType == usbType).ToList();
         if (sameType.Count == 0)
             return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingUsbPort);
 

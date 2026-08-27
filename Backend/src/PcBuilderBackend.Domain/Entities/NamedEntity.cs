@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace PcBuilderBackend.Domain.Entities;
 
 public abstract class NamedEntity: BaseEntity

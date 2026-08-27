@@ -4,12 +4,12 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class StorageDrive : ProductEntity
 {
-    public StorageMedia Media { get; set; }
-    public StorageInterface Interface { get; set; }
-    public StorageFormFactor FormFactor { get; set; }
-    public int CapacityGb { get; set; }
-    public PcieGeneration? PcieGeneration { get; set; }
-    public int? Rpm { get; set; }
+    public StorageMedia Media { get; private set; }
+    public StorageInterface Interface { get; private set; }
+    public StorageFormFactor FormFactor { get; private set; }
+    public int CapacityGb { get; private set; }
+    public PcieGeneration? PcieGeneration { get; private set; }
+    public int? Rpm { get; private set; }
 
     public bool IsM2 => FormFactor is
         StorageFormFactor.M22230 or
@@ -111,6 +111,7 @@ public class StorageDrive : ProductEntity
         FormFactor = factor;
         CapacityGb = capacityGb;
         Rpm = rpm;
+        PcieGeneration = null;
     }
 
     private void SetSsdSpecs(StorageMedia storageMedia, StorageInterface storageInterface, StorageFormFactor factor,
@@ -135,5 +136,6 @@ public class StorageDrive : ProductEntity
         FormFactor = factor;
         CapacityGb = capacityGb;
         PcieGeneration = pcieGeneration;
+        Rpm = null;
     }
 }

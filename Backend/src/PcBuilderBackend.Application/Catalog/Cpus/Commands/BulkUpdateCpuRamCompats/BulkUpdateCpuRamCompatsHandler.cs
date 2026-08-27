@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpuRamCompats;
 
 public class BulkUpdateCpuRamCompatsHandler(
-    IApplicationDbContext context,
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateCpuRamCompatsHandler> logger)
     : IRequestHandler<BulkUpdateCpuRamCompatsCommand, List<CpuRamCompatDto>?>
@@ -20,9 +20,7 @@ public class BulkUpdateCpuRamCompatsHandler(
         BulkUpdateCpuRamCompatsCommand request,
         CancellationToken cancellationToken)
     {
-        var cpu = await context.Cpus
-            .Include(x => x.RamCompats)
-            .FirstOrDefaultAsync(x => x.Id == request.CpuId, cancellationToken);
+        var cpu = await cpus.GetWithChildrenAsync(request.CpuId, cancellationToken);
 
         if (cpu == null)
         {
@@ -64,10 +62,10 @@ public class BulkUpdateCpuRamCompatsHandler(
                      .Where(x => !touchedKeys.Contains((x.DdrGeneration, x.RamModuleCount, x.RamRank))))
         {
             cpu.RemoveRamCompat(existing);
-            context.CpuRamCompats.Remove(existing);
+            cpus.DeleteRamCompat(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.CpuRamCompatsUpdated(logger, cpu.Id);
 

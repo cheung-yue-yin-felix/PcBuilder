@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
+using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkCreateGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkDeleteGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkUpdateGpuSeries;
@@ -39,8 +40,7 @@ public static class GpuSeriesEndpoints
             .WithSummary("Edit a GPU Series");
         
         subgroup.MapPost("/", CreateGpuSeries)
-            .Produces<GpuSeriesDto>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces<GpuSeriesDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add a new GPU Series");
         
@@ -51,20 +51,19 @@ public static class GpuSeriesEndpoints
             .WithSummary("Delete a GPU Series");
         
         subgroup.MapPost("/bulk", BulkCreateGpuSeries)
-            .Produces<List<GpuSeriesDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces<List<GpuSeriesDto>>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple new GPU Series");
         
         subgroup.MapPut("/bulk", BulkUpdateGpuSeries)
             .Produces<List<GpuSeriesDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple GPU Series");
         
         subgroup.MapDelete("/bulk", BulkDeleteGpuSeries)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple GPU Series");
     }
@@ -88,13 +87,14 @@ public static class GpuSeriesEndpoints
         return result is not null ? TypedResults.Ok(result) : TypedResults.NotFound();
     }
 
-    private static async Task<Results<Ok<GpuSeriesDto>, BadRequest>> CreateGpuSeries(
-        [FromBody] CreateGpuSeriesCommand command,
+    private static async Task<Created<GpuSeriesDto>> CreateGpuSeries(
+        [Validate] [FromBody] CreateGpuSeriesCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is not null ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return TypedResults.Created($"{httpContext.Request.Path}/{result.Id}", result);
     }
     
     private static async Task<Results<Ok<GpuSeriesDto>, NotFound>> UpdateGpuSeries(
@@ -116,30 +116,31 @@ public static class GpuSeriesEndpoints
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
     }
     
-    private static async Task<Results<Ok<List<GpuSeriesDto>>, BadRequest>> BulkCreateGpuSeries(
-        [FromBody] BulkCreateGpuSeriesCommand command,
+    private static async Task<Created<List<GpuSeriesDto>>> BulkCreateGpuSeries(
+        [Validate] [FromBody] BulkCreateGpuSeriesCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count > 0 ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
 
-    private static async Task<Results<Ok<List<GpuSeriesDto>>, BadRequest>> BulkUpdateGpuSeries(
+    private static async Task<Results<Ok<List<GpuSeriesDto>>, NotFound>> BulkUpdateGpuSeries(
         [FromBody] BulkUpdateGpuSeriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count > 0 ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
     
-    private static async Task<Results<NoContent, BadRequest>> BulkDeleteGpuSeries(
+    private static async Task<Results<NoContent, NotFound>> BulkDeleteGpuSeries(
         [FromBody] BulkDeleteGpuSeriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result ? TypedResults.NoContent() : TypedResults.BadRequest();
+        return result ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 }

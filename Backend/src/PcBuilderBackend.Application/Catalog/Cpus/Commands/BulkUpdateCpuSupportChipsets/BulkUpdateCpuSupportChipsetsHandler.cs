@@ -1,7 +1,5 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpuSupportChipsets;
 
 public class BulkUpdateCpuSupportChipsetsHandler(
-    IApplicationDbContext context,
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateCpuSupportChipsetsHandler> logger)
     : IRequestHandler<BulkUpdateCpuSupportChipsetsCommand, List<CpuSupportChipsetDto>?>
@@ -20,9 +19,7 @@ public class BulkUpdateCpuSupportChipsetsHandler(
         BulkUpdateCpuSupportChipsetsCommand request,
         CancellationToken cancellationToken)
     {
-        var cpu = await context.Cpus
-            .Include(x => x.SupportedChipsets)
-            .FirstOrDefaultAsync(x => x.Id == request.CpuId, cancellationToken);
+        var cpu = await cpus.GetWithChildrenAsync(request.CpuId, cancellationToken);
 
         if (cpu == null)
         {
@@ -54,17 +51,13 @@ public class BulkUpdateCpuSupportChipsetsHandler(
                      .Where(x => !touchedChipsetIds.Contains(x.ChipsetId)))
         {
             cpu.RemoveSupportedChipset(existing);
-            context.CpuSupportChipsets.Remove(existing);
+            cpus.DeleteSupportedChipset(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.CpuSupportChipsetsUpdated(logger, cpu.Id);
 
-        return await context.CpuSupportChipsets
-            .AsNoTracking()
-            .Where(x => x.CpuId == request.CpuId)
-            .ProjectTo<CpuSupportChipsetDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+        return [.. cpu.SupportedChipsets.Where(x => x.IsActive).Select(mapper.Map<CpuSupportChipsetDto>)];
     }
 }

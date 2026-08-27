@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -9,7 +8,8 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassis;
 
 public class BulkUpdateChassisHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisHandler> logger)
     : IRequestHandler<BulkUpdateChassisCommand, List<ChassisDto>?>
@@ -22,8 +22,7 @@ public class BulkUpdateChassisHandler(
 
         foreach (var item in request.Items)
         {
-            var entity = await context.Chassis
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await chassis.GetByIdAsync(item.Id, cancellationToken);    
 
             if (entity is null)
             {
@@ -46,7 +45,7 @@ public class BulkUpdateChassisHandler(
             result.Add(mapper.Map<ChassisDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.Chassis);
         return result;
     }

@@ -16,9 +16,9 @@ public class CpuProfile : Profile
                 opt => opt.MapFrom(src => src.Chipset != null ? src.Chipset.Name : string.Empty));
 
         CreateMap<Cpu, CpuListItemDto>()
-            .ForMember(dest => dest.ManufacturerName, opt => opt.MapFrom(src => src.Manufacturer.Name))
-            .ForMember(dest => dest.SocketName, opt => opt.MapFrom(src => src.Socket.Name))
-            .ForMember(dest => dest.SeriesName, opt => opt.MapFrom(src => src.Series.Name));
+            .ForMember(dest => dest.ManufacturerName, opt => opt.MapFrom(src => src.Manufacturer != null ? src.Manufacturer.Name : string.Empty))
+            .ForMember(dest => dest.SocketName, opt => opt.MapFrom(src => src.Socket != null ? src.Socket.Name : string.Empty))
+            .ForMember(dest => dest.SeriesName, opt => opt.MapFrom(src => src.Series != null ? src.Series.Name : string.Empty));
 
         CreateMap<Cpu, CpuDto>()
             .IncludeBase<Cpu, CpuListItemDto>()

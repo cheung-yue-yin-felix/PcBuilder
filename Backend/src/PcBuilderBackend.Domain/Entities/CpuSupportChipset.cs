@@ -2,11 +2,11 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class CpuSupportChipset : BaseEntity
 {
-    public Guid CpuId { get; set; }
-    public Guid ChipsetId { get; set; }
-    public bool RequiresBiosUpdate { get; set; }
-    public Cpu Cpu { get; init; } = null!;
-    public Chipset Chipset { get; init; } = null!;
+    public Guid CpuId { get; private set; }
+    public Guid ChipsetId { get; private set; }
+    public bool RequiresBiosUpdate { get; private set; }
+    public Cpu Cpu { get; private set; } = null!;
+    public Chipset Chipset { get; private set; } = null!;
 
     protected CpuSupportChipset() {}
 

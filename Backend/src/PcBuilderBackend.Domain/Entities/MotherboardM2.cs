@@ -9,7 +9,9 @@ public class MotherboardM2 : BaseEntity
     public PcieGeneration PcieGeneration { get; set; }
     public int SlotCount { get; set; }
     public bool SupportsSata { get; set; }
-    public ICollection<MotherboardM2FormFactor> FormFactors { get; set; } = new List<MotherboardM2FormFactor>();
+
+    private readonly List<MotherboardM2FormFactor> _formFactors = new();
+    public IReadOnlyCollection<MotherboardM2FormFactor> FormFactors => _formFactors;
 
     protected MotherboardM2() {}
 
@@ -26,18 +28,18 @@ public class MotherboardM2 : BaseEntity
 
     public void AddFormFactor(MotherboardM2FormFactor formFactor)
     {
-        if (FormFactors.Any(x => x.FormFactor == formFactor.FormFactor))
-            throw new InvalidOperationException("M.2 form factor already exists.");
+        if (_formFactors.Any(x => x.FormFactor == formFactor.FormFactor))
+            throw new ArgumentException("M.2 form factor already exists.");
 
-        FormFactors.Add(formFactor);
+        _formFactors.Add(formFactor);
     }
 
     public void RemoveFormFactor(MotherboardM2FormFactor formFactor)
     {
-        if (!FormFactors.Any(x => x.FormFactor == formFactor.FormFactor))
-            throw new InvalidOperationException("M.2 form factor does not exist.");
+        if (_formFactors.All(x => x.FormFactor != formFactor.FormFactor))
+            throw new ArgumentException("M.2 form factor does not exist.");
 
-        FormFactors.Remove(formFactor);
+        _formFactors.Remove(formFactor);
     }
 
     private void SetSpecs(Guid motherboardId, M2Key key, PcieGeneration pcieGeneration, int slotCount, bool supportsSata)

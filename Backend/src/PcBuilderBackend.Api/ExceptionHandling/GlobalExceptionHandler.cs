@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +24,32 @@ public sealed class GlobalExceptionHandler(
 
             httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             return true;
+        }
+
+        if (exception is ValidationException validationException)
+        {
+            logger.LogWarning(
+                exception,
+                "Validation failed for {Method} {Path}",
+                httpContext.Request.Method,
+                httpContext.Request.Path);
+
+            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            var errors = validationException.Errors
+                .GroupBy(e => string.IsNullOrWhiteSpace(e.PropertyName) ? string.Empty : e.PropertyName)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).Distinct().ToArray());
+
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                Exception = exception,
+                ProblemDetails = new HttpValidationProblemDetails(errors)
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "One or more validation errors occurred.",
+                    Instance = httpContext.Request.Path
+                }
+            });
         }
 
         var statusCode = exception switch

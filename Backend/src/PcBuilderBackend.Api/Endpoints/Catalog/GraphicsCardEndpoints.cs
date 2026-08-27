@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkDeleteGrap
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkUpdateGraphicsCards;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.DeleteGraphicsCard;
+using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.ImportGraphicsCards;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.UpdateGraphicsCard;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Queries;
@@ -51,7 +52,6 @@ public static class GraphicsCardEndpoints
 
         subgroup.MapPost("/bulk", BulkCreateGraphicsCards)
             .Produces<List<GraphicsCardDto>>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple graphics cards")
             .WithDescription("\n    POST /catalog/graphics-card/bulk");
@@ -65,7 +65,7 @@ public static class GraphicsCardEndpoints
 
         subgroup.MapPut("/bulk", BulkUpdateGraphicsCards)
             .Produces<List<GraphicsCardDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple graphics cards")
             .WithDescription("\n    PUT /catalog/graphics-card/bulk");
@@ -83,6 +83,13 @@ public static class GraphicsCardEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple graphics cards")
             .WithDescription("\n    DELETE /catalog/graphics-card/bulk");
+
+        subgroup.MapPost("/import", ImportGraphicsCards)
+            .Produces<List<GraphicsCardDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import graphics cards from Excel")
+            .WithDescription("\n    POST /catalog/graphics-card/import");
     }
 
     private static async Task<Ok<PagedResult<GraphicsCardListItemDto>>> GetGraphicsCards(
@@ -140,25 +147,23 @@ public static class GraphicsCardEndpoints
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 
-    private static async Task<Results<Created<List<GraphicsCardDto>>, BadRequest>> BulkCreateGraphicsCards(
+    private static async Task<Created<List<GraphicsCardDto>>> BulkCreateGraphicsCards(
         [Validate] [FromBody] BulkCreateGraphicsCardsCommand command,
         [FromServices] ISender sender,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count == 0
-            ? TypedResults.BadRequest()
-            : TypedResults.Created($"{httpContext.Request.Path}", result);
+        return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
 
-    private static async Task<Results<Ok<List<GraphicsCardDto>>, BadRequest>> BulkUpdateGraphicsCards(
+    private static async Task<Results<Ok<List<GraphicsCardDto>>, NotFound>> BulkUpdateGraphicsCards(
         [Validate] [FromBody] BulkUpdateGraphicsCardsCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null || result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> BulkDeleteGraphicsCards(
@@ -168,5 +173,15 @@ public static class GraphicsCardEndpoints
     {
         var result = await sender.Send(command, cancellationToken);
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<GraphicsCardDto>>> ImportGraphicsCards(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        var result = await sender.Send(new ImportGraphicsCardsCommand(fileStream), cancellationToken);
+        return TypedResults.Ok(result);
     }
 }

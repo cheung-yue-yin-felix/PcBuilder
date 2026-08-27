@@ -1,21 +1,26 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Validators;
 
 public class CreateCpuCommandValidator : AbstractValidator<CreateCpuCommand>
 {
-    public CreateCpuCommandValidator()
+    public CreateCpuCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.ManufacturerId)
-            .NotEmpty().WithMessage("ManufacturerId is required");
+            .NotEmpty().WithMessage("ManufacturerId is required")
+            .MustBeActiveManufacturer(db);
 
         RuleFor(x => x.SocketId)
-            .NotEmpty().WithMessage("SocketId is required");
+            .NotEmpty().WithMessage("SocketId is required")
+            .MustBeActiveSocket(db);
 
         RuleFor(x => x.SeriesId)
-            .NotEmpty().WithMessage("SeriesId is required");
+            .NotEmpty().WithMessage("SeriesId is required")
+            .MustBeActiveCpuSeries(db);
 
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
@@ -52,6 +57,10 @@ public class CreateCpuCommandValidator : AbstractValidator<CreateCpuCommand>
             .NotEmpty().WithMessage("At least one supported chipset entry is required")
             .Must(BeUniqueChipsetIds)
             .WithMessage("Duplicate chipset support entries are not allowed.");
+
+        RuleFor(x => x.SupportChipsets.Select(s => s.ChipsetId))
+            .MustAllBeActiveChipsets(db)
+            .When(x => x.SupportChipsets is { Count: > 0 });
 
         RuleForEach(x => x.SupportChipsets).ChildRules(support =>
         {

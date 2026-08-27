@@ -1,19 +1,17 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.UpdateMotherboard;
 
-public class UpdateMotherboardHandler(IApplicationDbContext context, IMapper mapper)
+public class UpdateMotherboardHandler(IMotherboardRepository motherboards, IUnitOfWork unitOfWork, IMapper mapper)
     : IRequestHandler<UpdateMotherboardCommand, MotherboardDto?>
 {
     public async Task<MotherboardDto?> Handle(UpdateMotherboardCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Motherboards
-            .FirstOrDefaultAsync(m => m.Id == request.Id && m.IsActive, cancellationToken);
-        if (entity == null) return null;
+        var entity = await motherboards.GetByIdAsync(request.Id, cancellationToken);
+        if (entity is not { IsActive: true }) return null;
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
@@ -34,7 +32,7 @@ public class UpdateMotherboardHandler(IApplicationDbContext context, IMapper map
             request.WifiEnabled,
             request.BluetoothEnabled);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<MotherboardDto>(entity);
     }

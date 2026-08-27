@@ -1,50 +1,49 @@
-﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PcBuilderBackend.Api.Filters;
 
 public static class ValidationFilter
 {
-    public static EndpointFilterDelegate ValidationFilterFactory(EndpointFilterFactoryContext context, EndpointFilterDelegate next)
+    public static EndpointFilterDelegate ValidationFilterFactory(
+        EndpointFilterFactoryContext context,
+        EndpointFilterDelegate next)
     {
-        var validationDescriptors = GetValidators(context.MethodInfo, context.ApplicationServices).ToList();
-        
-        return validationDescriptors.Count != 0 ? invocationContext => Validate(validationDescriptors, invocationContext, next) : next;
+        var validatedParameters = context.MethodInfo.GetParameters()
+            .Select((parameter, index) => (parameter, index))
+            .Where(item => item.parameter.GetCustomAttribute<ValidateAttribute>() is not null)
+            .ToList();
+
+        if (validatedParameters.Count == 0)
+            return next;
+
+        return invocationContext => Validate(validatedParameters, invocationContext, next);
     }
 
-    private static async ValueTask<object?> Validate(IEnumerable<ValidationDescriptor> validationDescriptors, EndpointFilterInvocationContext invocationContext, EndpointFilterDelegate next)
+    private static async ValueTask<object?> Validate(
+        IReadOnlyList<(ParameterInfo Parameter, int Index)> validatedParameters,
+        EndpointFilterInvocationContext invocationContext,
+        EndpointFilterDelegate next)
     {
-        foreach (var descriptor in validationDescriptors)
+        foreach (var (parameter, index) in validatedParameters)
         {
-            var argument = invocationContext.Arguments[descriptor.ArgumentIndex];
+            var argument = invocationContext.Arguments[index];
+            if (argument is null)
+                continue;
 
-            if (argument is null) continue;
-            var validationResult = await descriptor.Validator.ValidateAsync(
-                new ValidationContext<object>(argument)
-            );
+            var validatorType = typeof(IValidator<>).MakeGenericType(parameter.ParameterType);
+            if (invocationContext.HttpContext.RequestServices.GetService(validatorType) is not IValidator validator)
+                continue;
+
+            var validationResult = await validator.ValidateAsync(
+                new ValidationContext<object>(argument),
+                invocationContext.HttpContext.RequestAborted);
 
             if (!validationResult.IsValid)
-            {
                 return TypedResults.ValidationProblem(validationResult.ToDictionary());
-            }
         }
 
         return await next.Invoke(invocationContext);
-    }
-    
-    private static IEnumerable<ValidationDescriptor> GetValidators(MethodInfo methodInfo,
-        IServiceProvider serviceProvider)
-    {
-        foreach (var item in methodInfo.GetParameters().Select((parameter, index) => new { parameter, index }))
-        {
-            if (item.parameter.GetCustomAttribute<ValidateAttribute>() is null) continue;
-            var validatorType = typeof(IValidator<>).MakeGenericType(item.parameter.ParameterType);
-
-            if (serviceProvider.GetService(validatorType) is IValidator validator)
-            {
-                yield return new ValidationDescriptor { ArgumentIndex = item.index, ArgumentType = item.parameter.ParameterType, Validator = validator };
-            }
-        }
     }
 }

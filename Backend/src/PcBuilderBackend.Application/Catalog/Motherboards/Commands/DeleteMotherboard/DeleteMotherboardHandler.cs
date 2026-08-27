@@ -1,19 +1,18 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.DeleteMotherboard;
 
-public class DeleteMotherboardHandler(IApplicationDbContext context) : IRequestHandler<DeleteMotherboardCommand, bool>
+public class DeleteMotherboardHandler(IUnitOfWork unitOfWork, IMotherboardRepository motherboards) : IRequestHandler<DeleteMotherboardCommand, bool>
 {
     public async Task<bool> Handle(DeleteMotherboardCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Motherboards
-            .FirstOrDefaultAsync(m => m.Id == request.Id && m.IsActive, cancellationToken);
-        if (entity == null) return false;
+        var entity = await motherboards.GetByIdAsync(request.Id, cancellationToken);
+        
+        if (entity == null || !entity.IsActive) return false;
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

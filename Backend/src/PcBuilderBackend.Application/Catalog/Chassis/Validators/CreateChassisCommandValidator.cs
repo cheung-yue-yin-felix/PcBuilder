@@ -1,15 +1,17 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Chassis.Commands.CreateChassis;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Validators;
 
 public class CreateChassisCommandValidator : AbstractValidator<CreateChassisCommand>
 {
-    public CreateChassisCommandValidator()
+    public CreateChassisCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ManufacturerId).NotEmpty();
+        RuleFor(x => x.ManufacturerId).NotEmpty().MustBeActiveManufacturer(db);
         RuleFor(x => x.LengthMm).GreaterThan(0);
         RuleFor(x => x.WidthMm).GreaterThan(0);
         RuleFor(x => x.HeightMm).GreaterThan(0);

@@ -1,18 +1,21 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Memories.Commands.CreateMemory;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Validators;
 
 public class CreateMemoryCommandValidator : AbstractValidator<CreateMemoryCommand>
 {
-    public CreateMemoryCommandValidator()
+    public CreateMemoryCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
             .MaximumLength(200);
 
         RuleFor(x => x.ManufacturerId)
-            .NotEmpty().WithMessage("ManufacturerId is required");
+            .NotEmpty().WithMessage("ManufacturerId is required")
+            .MustBeActiveManufacturer(db);
 
         RuleFor(x => x.Color)
             .NotEmpty().WithMessage("Color is required")

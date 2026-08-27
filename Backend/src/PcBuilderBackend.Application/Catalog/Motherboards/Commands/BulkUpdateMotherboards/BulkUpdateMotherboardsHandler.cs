@@ -1,91 +1,59 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
-using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboards;
 
-public class BulkUpdateMotherboardsHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<BulkUpdateMotherboardsCommand, List<MotherboardDto>>
+public class BulkUpdateMotherboardsHandler(
+    IMotherboardRepository motherboards,
+    IUnitOfWork unitOfWork,
+    ILogger<BulkUpdateMotherboardsHandler> logger,
+    IMapper mapper) : IRequestHandler<BulkUpdateMotherboardsCommand, List<MotherboardDto>?>
 {
-    public async Task<List<MotherboardDto>> Handle(BulkUpdateMotherboardsCommand request, CancellationToken cancellationToken)
+    public async Task<List<MotherboardDto>?> Handle(BulkUpdateMotherboardsCommand request,
+        CancellationToken cancellationToken)
     {
         var result = new List<MotherboardDto>();
 
-        foreach (var dto in request.Motherboards)
+        foreach (var command in request.Motherboards)
         {
-            var entity = await context.Motherboards.FirstOrDefaultAsync(m => m.Id == dto.Id && m.IsActive, cancellationToken);
-            if (entity is null) return result;
+            var entity = await motherboards.GetWithChildrenAsync(command.Id, cancellationToken);
 
-            entity.Rename(dto.Name);
-            entity.UpdateManufacturer(dto.ManufacturerId);
+            if (entity == null)
+            {
+                EntityLog.NotFoundOrInactive(logger, EntityLog.Motherboard, command.Id);
+                return null;
+            }
+
+            entity.Rename(command.Name);
+            entity.UpdateManufacturer(command.ManufacturerId);
             entity.UpdateSpecs(
-                dto.SocketId,
-                dto.ChipsetId,
-                dto.RamSlots,
-                dto.MaxMemoryGb,
-                dto.MaxDimmSizeGb,
-                dto.SataPorts,
-                dto.FanConnectors,
-                dto.EpsConnectors,
-                dto.WidthMm,
-                dto.HeightMm,
-                dto.DdrGeneration,
-                dto.RamFormFactor,
-                dto.FormFactor,
-                dto.WifiEnabled,
-                dto.BluetoothEnabled
-            );
+                command.SocketId,
+                command.ChipsetId,
+                command.RamSlots,
+                command.MaxMemoryGb,
+                command.MaxDimmSizeGb,
+                command.SataPorts,
+                command.FanConnectors,
+                command.EpsConnectors,
+                command.WidthMm,
+                command.HeightMm,
+                command.DdrGeneration,
+                command.RamFormFactor,
+                command.FormFactor,
+                command.WifiEnabled,
+                command.BluetoothEnabled);
 
-            entity.PcieSlots.Clear();
-            entity.M2Slots.Clear();
-            entity.UsbPorts.Clear();
-
-            foreach (var slot in dto.PcieSlots)
-            {
-                entity.AddPcieSlot(
-                    new MotherboardPcie(
-                        entity.Id,
-                        slot.SlotType,
-                        slot.SlotLanes,
-                        slot.Generation,
-                        slot.SlotCount
-                    )
-                );
-            }
-            
-            foreach (var slot in dto.M2Slots)
-            {
-                var m2 = new MotherboardM2(
-                    entity.Id,
-                    slot.Key,
-                    slot.PcieGeneration,
-                    slot.SlotCount,
-                    slot.SupportsSata
-                );
-                
-                foreach (var formFactor in slot.FormFactors)
-                {
-                    m2.AddFormFactor(new MotherboardM2FormFactor(m2.Id, formFactor));
-                }
-
-                entity.AddM2Slot(m2);
-            }
-
-            foreach (var port in dto.UsbPorts)
-            {
-                entity.AddUsbPort(new MotherboardUsb(
-                    entity.Id,
-                    port.UsbVersion,
-                    port.UsbType,
-                    port.PortCount));
-            }
-            
             result.Add(mapper.Map<MotherboardDto>(entity));
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        EntityLog.BulkUpdated(logger, result.Count, EntityLog.Motherboard);
+
         return result;
     }
 }

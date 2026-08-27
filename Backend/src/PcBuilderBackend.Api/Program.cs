@@ -1,4 +1,5 @@
 using InfisicalConfiguration;
+using PcBuilderBackend.Api.Endpoints.Auth;
 using PcBuilderBackend.Api.Endpoints.Catalog;
 using PcBuilderBackend.Api.Endpoints.MasterData;
 using PcBuilderBackend.Api.ExceptionHandling;
@@ -32,11 +33,16 @@ builder.Configuration.AddInfisical(
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi(options => options.AutoDiscoverSidebarGroups());
+builder.Services.AddOpenApi(options =>
+{
+    options.AutoDiscoverSidebarGroups();
+    options.AddJwtBearerSecurity();
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddApplication();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApiAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -50,8 +56,15 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapCatalogEndpoints();
 app.MapMasterDataEndpoints();
+app.MapAuthEndpoints();
+app.MapSpaFallback();
 
+await app.SeedIdentityAsync();
 app.Run();

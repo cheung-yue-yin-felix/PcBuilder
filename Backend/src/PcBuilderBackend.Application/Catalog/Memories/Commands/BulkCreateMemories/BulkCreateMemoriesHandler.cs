@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.BulkCreateMemories;
 
-public class BulkCreateMemoriesHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<BulkCreateMemoriesCommand, List<RamDto>>
+public class BulkCreateMemoriesHandler(IRamRepository memories, IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<BulkCreateMemoriesCommand, List<RamDto>>
 {
     public async Task<List<RamDto>> Handle(BulkCreateMemoriesCommand request, CancellationToken cancellationToken)
     {
@@ -25,10 +25,10 @@ public class BulkCreateMemoriesHandler(IApplicationDbContext context, IMapper ma
                      memory.HeightMm
                  )))
         {
-            context.Rams.Add(entity);
+            memories.Add(entity);
             result.Add(mapper.Map<RamDto>(entity));
         }
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return result;
     }
 }

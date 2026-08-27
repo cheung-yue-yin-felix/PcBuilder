@@ -5,13 +5,17 @@ using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.DeleteCpu;
 
-public class DeleteCpuHandler(IApplicationDbContext context, ILogger<DeleteCpuHandler> logger): IRequestHandler<DeleteCpuCommand, bool>
+public class DeleteCpuHandler(
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    ILogger<DeleteCpuHandler> logger)
+    : IRequestHandler<DeleteCpuCommand, bool>
 {
     public async Task<bool> Handle(DeleteCpuCommand request, CancellationToken cancellationToken)
     {
-        var entity = context.Cpus.FirstOrDefault(c => c.Id == request.Id && c.IsActive);
+        var entity = await cpus.GetByIdAsync(request.Id, cancellationToken);
 
-        if (entity == null) 
+        if (entity == null)
         {
             EntityLog.NotFoundOrInactive(logger, EntityLog.Cpu, request.Id);
             return false;
@@ -19,10 +23,10 @@ public class DeleteCpuHandler(IApplicationDbContext context, ILogger<DeleteCpuHa
 
         entity.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.Cpu, entity.Id);
-        
+
         return true;
     }
 }

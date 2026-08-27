@@ -22,20 +22,16 @@ public static class QueryableExtensions
         => ApplyOrder(source, propertyName, "ThenByDescending");
     
     public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, string propertyName)
-        => ApplyOrder(source.AsQueryable(), propertyName, "OrderBy").AsEnumerable() as IOrderedEnumerable<T>
-           ?? throw new InvalidOperationException();
+        => Enumerable.OrderBy(source, CompileKeySelector<T>(propertyName));
 
     public static IOrderedEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, string propertyName)
-        => ApplyOrder(source.AsQueryable(), propertyName, "OrderByDescending").AsEnumerable() as IOrderedEnumerable<T>
-           ?? throw new InvalidOperationException();
+        => Enumerable.OrderByDescending(source, CompileKeySelector<T>(propertyName));
 
     public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source, string propertyName)
-        => ApplyOrder(source.AsQueryable(), propertyName, "ThenBy").AsEnumerable() as IOrderedEnumerable<T>
-           ?? throw new InvalidOperationException();
+        => Enumerable.ThenBy(source, CompileKeySelector<T>(propertyName));
 
     public static IOrderedEnumerable<T> ThenByDescending<T>(this IOrderedEnumerable<T> source, string propertyName)
-        => ApplyOrder(source.AsQueryable(), propertyName, "ThenByDescending").AsEnumerable() as IOrderedEnumerable<T>
-           ?? throw new InvalidOperationException();
+        => Enumerable.ThenByDescending(source, CompileKeySelector<T>(propertyName));
     
     public static IQueryable<T> WhereIf<T>(
         this IQueryable<T> source,
@@ -154,6 +150,28 @@ public static class QueryableExtensions
             TotalCount = totalCount,
             Items = items
         };
+    }
+
+    private static Func<T, object?> CompileKeySelector<T>(string propertyName)
+    {
+        if (string.IsNullOrWhiteSpace(propertyName))
+            throw new ArgumentException("Property name cannot be null or empty.", nameof(propertyName));
+
+        var parameter = Expression.Parameter(typeof(T), "x");
+        Expression access = parameter;
+
+        foreach (var member in propertyName.Split('.', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var property = access.Type.GetProperty(
+                member,
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase | BindingFlags.FlattenHierarchy)
+                ?? throw new ArgumentException($"Property '{member}' was not found on {access.Type.Name}.");
+
+            access = Expression.Property(access, property);
+        }
+
+        var boxed = Expression.Convert(access, typeof(object));
+        return Expression.Lambda<Func<T, object?>>(boxed, parameter).Compile();
     }
 
     private static IOrderedQueryable<T> ApplyOrder<T>(

@@ -26,7 +26,7 @@ internal sealed class CpuSeriesConfiguration : IEntityTypeConfiguration<CpuSerie
             .HasForeignKey(cs => cs.SocketId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(cs => cs.Cpu)
+        builder.HasMany(cs => cs.Cpus)
             .WithOne(c => c.Series)
             .HasForeignKey(c => c.SeriesId)
             .OnDelete(DeleteBehavior.Restrict);

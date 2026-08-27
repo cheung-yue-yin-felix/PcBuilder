@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
@@ -7,14 +6,14 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.DeleteGraphicsCard;
 
 public class DeleteGraphicsCardHandler(
-    IApplicationDbContext context,
+    IGraphicsCardRepository graphicsCards,
+    IUnitOfWork unitOfWork,
     ILogger<DeleteGraphicsCardHandler> logger)
     : IRequestHandler<DeleteGraphicsCardCommand, bool>
 {
     public async Task<bool> Handle(DeleteGraphicsCardCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.GraphicsCards
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await graphicsCards.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -23,7 +22,7 @@ public class DeleteGraphicsCardHandler(
         }
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.GraphicsCard, entity.Id);
         return true;

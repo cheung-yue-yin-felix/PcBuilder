@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkCreateGraphicsCards;
 
 public class BulkCreateGraphicsCardsHandler(
-    IApplicationDbContext context,
+    IGraphicsCardRepository graphicsCards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkCreateGraphicsCardsHandler> logger)
     : IRequestHandler<BulkCreateGraphicsCardsCommand, List<GraphicsCardDto>>
@@ -20,27 +21,26 @@ public class BulkCreateGraphicsCardsHandler(
     {
         var result = new List<GraphicsCardDto>();
 
-        foreach (var item in request.Cards)
+        foreach (var entity in request.Cards.Select(item => new GraphicsCard(
+                     item.Name,
+                     item.ManufacturerId,
+                     item.GpuId,
+                     item.VideoMemoryGb,
+                     item.PcieSlotsUsed,
+                     item.PcieGeneration,
+                     item.IsLowProfile,
+                     item.LengthMm,
+                     item.WidthMm,
+                     item.HeightMm,
+                     item.PowerConsumptionWatts,
+                     item.PowerConnectorType,
+                     item.PowerConnectorCount)))
         {
-            var entity = new GraphicsCard(
-                item.Name,
-                item.ManufacturerId,
-                item.GpuId,
-                item.VideoMemoryGb,
-                item.PcieSlotsUsed,
-                item.PcieGeneration,
-                item.LengthMm,
-                item.WidthMm,
-                item.HeightMm,
-                item.PowerConsumptionWatts,
-                item.PowerConnectorType,
-                item.PowerConnectorCount);
-
-            context.GraphicsCards.Add(entity);
+            graphicsCards.Add(entity);
             result.Add(mapper.Map<GraphicsCardDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.GraphicsCard);
         return result;
     }

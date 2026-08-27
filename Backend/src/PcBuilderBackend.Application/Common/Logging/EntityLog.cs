@@ -11,9 +11,15 @@ internal static partial class EntityLog
     public const string Cpu = "CPU";
     public const string Gpu = "GPU";
     public const string GraphicsCard = "Graphics Card";
+    public const string Psu = "PSU";
     public const string Motherboard = "Motherboard";
     public const string Chassis = "Chassis";
+    public const string ChassisFan = "Chassis Fan";
     public const string CpuRamCompat = "CPU RAM compatibility";
+    public const string CpuCooler = "CPU Cooler";
+    public const string StorageDrive = "Storage Drive";
+    public const string WiredNetworkAdapter = "Wired Network Adapter";
+    public const string WirelessNetworkAdapter = "Wireless Network Adapter";
 
     [LoggerMessage(
         EventId = 1001,
@@ -145,4 +151,16 @@ internal static partial class EntityLog
         Level = LogLevel.Information,
         Message = "Bulk updated PSU form factors for chassis {ChassisId} successfully.")]
     public static partial void ChassisPsuFormFactorsUpdated(ILogger logger, Guid chassisId);
+
+    [LoggerMessage(
+        EventId = 1023,
+        Level = LogLevel.Information,
+        Message = "Bulk updated sockets for CPU cooler {CpuCoolerId} successfully.")]
+    public static partial void CpuCoolerSocketsUpdated(ILogger logger, Guid cpuCoolerId);
+
+    [LoggerMessage(
+        EventId = 1024,
+        Level = LogLevel.Information,
+        Message = "Bulk updated cables for PSU {PsuId} successfully.")]
+    public static partial void PsuCablesUpdated(ILogger logger, Guid psuId);
 }

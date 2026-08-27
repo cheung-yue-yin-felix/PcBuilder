@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -9,7 +8,8 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.UpdateGraphicsCard;
 
 public class UpdateGraphicsCardHandler(
-    IApplicationDbContext context,
+    IGraphicsCardRepository graphicsCards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<UpdateGraphicsCardHandler> logger)
     : IRequestHandler<UpdateGraphicsCardCommand, GraphicsCardDto?>
@@ -18,8 +18,7 @@ public class UpdateGraphicsCardHandler(
         UpdateGraphicsCardCommand request,
         CancellationToken cancellationToken)
     {
-        var entity = await context.GraphicsCards
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await graphicsCards.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -34,6 +33,7 @@ public class UpdateGraphicsCardHandler(
             request.VideoMemoryGb,
             request.PcieSlotsUsed,
             request.PcieGeneration,
+            request.IsLowProfile,
             request.LengthMm,
             request.WidthMm,
             request.HeightMm,
@@ -41,7 +41,7 @@ public class UpdateGraphicsCardHandler(
             request.PowerConnectorType,
             request.PowerConnectorCount);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.GraphicsCard, entity.Id);
 

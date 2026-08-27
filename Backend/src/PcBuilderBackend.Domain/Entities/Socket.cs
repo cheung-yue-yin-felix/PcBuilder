@@ -2,9 +2,14 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Socket : ProductEntity
 {
-    public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
-    public ICollection<Cpu> Cpus { get; set; } = new List<Cpu>();
-    public ICollection<CpuCoolerSocket> CpuCoolerSockets { get; set; } = new List<CpuCoolerSocket>();
+    private readonly List<Motherboard> _motherboards = [];
+    public IReadOnlyCollection<Motherboard> Motherboards => _motherboards;
+
+    private readonly List<Cpu> _cpus = [];
+    public IReadOnlyCollection<Cpu> Cpus => _cpus;
+
+    private readonly List<CpuCoolerSocket> _cpuCoolerSockets = [];
+    public IReadOnlyCollection<CpuCoolerSocket> CpuCoolerSockets => _cpuCoolerSockets; 
     
     protected Socket() {}
 

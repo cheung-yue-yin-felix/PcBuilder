@@ -1,18 +1,17 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.DeleteMemory;
 
-public class DeleteMemoryHandler(IApplicationDbContext context) : IRequestHandler<DeleteMemoryCommand, bool>
+public class DeleteMemoryHandler(IRamRepository memories, IUnitOfWork unitOfWork) : IRequestHandler<DeleteMemoryCommand, bool>
 {
     public async Task<bool> Handle(DeleteMemoryCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Rams.FirstOrDefaultAsync(r => r.Id == request.Id && r.IsActive, cancellationToken);
+        var entity = await memories.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return false;
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

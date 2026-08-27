@@ -4,11 +4,13 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisFanMount : BaseEntity
 {
-    public Guid ChassisId { get; set; }
-    public FanMountLocation Location { get; set; }
-    public bool SingleDiameterOnly { get; set; }
-    public Chassis Chassis { get; set; } = null!;
-    public ICollection<ChassisFanMountOption> Options { get; set; } = new List<ChassisFanMountOption>();
+    public Guid ChassisId { get; private set; }
+    public FanMountLocation Location { get; private set; }
+    public bool SingleDiameterOnly { get; private set; }
+    public Chassis Chassis { get; private set; } = null!;
+
+    private readonly List<ChassisFanMountOption> _options = [];
+    public IReadOnlyCollection<ChassisFanMountOption> Options => _options;
     
     protected ChassisFanMount() { }
 
@@ -25,18 +27,18 @@ public class ChassisFanMount : BaseEntity
 
     public void AddOption(ChassisFanMountOption option)
     {
-        if (Options.Any(x => x.Diameter == option.Diameter))
-            throw new InvalidOperationException("Option already exists");
+        if (_options.Any(x => x.Diameter == option.Diameter))
+            throw new ArgumentException("Option already exists");
         
-        Options.Add(option);
+        _options.Add(option);
     }
 
     public void RemoveOption(ChassisFanMountOption option)
     {
-        if (!Options.Any(x => x.Diameter == option.Diameter))
-            throw new InvalidOperationException("Option does not exist");
+        if (_options.All(x => x.Diameter != option.Diameter))
+            throw new ArgumentException("Option does not exist");
         
-        Options.Remove(option);
+        _options.Remove(option);
     }
     
     private void SetSpecs(Guid chassisId, FanMountLocation location, bool singleDiameterOnly)
@@ -44,7 +46,7 @@ public class ChassisFanMount : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("ChassisId must be a non-empty guid");
         
-        if (!Enum.IsDefined(location))
+        if (!Enum.IsDefined(typeof(FanMountLocation), location))
             throw new ArgumentException("Invalid location");
         
         ChassisId = chassisId;

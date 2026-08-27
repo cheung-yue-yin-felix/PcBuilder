@@ -33,7 +33,9 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
     public DbSet<ChassisFanMountOption> ChassisFanMountOptions { get; set; } = null!;
     public DbSet<ChassisDriveBay> ChassisDriveBays { get; set; } = null!;
     public DbSet<ChassisPcieSlot> ChassisPcieSlots { get; set; } = null!;
+    public DbSet<ChassisMbFormFactor> ChassisMbFormFactors { get; set; } = null!;
     public DbSet<ChassisRadiator> ChassisRadiators { get; set; } = null!;
+    public DbSet<ChassisPsuFormFactor> ChassisPsuFormFactors { get; set; } = null!;
     public DbSet<CpuCooler> CpuCoolers { get; set; } = null!;
     public DbSet<CpuCoolerSocket> CpuCoolerSockets { get; set; } = null!;
     public DbSet<CpuRamCompat> CpuRamCompats { get; set; } = null!;
@@ -76,7 +78,7 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
             if (!typeof(BaseEntity).IsAssignableFrom(clrType)) continue;
             var method = typeof(PcBuilderDbContext).GetMethod(nameof(SetIsActiveQueryFilter), BindingFlags.NonPublic | BindingFlags.Static);
             var generic = method!.MakeGenericMethod(clrType);
-            generic.Invoke(null, new object[] { modelBuilder });
+            generic.Invoke(null, [modelBuilder]);
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PcBuilderDbContext).Assembly);

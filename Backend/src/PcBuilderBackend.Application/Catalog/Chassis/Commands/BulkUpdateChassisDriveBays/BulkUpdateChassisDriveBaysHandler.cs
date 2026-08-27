@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassisDriveBays;
 
 public class BulkUpdateChassisDriveBaysHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisDriveBaysHandler> logger)
     : IRequestHandler<BulkUpdateChassisDriveBaysCommand, List<ChassisDriveBayDto>?>
@@ -20,17 +20,15 @@ public class BulkUpdateChassisDriveBaysHandler(
         BulkUpdateChassisDriveBaysCommand request,
         CancellationToken cancellationToken)
     {
-        var chassis = await context.Chassis
-            .Include(x => x.DriveBays)
-            .FirstOrDefaultAsync(x => x.Id == request.ChassisId && x.IsActive, cancellationToken);
+        var entity = await chassis.GetWithChildrenAsync(request.ChassisId, cancellationToken);
 
-        if (chassis is null)
+        if (entity is null)
         {
             EntityLog.NotFound(logger, EntityLog.Chassis, request.ChassisId);
             return null;
         }
 
-        var existingByKey = chassis.DriveBays.ToDictionary(x => x.DriveBayFormFactor);
+        var existingByKey = entity.DriveBays.ToDictionary(x => x.DriveBayFormFactor);
         var touchedKeys = new HashSet<DriveBayFormFactor>();
 
         foreach (var bay in request.DriveBays)
@@ -43,7 +41,7 @@ public class BulkUpdateChassisDriveBaysHandler(
             }
             else
             {
-                chassis.AddDriveBay(new ChassisDriveBay(
+                entity.AddDriveBay(new ChassisDriveBay(
                     request.ChassisId,
                     bay.FormFactor,
                     bay.SlotCount));
@@ -52,15 +50,15 @@ public class BulkUpdateChassisDriveBaysHandler(
 
         foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains(x.DriveBayFormFactor)))
         {
-            chassis.RemoveDriveBay(existing);
-            context.ChassisDriveBays.Remove(existing);
+            entity.RemoveDriveBay(existing);
+            chassis.DeleteDriveBay(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EntityLog.ChassisDriveBaysUpdated(logger, chassis.Id);
+        EntityLog.ChassisDriveBaysUpdated(logger, entity.Id);
 
-        return [.. chassis.DriveBays
+        return [.. entity.DriveBays
             .Where(x => x.IsActive)
             .Select(mapper.Map<ChassisDriveBayDto>)];
     }

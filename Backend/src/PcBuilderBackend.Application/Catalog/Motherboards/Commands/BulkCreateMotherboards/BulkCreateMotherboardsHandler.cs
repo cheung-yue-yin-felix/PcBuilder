@@ -6,9 +6,11 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkCreateMotherboards;
 
-public class BulkCreateMotherboardsHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<BulkCreateMotherboardCommand, List<MotherboardDto>>
+public class BulkCreateMotherboardsHandler(IMotherboardRepository motherboards, IUnitOfWork unitOfWork, IMapper mapper)
+    : IRequestHandler<BulkCreateMotherboardCommand, List<MotherboardDto>>
 {
-    public async Task<List<MotherboardDto>> Handle(BulkCreateMotherboardCommand request, CancellationToken cancellationToken)
+    public async Task<List<MotherboardDto>> Handle(BulkCreateMotherboardCommand request,
+        CancellationToken cancellationToken)
     {
         var result = new List<MotherboardDto>();
 
@@ -56,7 +58,7 @@ public class BulkCreateMotherboardsHandler(IApplicationDbContext context, IMappe
                     slot.SlotCount,
                     slot.SupportsSata
                 );
-                
+
                 foreach (var formFactor in slot.FormFactors)
                 {
                     m2.AddFormFactor(new MotherboardM2FormFactor(m2.Id, formFactor));
@@ -74,12 +76,12 @@ public class BulkCreateMotherboardsHandler(IApplicationDbContext context, IMappe
                     port.PortCount));
             }
 
-            context.Motherboards.Add(motherboard);
+            motherboards.Add(motherboard);
 
             result.Add(mapper.Map<MotherboardDto>(motherboard));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return result;
     }
 }

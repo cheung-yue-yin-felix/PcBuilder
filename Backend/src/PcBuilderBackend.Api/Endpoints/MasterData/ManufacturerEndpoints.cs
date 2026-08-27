@@ -44,7 +44,7 @@ public static class ManufacturerEndpoints
         
         subgroup.MapPut("/bulk", BulkUpdateManufacturers)
             .Produces<List<ManufacturerDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple Manufacturers")
             .WithDescription("\n    PUT /master-data/manufacturer/bulk \n [{\n\"id\":\"00000000-0000-0000-0000-000000000000\",\n\"name\":\"ASUS\"\n}]");
@@ -70,7 +70,7 @@ public static class ManufacturerEndpoints
 
         subgroup.MapDelete("/bulk", BulkDeleteManufacturers)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple Manufacturers")
             .WithDescription("\n    DELETE /master-data/manufacturer/bulk \n [\"00000000-0000-0000-0000-000000000000\"]");
@@ -133,23 +133,23 @@ public static class ManufacturerEndpoints
         return TypedResults.Created(context.Request.Path, await sender.Send(command, cancellationToken));
     }
     
-    private static async Task<Results<Ok<List<ManufacturerDto>>, BadRequest>> BulkUpdateManufacturers(
+    private static async Task<Results<Ok<List<ManufacturerDto>>, NotFound>> BulkUpdateManufacturers(
         [Validate] [FromBody] BulkUpdateManufacturersCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken
     )
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null || result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
     
-    private static async Task<Results<NoContent, BadRequest>> BulkDeleteManufacturers(
+    private static async Task<Results<NoContent, NotFound>> BulkDeleteManufacturers(
         [Validate] [FromBody] List<Guid> ids,
         [FromServices] ISender sender,
         CancellationToken cancellationToken
     )
     {
         var success = await sender.Send(new BulkDeleteManufacturersCommand(ids), cancellationToken);
-        return success ? TypedResults.NoContent() : TypedResults.BadRequest();
+        return success ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 }

@@ -33,13 +33,13 @@ public class UpdateMotherboardCommandValidator : AbstractValidator<UpdateMotherb
             .GreaterThan(0).WithMessage("MaxDimmSizeGb must be greater than 0");
 
         RuleFor(x => x.SataPorts)
-            .GreaterThanOrEqualTo(0).WithMessage("SataPorts cannot be negative");
+            .GreaterThan(0).WithMessage("SataPorts must be greater than 0");
 
         RuleFor(x => x.FanConnectors)
-            .GreaterThanOrEqualTo(0).WithMessage("FanConnectors cannot be negative");
+            .GreaterThan(0).WithMessage("FanConnectors must be greater than 0");
 
         RuleFor(x => x.EpsConnectors)
-            .GreaterThanOrEqualTo(0).WithMessage("EpsConnectors cannot be negative");
+            .GreaterThan(0).WithMessage("EpsConnectors must be greater than 0");
 
         RuleFor(x => x.WidthMm)
             .GreaterThan(0).WithMessage("WidthMm must be greater than 0");

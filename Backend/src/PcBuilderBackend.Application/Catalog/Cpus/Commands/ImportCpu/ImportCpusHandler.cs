@@ -4,22 +4,34 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.ImportCpu;
 
 public class ImportCpusHandler(
-    IApplicationDbContext context,
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
     ILogger<ImportCpusHandler> logger) : IRequestHandler<ImportCpusCommand, List<CpuDto>>
 {
     public async Task<List<CpuDto>> Handle(ImportCpusCommand request, CancellationToken cancellationToken)
     {
-        var cpus = await excel.ParseCpuImportAsync(request.Stream, cancellationToken);
+        var rows = await excel.ParseCpuImportAsync(request.Stream, cancellationToken);
+
+        await ActiveEntityGuard.EnsureManufacturersExist(lookup, rows.Select(c => c.ManufacturerId), cancellationToken);
+        await ActiveEntityGuard.EnsureSocketsExist(lookup, rows.Select(c => c.SocketId), cancellationToken);
+        await ActiveEntityGuard.EnsureCpuSeriesExist(lookup, rows.Select(c => c.SeriesId), cancellationToken);
+        await ActiveEntityGuard.EnsureChipsetsExist(
+            lookup,
+            rows.SelectMany(c => c.SupportChipsets.Select(s => s.ChipsetId)),
+            cancellationToken);
+
         var result = new List<Cpu>();
 
-        foreach (var cpu in cpus)
+        foreach (var cpu in rows)
         {
             var entity = new Cpu(
                 cpu.Name,
@@ -50,11 +62,11 @@ public class ImportCpusHandler(
                     support.RequiresBiosUpdate));
             }
 
-            context.Cpus.Add(entity);
+            cpus.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.Cpu);
 

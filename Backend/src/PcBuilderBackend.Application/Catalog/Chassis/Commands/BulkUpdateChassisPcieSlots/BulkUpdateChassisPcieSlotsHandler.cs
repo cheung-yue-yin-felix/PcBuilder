@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassisPcieSlots;
 
 public class BulkUpdateChassisPcieSlotsHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisPcieSlotsHandler> logger)
     : IRequestHandler<BulkUpdateChassisPcieSlotsCommand, List<ChassisPcieSlotDto>?>
@@ -20,17 +20,15 @@ public class BulkUpdateChassisPcieSlotsHandler(
         BulkUpdateChassisPcieSlotsCommand request,
         CancellationToken cancellationToken)
     {
-        var chassis = await context.Chassis
-            .Include(x => x.PcieSlots)
-            .FirstOrDefaultAsync(x => x.Id == request.ChassisId && x.IsActive, cancellationToken);
+        var entity = await chassis.GetWithChildrenAsync(request.ChassisId, cancellationToken);
 
-        if (chassis is null)
+        if (entity is null)
         {
             EntityLog.NotFound(logger, EntityLog.Chassis, request.ChassisId);
             return null;
         }
 
-        var existingByKey = chassis.PcieSlots.ToDictionary(x => (x.LowProfileSlots, x.Orientation));
+        var existingByKey = entity.PcieSlots.ToDictionary(x => (x.LowProfileSlots, x.Orientation));
         var touchedKeys = new HashSet<(bool LowProfileSlots, PcieOrientation Orientation)>();
 
         foreach (var slot in request.PcieSlots)
@@ -48,7 +46,7 @@ public class BulkUpdateChassisPcieSlotsHandler(
             }
             else
             {
-                chassis.AddPcieSlot(new ChassisPcieSlot(
+                entity.AddPcieSlot(new ChassisPcieSlot(
                     request.ChassisId,
                     slot.LowProfileSlots,
                     slot.SlotCount,
@@ -59,15 +57,15 @@ public class BulkUpdateChassisPcieSlotsHandler(
         foreach (var existing in existingByKey.Values.Where(x =>
                      !touchedKeys.Contains((x.LowProfileSlots, x.Orientation))))
         {
-            chassis.RemovePcieSlot(existing);
-            context.ChassisPcieSlots.Remove(existing);
+            entity.RemovePcieSlot(existing);
+            chassis.DeletePcieSlot(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EntityLog.ChassisPcieSlotsUpdated(logger, chassis.Id);
+        EntityLog.ChassisPcieSlotsUpdated(logger, entity.Id);
 
-        return [.. chassis.PcieSlots
+        return [.. entity.PcieSlots
             .Where(x => x.IsActive)
             .Select(mapper.Map<ChassisPcieSlotDto>)];
     }

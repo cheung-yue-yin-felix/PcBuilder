@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.CreateMotherboard;
 
-public class CreateMotherboardHandler(IApplicationDbContext context, IMapper mapper)
+public class CreateMotherboardHandler(IMotherboardRepository motherboards, IUnitOfWork unitOfWork, IMapper mapper)
     : IRequestHandler<CreateMotherboardCommand, MotherboardDto>
 {
     public async Task<MotherboardDto> Handle(CreateMotherboardCommand request, CancellationToken cancellationToken)
@@ -53,8 +53,8 @@ public class CreateMotherboardHandler(IApplicationDbContext context, IMapper map
             entity.AddUsbPort(new MotherboardUsb(entity.Id, port.UsbVersion, port.UsbType, port.PortCount));
         }
         
-        context.Motherboards.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        motherboards.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<MotherboardDto>(entity);
     }

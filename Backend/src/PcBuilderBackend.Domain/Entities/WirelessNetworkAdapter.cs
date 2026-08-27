@@ -4,17 +4,17 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class WirelessNetworkAdapter : ProductEntity
 {
-    public WifiStandard WifiStandard { get; set; }
-    public BluetoothVersion? BluetoothVersion { get; set; }
-    public WirelessHostInterface HostInterface { get; set; }
-    public int MaxSpeedMbps { get; set; }
-    public int? MaxSpeedMbps5G { get; set; }
-    public int? MaxSpeedMbps6G { get; set; }
-    public PcieSlotType? PcieSlotType { get; set; }
-    public M2Key? Key { get; set; }
-    public M2FormFactor? M2FormFactor { get; set; }
-    public UsbVersion? UsbVersion { get; set; }
-    public UsbType? UsbType { get; set; }
+    public WifiStandard WifiStandard { get; private set; }
+    public BluetoothVersion? BluetoothVersion { get; private set; }
+    public WirelessHostInterface HostInterface { get; private set; }
+    public int MaxSpeedMbps { get; private set; }
+    public int? MaxSpeedMbps5G { get; private set; }
+    public int? MaxSpeedMbps6G { get; private set; }
+    public PcieSlotType? PcieSlotType { get; private set; }
+    public M2Key? Key { get; private set; }
+    public M2FormFactor? M2FormFactor { get; private set; }
+    public UsbVersion? UsbVersion { get; private set; }
+    public UsbType? UsbType { get; private set; }
 
     protected WirelessNetworkAdapter()
     {

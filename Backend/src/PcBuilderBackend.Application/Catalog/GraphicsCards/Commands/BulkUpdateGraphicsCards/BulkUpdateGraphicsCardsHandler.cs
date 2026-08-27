@@ -38,6 +38,7 @@ public class BulkUpdateGraphicsCardsHandler(
                 item.VideoMemoryGb,
                 item.PcieSlotsUsed,
                 item.PcieGeneration,
+                item.IsLowProfile,
                 item.LengthMm,
                 item.WidthMm,
                 item.HeightMm,

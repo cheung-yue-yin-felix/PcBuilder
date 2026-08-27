@@ -5,13 +5,15 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Psu : ProductEntity
 {
-    public int Wattage { get; set; }
-    public PsuModularity Modularity { get; set; }
-    public PsuFormFactor FormFactor { get; set; }
-    public decimal LengthMm { get; set; }
-    public decimal WidthMm { get; set; }
-    public decimal HeightMm { get; set; }
-    public ICollection<PsuCable> Cables { get; set; } = new List<PsuCable>();
+    public int Wattage { get; private set; }
+    public PsuModularity Modularity { get; private set; }
+    public PsuFormFactor FormFactor { get; private set; }
+    public decimal LengthMm { get; private set; }
+    public decimal WidthMm { get; private set; }
+    public decimal HeightMm { get; private set; }
+
+    private readonly List<PsuCable> _cables = [];
+    public IReadOnlyCollection<PsuCable> Cables => _cables;
 
     private const decimal CpuVrmEfficiency = 0.90m;
     private const decimal CpuHeadroom = 1.25m;
@@ -20,34 +22,35 @@ public class Psu : ProductEntity
     
     protected Psu() {}
 
-    public Psu(string name, Guid manufacturerId, int wattage, PsuModularity modularity, decimal lengthMm,
-        decimal widthMm, decimal heightMm)
+    public Psu(string name, Guid manufacturerId, int wattage, PsuModularity modularity, PsuFormFactor formFactor,
+        decimal lengthMm, decimal widthMm, decimal heightMm)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(wattage, modularity, lengthMm, widthMm, heightMm);
+        SetSpecs(wattage, modularity, formFactor, lengthMm, widthMm, heightMm);
     }
 
-    public void UpdateSpecs(int wattage, PsuModularity modularity, decimal lengthMm, decimal widthMm, decimal heightMm)
+    public void UpdateSpecs(int wattage, PsuModularity modularity, PsuFormFactor formFactor, decimal lengthMm,
+        decimal widthMm, decimal heightMm)
     {
-        SetSpecs(wattage, modularity, lengthMm, widthMm, heightMm);
+        SetSpecs(wattage, modularity, formFactor, lengthMm, widthMm, heightMm);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
     public void AddCable(PsuCable cable)
     {
-        if (Cables.Any(c => c.PsuId == cable.PsuId && c.Type == cable.Type))
+        if (_cables.Any(c => c.PsuId == cable.PsuId && c.Type == cable.Type))
             throw new ArgumentException("Cable is already added");
             
-        Cables.Add(cable);
+        _cables.Add(cable);
     }
 
     public void RemoveCable(PsuCable cable)
     {
-        if (!Cables.Any(c => c.PsuId == cable.PsuId && c.Type == cable.Type))
+        if (!_cables.Any(c => c.PsuId == cable.PsuId && c.Type == cable.Type))
             throw new ArgumentException("Cable does not exist");
         
-        Cables.Remove(cable);
+        _cables.Remove(cable);
     }
     
     public PartsCompatibilityResult CheckPowerBudget(Cpu cpu, GraphicsCard? gpu)
@@ -63,14 +66,14 @@ public class Psu : ProductEntity
 
     public PartsCompatibilityResult CheckMotherboardCompatibility(Motherboard motherboard)
     {
-        var atx24PinCables = Cables
+        var atx24PinCables = _cables
             .Where(x => x.Type == PsuCableType.Motherboard24Pin)
             .Sum(x => x.CablesCount);
         
         if (atx24PinCables < 1)
             return PartsCompatibilityResult.Incompatible(CompatibilityReason.MissingMotherboardPowerCable);
         
-        var cpuCables = Cables
+        var cpuCables = _cables
             .Where(x => x.Type == PsuCableType.Cpu4Plus4Pin)
             .Sum(x => x.CablesCount);
 
@@ -79,15 +82,15 @@ public class Psu : ProductEntity
 
     public PartsCompatibilityResult CheckGraphisCardCompatibility(GraphicsCard gpu)
     {
-        var pcie8PinCables = Cables
+        var pcie8PinCables = _cables
             .Where(x => x.Type == PsuCableType.Pcie6Plus2Pin)
             .Sum(x => x.CablesCount);
         
-        var pcie12V2X6Cables = Cables
+        var pcie12V2X6Cables = _cables
             .Where(x => x.Type == PsuCableType.Pcie12V2X6)
             .Sum(x => x.CablesCount);
         
-        var pcie12VHighPowerCables = Cables
+        var pcie12VHighPowerCables = _cables
             .Where(x => x.Type == PsuCableType.Pcie12VHighPower)
             .Sum(x => x.CablesCount);
 
@@ -116,7 +119,7 @@ public class Psu : ProductEntity
         if (storageDrives.All(x => x.Interface != StorageInterface.Sata))
             return PartsCompatibilityResult.Compatible();
 
-        var sataCables = Cables
+        var sataCables = _cables
             .Where(x => x.Type == PsuCableType.Sata)
             .Sum(x => x.CablesCount);
 
@@ -125,13 +128,16 @@ public class Psu : ProductEntity
             : PartsCompatibilityResult.Compatible();
     }
 
-    private void SetSpecs(int wattage, PsuModularity modularity, decimal lengthMm,
+    private void SetSpecs(int wattage, PsuModularity modularity, PsuFormFactor formFactor, decimal lengthMm,
         decimal widthMm, decimal heightMm)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(wattage);
         
         if (!Enum.IsDefined(modularity))
             throw new ArgumentException("Modularity is invalid  ");
+
+        if (!Enum.IsDefined(formFactor))
+            throw new ArgumentException("Form factor is invalid");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(lengthMm);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(widthMm);
@@ -139,6 +145,7 @@ public class Psu : ProductEntity
         
         Wattage = wattage;
         Modularity = modularity;
+        FormFactor = formFactor;
         LengthMm = lengthMm;
         WidthMm = widthMm;
         HeightMm = heightMm;

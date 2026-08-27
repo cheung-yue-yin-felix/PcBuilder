@@ -12,6 +12,7 @@ public record CreateGraphicsCardCommand : IRequest<GraphicsCardDto>
     public int VideoMemoryGb { get; init; }
     public int PcieSlotsUsed { get; init; }
     public PcieGeneration PcieGeneration { get; init; }
+    public bool IsLowProfile { get; init; }
     public decimal LengthMm { get; init; }
     public decimal WidthMm { get; init; }
     public decimal HeightMm { get; init; }

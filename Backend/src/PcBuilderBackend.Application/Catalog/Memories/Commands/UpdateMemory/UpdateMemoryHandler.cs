@@ -1,16 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.UpdateMemory;
 
-public class UpdateMemoryHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<UpdateMemoryCommand, RamDto?>
+public class UpdateMemoryHandler(IRamRepository memories, IUnitOfWork unitOfWork, IMapper mapper)
+    : IRequestHandler<UpdateMemoryCommand, RamDto?>
 {
     public async Task<RamDto?> Handle(UpdateMemoryCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Rams.FirstOrDefaultAsync(r => r.Id == request.Id && r.IsActive, cancellationToken);
+        var entity = await memories.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null) return null;
 
         entity.Rename(request.Name);
@@ -26,7 +26,7 @@ public class UpdateMemoryHandler(IApplicationDbContext context, IMapper mapper) 
             request.MaxMemorySpeedMts,
             request.HeightMm);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<RamDto>(entity);
     }

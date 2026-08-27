@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
+using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkCreateGpus;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkDeleteGpus;
@@ -38,14 +39,14 @@ public static class GpuEndpoints
 
         subgroup.MapPut("/", UpdateGpu)
             .Produces<GpuDto>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit a GPU")
             .WithDescription("\n    PUT /master-data/gpu");
 
         subgroup.MapPut("/bulk", BulkUpdateGpus)
             .Produces<List<GpuDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple GPUs")
             .WithDescription("\n    PUT /master-data/gpu/bulk");
@@ -58,7 +59,6 @@ public static class GpuEndpoints
 
         subgroup.MapPost("/bulk", BulkCreateGpus)
             .Produces<List<GpuDto>>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple GPUs")
             .WithDescription("\n    POST /master-data/gpu/bulk");
@@ -108,7 +108,7 @@ public static class GpuEndpoints
     }
 
     private static async Task<Created<GpuDto>> CreateGpu(
-        [FromBody] CreateGpuCommand command,
+        [Validate] [FromBody] CreateGpuCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken,
         HttpContext httpContext)
@@ -117,13 +117,13 @@ public static class GpuEndpoints
         return TypedResults.Created($"{httpContext.Request.Path}/{result.Id}", result);
     }
 
-    private static async Task<Results<Ok<GpuDto>, BadRequest>> UpdateGpu(
+    private static async Task<Results<Ok<GpuDto>, NotFound>> UpdateGpu(
         [FromBody] UpdateGpuCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is not null ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteGpu(
@@ -144,25 +144,23 @@ public static class GpuEndpoints
         return TypedResults.Ok(await sender.Send(new ImportGpusCommand(fileStream), cancellationToken));
     }
 
-    private static async Task<Results<Created<List<GpuDto>>, BadRequest>> BulkCreateGpus(
-        [FromBody] BulkCreateGpusCommand command,
+    private static async Task<Created<List<GpuDto>>> BulkCreateGpus(
+        [Validate] [FromBody] BulkCreateGpusCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken,
         HttpContext httpContext)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count > 0
-            ? TypedResults.Created($"{httpContext.Request.Path}", result)
-            : TypedResults.BadRequest();
+        return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
 
-    private static async Task<Results<Ok<List<GpuDto>>, BadRequest>> BulkUpdateGpus(
+    private static async Task<Results<Ok<List<GpuDto>>, NotFound>> BulkUpdateGpus(
         [FromBody] BulkUpdateGpusCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count > 0 ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> BulkDeleteGpus(

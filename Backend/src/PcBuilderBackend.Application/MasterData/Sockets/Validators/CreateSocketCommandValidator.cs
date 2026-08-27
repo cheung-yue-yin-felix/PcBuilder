@@ -1,13 +1,17 @@
 ﻿using FluentValidation;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.CreateSocket;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Validators;
 
 public class CreateSocketCommandValidator: AbstractValidator<CreateSocketCommand>
 {
-    public CreateSocketCommandValidator()
+    public CreateSocketCommandValidator(IActiveEntityLookup db)
     {
-        RuleFor(x => x.ManufacturerId).NotEmpty().WithMessage("ManufacturerId is required.");
+        RuleFor(x => x.ManufacturerId)
+            .NotEmpty().WithMessage("ManufacturerId is required.")
+            .MustBeActiveManufacturer(db);
         RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.").MaximumLength(200).WithMessage("Name cannot exceed 200 characters.");
     }
 }

@@ -1,25 +1,30 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Motherboards.Commands.CreateMotherboard;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Validators;
 
 public class CreateMotherboardCommandValidator : AbstractValidator<CreateMotherboardCommand>
 {
-    public CreateMotherboardCommandValidator()
+    public CreateMotherboardCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name is required")
             .MaximumLength(200);
 
         RuleFor(x => x.ManufacturerId)
-            .NotEmpty().WithMessage("ManufacturerId is required");
+            .NotEmpty().WithMessage("ManufacturerId is required")
+            .MustBeActiveManufacturer(db);
 
         RuleFor(x => x.SocketId)
-            .NotEmpty().WithMessage("SocketId is required");
+            .NotEmpty().WithMessage("SocketId is required")
+            .MustBeActiveSocket(db);
 
         RuleFor(x => x.ChipsetId)
-            .NotEmpty().WithMessage("ChipsetId is required");
+            .NotEmpty().WithMessage("ChipsetId is required")
+            .MustBeActiveChipset(db);
 
         RuleFor(x => x.RamSlots)
             .GreaterThan(0).WithMessage("RamSlots must be greater than 0");
@@ -31,13 +36,13 @@ public class CreateMotherboardCommandValidator : AbstractValidator<CreateMotherb
             .GreaterThan(0).WithMessage("MaxDimmSizeGb must be greater than 0");
 
         RuleFor(x => x.SataPorts)
-            .GreaterThanOrEqualTo(0).WithMessage("SataPorts cannot be negative");
+            .GreaterThan(0).WithMessage("SataPorts must be greater than 0");
 
         RuleFor(x => x.FanConnectors)
-            .GreaterThanOrEqualTo(0).WithMessage("FanConnectors cannot be negative");
+            .GreaterThan(0).WithMessage("FanConnectors must be greater than 0");
 
         RuleFor(x => x.EpsConnectors)
-            .GreaterThanOrEqualTo(0).WithMessage("EpsConnectors cannot be negative");
+            .GreaterThan(0).WithMessage("EpsConnectors must be greater than 0");
 
         RuleFor(x => x.WidthMm)
             .GreaterThan(0).WithMessage("WidthMm must be greater than 0");
@@ -55,7 +60,13 @@ public class CreateMotherboardCommandValidator : AbstractValidator<CreateMotherb
             .IsInEnum().WithMessage("FormFactor is invalid");
         
         RuleFor(x => x.PcieSlots)
-            .NotEmpty().WithMessage("PcieSlots is required");
+            .NotEmpty().WithMessage("PcieSlots is required")
+            .Must(slots => slots
+                .Select(s => (s.SlotType, s.SlotLanes, s.Generation))
+                .Distinct()
+                .Count() == slots.Count)
+            .WithMessage("Duplicate PCIe slots (same type, lanes, and generation) are not allowed.")
+            .When(x => x.PcieSlots.Count > 0);
 
         RuleFor(x => x.M2Slots)
             .NotEmpty().WithMessage("M2Slots is required");

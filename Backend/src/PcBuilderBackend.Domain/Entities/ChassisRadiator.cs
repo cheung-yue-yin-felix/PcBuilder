@@ -4,11 +4,11 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisRadiator : BaseEntity
 {
-    public Guid ChassisId { get; set; }
-    public RadiatorLength Length { get; set; }
-    public RadiatorMountLocation MountLocation { get; set; }
-    public int RadiatorCount { get; set; }
-    public Chassis Chassis { get; set; } = null!;
+    public Guid ChassisId { get; private set; }
+    public RadiatorLength Length { get; private set; }
+    public RadiatorMountLocation MountLocation { get; private set; }
+    public int RadiatorCount { get; private set; }
+    public Chassis Chassis { get; private set; } = null!;
     
     protected ChassisRadiator() {}
 
@@ -40,10 +40,10 @@ public class ChassisRadiator : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID is required.");
 
-        if (!Enum.IsDefined(length))
+        if (!Enum.IsDefined(typeof(RadiatorLength), length))
             throw new ArgumentException("Radiator length is invalid.");
 
-        if (!Enum.IsDefined(mountLocation))
+        if (!Enum.IsDefined(typeof(RadiatorMountLocation), mountLocation))
             throw new ArgumentException("Radiator mount location is invalid.");
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(radiatorCount);

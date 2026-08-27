@@ -81,7 +81,7 @@ public static class MotherboardEndpoints
 
         pcieGroup.MapPut("/", UpdateMotherboardPcieSlots)
             .Produces<List<MotherboardPcieDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace motherboard PCIe slots")
             .WithDescription("\n    PUT /catalog/motherboard/00000000-0000-0000-0000-000000000000/pcie-slot");
@@ -97,7 +97,7 @@ public static class MotherboardEndpoints
 
         m2Group.MapPut("/", UpdateMotherboardM2Slots)
             .Produces<List<MotherboardM2Dto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace motherboard M.2 slots")
             .WithDescription("\n    PUT /catalog/motherboard/00000000-0000-0000-0000-000000000000/m2-slot");
@@ -113,7 +113,7 @@ public static class MotherboardEndpoints
 
         usbGroup.MapPut("/", UpdateMotherboardUsbPorts)
             .Produces<List<MotherboardUsbDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace motherboard USB ports")
             .WithDescription("\n    PUT /catalog/motherboard/00000000-0000-0000-0000-000000000000/usb-port");
@@ -195,7 +195,7 @@ public static class MotherboardEndpoints
             await sender.Send(new GetMotherboardPcieSlotsByMotherboardIdQuery(motherboardId), cancellationToken));
     }
 
-    private static async Task<Results<Ok<List<MotherboardPcieDto>>, BadRequest>> UpdateMotherboardPcieSlots(
+    private static async Task<Results<Ok<List<MotherboardPcieDto>>, NotFound>> UpdateMotherboardPcieSlots(
         [FromRoute] Guid motherboardId,
         [FromBody] List<MotherboardPcieDto> pcieSlots,
         [FromServices] ISender sender,
@@ -205,7 +205,7 @@ public static class MotherboardEndpoints
             new BulkUpdateMotherboardPcieSlotsCommand(motherboardId, pcieSlots),
             cancellationToken);
 
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Ok<List<MotherboardM2Dto>>> GetMotherboardM2Slots(
@@ -217,7 +217,7 @@ public static class MotherboardEndpoints
             await sender.Send(new GetMotherboardM2SlotsByMotherboardIdQuery(motherboardId), cancellationToken));
     }
 
-    private static async Task<Results<Ok<List<MotherboardM2Dto>>, BadRequest>> UpdateMotherboardM2Slots(
+    private static async Task<Results<Ok<List<MotherboardM2Dto>>, NotFound>> UpdateMotherboardM2Slots(
         [FromRoute] Guid motherboardId,
         [FromBody] List<MotherboardM2Dto> m2Slots,
         [FromServices] ISender sender,
@@ -227,7 +227,7 @@ public static class MotherboardEndpoints
             new BulkUpdateMotherboardM2SlotsCommand(motherboardId, m2Slots),
             cancellationToken);
 
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Ok<List<MotherboardUsbDto>>> GetMotherboardUsbPorts(
@@ -239,7 +239,7 @@ public static class MotherboardEndpoints
             await sender.Send(new GetMotherboardUsbPortsByMotherboardIdQuery(motherboardId), cancellationToken));
     }
 
-    private static async Task<Results<Ok<List<MotherboardUsbDto>>, BadRequest>> UpdateMotherboardUsbPorts(
+    private static async Task<Results<Ok<List<MotherboardUsbDto>>, NotFound>> UpdateMotherboardUsbPorts(
         [FromRoute] Guid motherboardId,
         [FromBody] List<MotherboardUsbDto> usbPorts,
         [FromServices] ISender sender,
@@ -249,6 +249,6 @@ public static class MotherboardEndpoints
             new BulkUpdateMotherboardUsbPortsCommand(motherboardId, usbPorts),
             cancellationToken);
 
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 }

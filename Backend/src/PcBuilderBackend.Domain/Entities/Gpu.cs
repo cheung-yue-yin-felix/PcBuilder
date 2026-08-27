@@ -2,8 +2,8 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Gpu : ProductEntity
 {
-    public Guid SeriesId { get; set; }
-    public GpuSeries Series { get; set; } = null!;
+    public Guid SeriesId { get; private set; }
+    public GpuSeries Series { get; private set; } = null!;
     
     protected Gpu() {}
     

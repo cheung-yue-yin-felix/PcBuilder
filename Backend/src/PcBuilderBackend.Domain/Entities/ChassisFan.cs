@@ -4,8 +4,8 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisFan : ProductEntity
 {
-    public FanDiameterMm DiameterMm { get; set; }
-    public int FansCountPerPack { get; set; }
+    public FanDiameterMm DiameterMm { get; private set; }
+    public int FansCountPerPack { get; private set; }
     
     protected ChassisFan() {}
 
@@ -24,7 +24,7 @@ public class ChassisFan : ProductEntity
 
     private void SetSpecs(FanDiameterMm diameterMm, int fansCountPerPack)
     {
-        if (!Enum.IsDefined(diameterMm))
+        if (!Enum.IsDefined(typeof(FanDiameterMm), diameterMm))
             throw new ArgumentException("Fan Diameter mm is invalid");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fansCountPerPack);

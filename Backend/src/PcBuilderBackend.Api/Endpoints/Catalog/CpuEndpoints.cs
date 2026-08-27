@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
+using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkCreateCpus;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkDeleteCpus;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpuRamCompats;
@@ -62,31 +63,33 @@ public static class CpuEndpoints
 
         subgroup.MapPut("/bulk", BulkUpdateCpus)
             .Produces<List<CpuDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple CPUs")
             .WithDescription("\n    PUT /catalog/cpu/bulk");
 
         subgroup.MapPost("/", CreateCpu)
-            .Produces<CpuDto>()
+            .Produces<CpuDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add CPU")
             .WithDescription("\n    POST /catalog/cpu");
 
         subgroup.MapPost("/bulk", BulkCreateCpus)
-            .Produces<List<CpuDto>>()
+            .Produces<List<CpuDto>>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple CPUs")
             .WithDescription("\n    POST /catalog/cpu/bulk");
 
         subgroup.MapDelete("/{id}", DeleteCpu)
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete a CPU")
             .WithDescription("\n    DELETE /catalog/cpu/00000000-0000-0000-0000-000000000000");
 
         subgroup.MapDelete("/bulk", BulkDeleteCpus)
             .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple CPUs")
             .WithDescription("\n    DELETE /catalog/cpu/bulk");
@@ -109,7 +112,7 @@ public static class CpuEndpoints
 
         ramCompatGroup.MapPut("/", UpdateCpuRamCompats)
             .Produces<List<CpuRamCompatDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace CPU RAM compatibility entries")
             .WithDescription("\n    PUT /catalog/cpu/00000000-0000-0000-0000-000000000000/ram-compats");
@@ -125,7 +128,7 @@ public static class CpuEndpoints
 
         supportChipsetGroup.MapPut("/", UpdateCpuSupportChipsets)
             .Produces<List<CpuSupportChipsetDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Replace CPU supported chipset entries")
             .WithDescription("\n    PUT /catalog/cpu/00000000-0000-0000-0000-000000000000/support-chipsets");
@@ -161,13 +164,13 @@ public static class CpuEndpoints
     }
 
     private static async Task<Created<CpuDto>> CreateCpu(
-        [FromBody] CreateCpuCommand command,
+        [Validate] [FromBody] CreateCpuCommand command,
         [FromServices] ISender sender,
         HttpContext context,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return TypedResults.Created(context.Request.Path, result);
+        return TypedResults.Created($"{context.Request.Path}/{result.Id}", result);
     }
 
     private static async Task<Results<Ok<CpuDto>, NotFound>> UpdateCpu(
@@ -196,14 +199,14 @@ public static class CpuEndpoints
         return TypedResults.Ok(await sender.Send(new ListCompatibleMemoriesQuery(cpuId), cancellationToken));
     }
 
-    private static async Task<Results<Ok<List<CpuRamCompatDto>>, BadRequest>> UpdateCpuRamCompats(
+    private static async Task<Results<Ok<List<CpuRamCompatDto>>, NotFound>> UpdateCpuRamCompats(
         [FromRoute] Guid cpuId,
         [FromBody] List<CpuRamCompatDto> ramCompats,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(new BulkUpdateCpuRamCompatsCommand(cpuId, ramCompats), cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Ok<List<CpuSupportChipsetDto>>> GetCpuSupportChipsets(
@@ -214,7 +217,7 @@ public static class CpuEndpoints
         return TypedResults.Ok(await sender.Send(new ListCompatibleChipsetsQuery(cpuId), cancellationToken));
     }
 
-    private static async Task<Results<Ok<List<CpuSupportChipsetDto>>, BadRequest>> UpdateCpuSupportChipsets(
+    private static async Task<Results<Ok<List<CpuSupportChipsetDto>>, NotFound>> UpdateCpuSupportChipsets(
         [FromRoute] Guid cpuId,
         [FromBody] List<CpuSupportChipsetDto> supportChipsets,
         [FromServices] ISender sender,
@@ -223,26 +226,26 @@ public static class CpuEndpoints
         var result = await sender.Send(
             new BulkUpdateCpuSupportChipsetsCommand(cpuId, supportChipsets),
             cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<Results<Created<List<CpuDto>>, BadRequest>> BulkCreateCpus(
-        [FromBody] BulkCreateCpusCommand commands,
+    private static async Task<Created<List<CpuDto>>> BulkCreateCpus(
+        [Validate] [FromBody] BulkCreateCpusCommand commands,
         [FromServices] ISender sender,
         HttpContext context,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(commands, cancellationToken);
-        return result.Count == 0 ? TypedResults.BadRequest() : TypedResults.Created(context.Request.Path, result);
+        return TypedResults.Created(context.Request.Path, result);
     }
 
-    private static async Task<Results<Ok<List<CpuDto>>, BadRequest>> BulkUpdateCpus(
+    private static async Task<Results<Ok<List<CpuDto>>, NotFound>> BulkUpdateCpus(
         [FromBody] BulkUpdateCpusCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null || result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> BulkDeleteCpus(

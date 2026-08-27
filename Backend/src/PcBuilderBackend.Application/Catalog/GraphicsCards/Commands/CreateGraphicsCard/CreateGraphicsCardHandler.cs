@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
 
 public class CreateGraphicsCardHandler(
-    IApplicationDbContext context,
+    IGraphicsCardRepository graphicsCards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateGraphicsCardHandler> logger)
     : IRequestHandler<CreateGraphicsCardCommand, GraphicsCardDto>
@@ -25,6 +26,7 @@ public class CreateGraphicsCardHandler(
             request.VideoMemoryGb,
             request.PcieSlotsUsed,
             request.PcieGeneration,
+            request.IsLowProfile,
             request.LengthMm,
             request.WidthMm,
             request.HeightMm,
@@ -32,8 +34,8 @@ public class CreateGraphicsCardHandler(
             request.PowerConnectorType,
             request.PowerConnectorCount);
 
-        context.GraphicsCards.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        graphicsCards.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.GraphicsCard, entity.Id);
 

@@ -4,11 +4,11 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class WiredNetworkAdapter : ProductEntity
 {
-    public WiredHostInterface HostInterface { get; set; }
-    public int MaxSpeedMbps { get; set; }
-    public UsbVersion? UsbVersion { get; set; }
-    public UsbType? UsbType { get; set; }
-    public PcieSlotType? PcieSlotType { get; set; }
+    public WiredHostInterface HostInterface { get; private set; }
+    public int MaxSpeedMbps { get; private set; }
+    public UsbVersion? UsbVersion { get; private set; }
+    public UsbType? UsbType { get; private set; }
+    public PcieSlotType? PcieSlotType { get; private set; }
     
     protected WiredNetworkAdapter() { }
 

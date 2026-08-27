@@ -4,12 +4,15 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.ImportMotherboards;
 
 public class ImportMotherboardsHandler(
-    IApplicationDbContext context,
+    IMotherboardRepository motherboards,
+    IUnitOfWork unitOfWork,
+    IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
     ILogger<ImportMotherboardsHandler> logger)
@@ -20,6 +23,11 @@ public class ImportMotherboardsHandler(
         CancellationToken cancellationToken)
     {
         var rows = await excel.ParseMotherboardImportAsync(request.Stream, cancellationToken);
+
+        await ActiveEntityGuard.EnsureManufacturersExist(lookup, rows.Select(r => r.ManufacturerId), cancellationToken);
+        await ActiveEntityGuard.EnsureSocketsExist(lookup, rows.Select(r => r.SocketId), cancellationToken);
+        await ActiveEntityGuard.EnsureChipsetsExist(lookup, rows.Select(r => r.ChipsetId), cancellationToken);
+
         var result = new List<Motherboard>();
 
         foreach (var row in rows)
@@ -72,11 +80,11 @@ public class ImportMotherboardsHandler(
                     entity.Id, port.UsbVersion, port.UsbType, port.PortCount));
             }
 
-            context.Motherboards.Add(entity);
+            motherboards.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.Motherboard);
 

@@ -4,9 +4,9 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisPsuFormFactor: BaseEntity
 {
-    public Guid ChassisId { get; set; }
-    public PsuFormFactor PsuFormFactor { get; set; }
-    public Chassis Chassis { get; set; } = null!;
+    public Guid ChassisId { get; private set; }
+    public PsuFormFactor PsuFormFactor { get; private set; }
+    public Chassis Chassis { get; private set; } = null!;
     
     protected ChassisPsuFormFactor() {}
 
@@ -26,7 +26,7 @@ public class ChassisPsuFormFactor: BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID cannot be empty");
         
-        if (!Enum.IsDefined(formFactor))
+        if (!Enum.IsDefined(typeof(PsuFormFactor), formFactor))
             throw new ArgumentException("PSU Form Factor is invalid");
         
         ChassisId = chassisId;

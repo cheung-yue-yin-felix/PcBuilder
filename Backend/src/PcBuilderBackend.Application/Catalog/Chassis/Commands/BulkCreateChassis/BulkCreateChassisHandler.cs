@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkCreateChassis;
 
 public class BulkCreateChassisHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkCreateChassisHandler> logger)
     : IRequestHandler<BulkCreateChassisCommand, List<ChassisDto>>
@@ -82,11 +83,11 @@ public class BulkCreateChassisHandler(
                 entity.AddPsuFormFactor(new ChassisPsuFormFactor(entity.Id, formFactor));
             }
 
-            context.Chassis.Add(entity);
+            chassis.Add(entity);
             result.Add(mapper.Map<ChassisDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.Chassis);
         return result;
     }

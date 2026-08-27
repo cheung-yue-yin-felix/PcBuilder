@@ -11,10 +11,10 @@ public class StorageServices : IStorageServices
 
     public StorageServices(IConfiguration configuration)
     {
-        _bucketName = configuration["BackBlaze:BucketName"] ?? "";
-        var accessKey = configuration["BackBlaze:KeyID"] ?? "";
-        var secretKey = configuration["BackBlaze:Key"] ?? "";
-        var serviceUrl = configuration["BackBlaze:ServiceUrl"] ?? "";
+        _bucketName = configuration["S3:BucketName"] ?? "";
+        var accessKey = configuration["S3:AccessKey"] ?? "";
+        var secretKey = configuration["S3:SecretKey"] ?? "";
+        var serviceUrl = configuration["S3:ServiceUrl"] ?? "";
         _s3Client = new AmazonS3Client(accessKey, secretKey, new AmazonS3Config
         {
             ServiceURL = serviceUrl,
@@ -24,8 +24,8 @@ public class StorageServices : IStorageServices
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName, string contentType)
     {
-        var key = $"photos/{Guid.NewGuid()}{Path.GetExtension(fileName)}";
-        
+        var key = $"pc-builder/{Guid.NewGuid()}{Path.GetExtension(fileName)}";
+
         var request = new Amazon.S3.Model.PutObjectRequest
         {
             BucketName = _bucketName,
@@ -36,12 +36,6 @@ public class StorageServices : IStorageServices
 
         await _s3Client.PutObjectAsync(request);
         return key;
-    }
-
-    public async Task<Stream> GetPhotoStreamAsync(string key)
-    {
-        var response = await _s3Client.GetObjectAsync(_bucketName, key);
-        return response.ResponseStream;
     }
 }
 

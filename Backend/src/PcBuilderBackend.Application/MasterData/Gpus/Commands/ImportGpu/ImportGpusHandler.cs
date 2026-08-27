@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Domain.Entities;
 
@@ -9,6 +10,7 @@ namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.ImportGpu;
 
 public class ImportGpusHandler(
     IApplicationDbContext context,
+    IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
     ICacheService cache)
@@ -17,6 +19,10 @@ public class ImportGpusHandler(
     public async Task<List<GpuDto>> Handle(ImportGpusCommand request, CancellationToken cancellationToken)
     {
         var gpus = await excel.ParseGpuImportAsync(request.Stream, cancellationToken);
+
+        await ActiveEntityGuard.EnsureManufacturersExist(lookup, gpus.Select(g => g.ManufacturerId), cancellationToken);
+        await ActiveEntityGuard.EnsureGpuSeriesExist(lookup, gpus.Select(g => g.SeriesId), cancellationToken);
+
         var result = new List<Gpu>();
 
         foreach (var gpu in gpus)

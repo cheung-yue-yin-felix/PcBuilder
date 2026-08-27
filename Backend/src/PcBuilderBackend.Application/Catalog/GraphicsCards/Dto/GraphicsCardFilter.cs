@@ -11,6 +11,7 @@ public record GraphicsCardFilter
     public int? VideoMemoryGb { get; init; }
     public int? PcieSlotsUsed { get; init; }
     public PcieGeneration? PcieGeneration { get; init; }
+    public bool? IsLowProfile { get; init; }
     public RangeFilter? LengthMm { get; init; }
     public RangeFilter? WidthMm { get; init; }
     public RangeFilter? HeightMm { get; init; }

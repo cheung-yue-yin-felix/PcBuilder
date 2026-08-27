@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassisFanMounts;
 
 public class BulkUpdateChassisFanMountsHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisFanMountsHandler> logger)
     : IRequestHandler<BulkUpdateChassisFanMountsCommand, List<ChassisFanMountDto>?>
@@ -20,18 +20,15 @@ public class BulkUpdateChassisFanMountsHandler(
         BulkUpdateChassisFanMountsCommand request,
         CancellationToken cancellationToken)
     {
-        var chassis = await context.Chassis
-            .Include(x => x.FanMounts)
-            .ThenInclude(x => x.Options)
-            .FirstOrDefaultAsync(x => x.Id == request.ChassisId && x.IsActive, cancellationToken);
+        var entity = await chassis.GetWithChildrenAsync(request.ChassisId, cancellationToken);
 
-        if (chassis is null)
+        if (entity is null)
         {
             EntityLog.NotFound(logger, EntityLog.Chassis, request.ChassisId);
             return null;
         }
 
-        var existingByKey = chassis.FanMounts.ToDictionary(x => x.Location);
+        var existingByKey = entity.FanMounts.ToDictionary(x => x.Location);
         var touchedKeys = new HashSet<FanMountLocation>();
 
         foreach (var mount in request.FanMounts)
@@ -58,7 +55,7 @@ public class BulkUpdateChassisFanMountsHandler(
                         option.SlotCount));
                 }
 
-                chassis.AddFanMount(mountEntity);
+                entity.AddFanMount(mountEntity);
             }
         }
 
@@ -67,18 +64,18 @@ public class BulkUpdateChassisFanMountsHandler(
             foreach (var option in existing.Options.ToList())
             {
                 existing.RemoveOption(option);
-                context.ChassisFanMountOptions.Remove(option);
+                chassis.DeleteFanMountOption(option);
             }
 
-            chassis.RemoveFanMount(existing);
-            context.ChassisFanMounts.Remove(existing);
+            entity.RemoveFanMount(existing);
+            chassis.DeleteFanMount(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EntityLog.ChassisFanMountsUpdated(logger, chassis.Id);
+        EntityLog.ChassisFanMountsUpdated(logger, entity.Id);
 
-        return [.. chassis.FanMounts
+        return [.. entity.FanMounts
             .Where(x => x.IsActive)
             .Select(mapper.Map<ChassisFanMountDto>)];
     }
@@ -106,7 +103,7 @@ public class BulkUpdateChassisFanMountsHandler(
         foreach (var optionEntity in existingByKey.Values.Where(x => !requestedByKey.ContainsKey(x.Diameter)))
         {
             existing.RemoveOption(optionEntity);
-            context.ChassisFanMountOptions.Remove(optionEntity);
+            chassis.DeleteFanMountOption(optionEntity);
         }
     }
 }

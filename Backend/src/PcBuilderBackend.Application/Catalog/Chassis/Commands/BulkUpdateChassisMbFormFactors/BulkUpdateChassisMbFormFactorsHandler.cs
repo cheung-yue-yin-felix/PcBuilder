@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
@@ -9,7 +8,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassisMbFormFactors;
 
 public class BulkUpdateChassisMbFormFactorsHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     ILogger<BulkUpdateChassisMbFormFactorsHandler> logger)
     : IRequestHandler<BulkUpdateChassisMbFormFactorsCommand, List<MbFormFactor>?>
 {
@@ -17,38 +17,40 @@ public class BulkUpdateChassisMbFormFactorsHandler(
         BulkUpdateChassisMbFormFactorsCommand request,
         CancellationToken cancellationToken)
     {
-        var chassis = await context.Chassis
-            .Include(x => x.MbFormFactors)
-            .FirstOrDefaultAsync(x => x.Id == request.ChassisId && x.IsActive, cancellationToken);
+        var entity = await chassis.GetWithChildrenAsync(request.ChassisId, cancellationToken);
 
-        if (chassis is null)
+        if (entity is null)
         {
             EntityLog.NotFound(logger, EntityLog.Chassis, request.ChassisId);
             return null;
         }
 
         var requested = request.MbFormFactors.Distinct().ToHashSet();
-        var existingByKey = chassis.MbFormFactors.ToDictionary(x => x.MbFormFactor);
+        var existingByKey = entity.MbFormFactors.ToDictionary(x => x.MbFormFactor);
 
         foreach (var formFactor in requested)
         {
             if (!existingByKey.ContainsKey(formFactor))
             {
-                chassis.AddMbFormFactor(new ChassisMbFormFactor(request.ChassisId, formFactor));
+                entity.AddMbFormFactor(new ChassisMbFormFactor(request.ChassisId, formFactor));
             }
         }
 
         foreach (var existing in existingByKey.Values.Where(x => !requested.Contains(x.MbFormFactor)))
         {
-            chassis.RemoveMbFormFactor(existing);
+            entity.RemoveMbFormFactor(existing);
+            chassis.DeleteMbFormFactor(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EntityLog.ChassisMbFormFactorsUpdated(logger, chassis.Id);
+        EntityLog.ChassisMbFormFactorsUpdated(logger, entity.Id);
 
-        return [.. chassis.MbFormFactors
-            .Where(x => x.IsActive)
-            .Select(x => x.MbFormFactor)];
+        return
+        [
+            .. entity.MbFormFactors
+                .Where(x => x.IsActive)
+                .Select(x => x.MbFormFactor)
+        ];
     }
 }

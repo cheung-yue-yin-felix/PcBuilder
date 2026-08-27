@@ -4,9 +4,9 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class MotherboardM2FormFactor : BaseEntity
 {
-    public Guid MotherboardM2Id { get; set; }
-    public M2FormFactor FormFactor { get; set; }
-    public MotherboardM2 MotherboardM2 { get; set; } = null!;
+    public Guid MotherboardM2Id { get; private set; }
+    public M2FormFactor FormFactor { get; private set; }
+    public MotherboardM2 MotherboardM2 { get; private set; } = null!;
 
     protected MotherboardM2FormFactor() {}
 

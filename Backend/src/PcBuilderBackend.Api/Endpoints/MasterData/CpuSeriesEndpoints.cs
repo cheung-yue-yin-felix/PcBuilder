@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
+using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkCreateCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkDeleteCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkUpdateCpuSeries;
@@ -34,11 +35,12 @@ public static class CpuSeriesEndpoints
         
         subgroup.MapPut("/", UpdateCpuSeries)
             .Produces<CpuSeriesDto>()
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit a CPU Series");
         
         subgroup.MapPost("/", CreateCpuSeries)
-            .Produces<CpuSeriesDto>()
+            .Produces<CpuSeriesDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add a new CPU Series");
         
@@ -50,18 +52,18 @@ public static class CpuSeriesEndpoints
         
         subgroup.MapPut("/bulk", BulkUpdateCpuSeries)
             .Produces<List<CpuSeriesDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple CPU Series");
         
         subgroup.MapPost("/bulk", BulkCreateCpuSeries)
-            .Produces<List<CpuSeriesDto>>()
+            .Produces<List<CpuSeriesDto>>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple new CPU Series");
         
         subgroup.MapDelete("/bulk", BulkDeleteCpuSeries)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple CPU Series");
     }
@@ -82,20 +84,23 @@ public static class CpuSeriesEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
     
-    private static async Task<Ok<CpuSeriesDto>> CreateCpuSeries(
-        [FromBody] CreateCpuSeriesCommand command,
+    private static async Task<Created<CpuSeriesDto>> CreateCpuSeries(
+        [Validate] [FromBody] CreateCpuSeriesCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(command, cancellationToken));
+        var result = await sender.Send(command, cancellationToken);
+        return TypedResults.Created($"{httpContext.Request.Path}/{result.Id}", result);
     }
 
-    private static async Task<Ok<CpuSeriesDto>> UpdateCpuSeries(
+    private static async Task<Results<Ok<CpuSeriesDto>, NotFound>> UpdateCpuSeries(
         [FromBody] UpdateCpuSeriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(command, cancellationToken));
+        var result = await sender.Send(command, cancellationToken);
+        return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
     
     private static async Task<Results<NoContent, NotFound>> DeleteCpuSeries(
@@ -107,29 +112,31 @@ public static class CpuSeriesEndpoints
         return success ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 
-    private static async Task<Ok<List<CpuSeriesDto>>> BulkCreateCpuSeries(
-        [FromBody] BulkCreateCpuSeriesCommand command,
+    private static async Task<Created<List<CpuSeriesDto>>> BulkCreateCpuSeries(
+        [Validate] [FromBody] BulkCreateCpuSeriesCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(command, cancellationToken));
+        var result = await sender.Send(command, cancellationToken);
+        return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
     
-    private static async Task<Results<Ok<List<CpuSeriesDto>>, BadRequest>> BulkUpdateCpuSeries(
+    private static async Task<Results<Ok<List<CpuSeriesDto>>, NotFound>> BulkUpdateCpuSeries(
         [FromBody] BulkUpdateCpuSeriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var results = await sender.Send(command, cancellationToken);
-        return results.Count > 0 ? TypedResults.Ok(results) : TypedResults.BadRequest();
+        return results.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(results);
     }
 
-    private static async Task<Results<NoContent, BadRequest>> BulkDeleteCpuSeries(
+    private static async Task<Results<NoContent, NotFound>> BulkDeleteCpuSeries(
         [FromBody] BulkDeleteCpuSeriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var success = await sender.Send(command, cancellationToken);
-        return success ? TypedResults.NoContent() : TypedResults.BadRequest();
+        return success ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 }

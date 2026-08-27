@@ -49,18 +49,6 @@ public static class MasterDataCacheKeys
     {
         public const string Prefix = $"{Root}:gpus:";
         public static string ById(Guid id) => $"{Prefix}{id:D}";
-
-        public static string List(
-            int pageIndex,
-            int pageSize,
-            string? name,
-            Guid? manufacturerId,
-            Guid? gpuSeriesId)
-        {
-            var n = string.IsNullOrWhiteSpace(name) ? "_" : name.Trim().ToLowerInvariant();
-            var m = manufacturerId?.ToString("D") ?? "_";
-            var s = gpuSeriesId?.ToString("D") ?? "_";
-            return $"{Prefix}list:{pageIndex}:{pageSize}:{n}:{m}:{s}";
-        }
+        public static string All() => $"{Prefix}all";
     }
 }

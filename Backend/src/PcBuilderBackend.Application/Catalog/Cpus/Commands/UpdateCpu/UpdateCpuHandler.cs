@@ -7,12 +7,16 @@ using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.UpdateCpu;
 
-public class UpdateCpuHandler(IApplicationDbContext context, IMapper mapper, ILogger<UpdateCpuHandler> logger)
+public class UpdateCpuHandler(
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    ILogger<UpdateCpuHandler> logger)
     : IRequestHandler<UpdateCpuCommand, CpuDto?>
 {
     public async Task<CpuDto?> Handle(UpdateCpuCommand request, CancellationToken cancellationToken)
     {
-        var entity = context.Cpus.FirstOrDefault(c => c.Id == request.Id && c.IsActive);
+        var entity = await cpus.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
             EntityLog.NotFoundOrInactive(logger, EntityLog.Cpu, request.Id);
@@ -30,7 +34,7 @@ public class UpdateCpuHandler(IApplicationDbContext context, IMapper mapper, ILo
             request.ThermalDesignPower,
             request.PowerConsumptionWatts);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.Cpu, entity.Id);
 

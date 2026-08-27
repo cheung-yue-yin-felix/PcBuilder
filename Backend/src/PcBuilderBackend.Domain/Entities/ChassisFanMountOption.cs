@@ -4,10 +4,10 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisFanMountOption : BaseEntity
 {
-    public Guid ChassisFanMountId { get; set; }
-    public FanDiameterMm Diameter { get; set; }
-    public int SlotCount { get; set; }
-    public ChassisFanMount Mount { get; set; } = null!;
+    public Guid ChassisFanMountId { get; private set; }
+    public FanDiameterMm Diameter { get; private set; }
+    public int SlotCount { get; private set; }
+    public ChassisFanMount Mount { get; private set; } = null!;
     
     protected ChassisFanMountOption() {}
 
@@ -27,7 +27,7 @@ public class ChassisFanMountOption : BaseEntity
         if (chassisFanMountId == Guid.Empty)
             throw new ArgumentException("Chassis Fan Mount ID must be provided");
         
-        if (!Enum.IsDefined(diameterMm))
+        if (!Enum.IsDefined(typeof(FanDiameterMm), diameterMm))
             throw new ArgumentException("Fan Diameter mm must be provided");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(slotCount);

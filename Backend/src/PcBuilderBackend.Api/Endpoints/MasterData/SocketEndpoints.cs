@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
+using PcBuilderBackend.Api.Filters;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkCreateSockets;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkUpdateSockets;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkDeleteSockets;
@@ -51,13 +52,12 @@ public static class SocketEndpoints
         
         subgroup.MapPost("/bulk", BulkCreateSockets)
             .Produces<List<SocketDto>>(StatusCodes.Status201Created)
-            .Produces(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple new Sockets");
         
         subgroup.MapPut("/bulk", BulkUpdateSockets)
             .Produces<List<SocketDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple Sockets");
         
@@ -94,14 +94,13 @@ public static class SocketEndpoints
     }
 
     private static async Task<Created<SocketDto>> CreateSocket(
-        [FromBody] CreateSocketCommand command,
+        [Validate] [FromBody] CreateSocketCommand command,
         [FromServices] ISender sender,
         HttpContext context,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        var path = context.Request.Path;          
-        return TypedResults.Created(path, result);
+        return TypedResults.Created($"{context.Request.Path}/{result.Id}", result);
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteSocket(
@@ -114,24 +113,23 @@ public static class SocketEndpoints
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 
-    private static async Task<Results<Created<List<SocketDto>>, BadRequest>> BulkCreateSockets(
-        [FromBody] BulkCreateSocketsCommand command,
+    private static async Task<Created<List<SocketDto>>> BulkCreateSockets(
+        [Validate] [FromBody] BulkCreateSocketsCommand command,
         [FromServices] ISender sender,
         HttpContext context,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        var path = context.Request.Path;          
-        return result.Count > 0 ? TypedResults.Created(path, result) : TypedResults.BadRequest();
+        return TypedResults.Created(context.Request.Path, result);
     }
 
-    private static async Task<Results<Ok<List<SocketDto>>, BadRequest>> BulkUpdateSockets(
+    private static async Task<Results<Ok<List<SocketDto>>, NotFound>> BulkUpdateSockets(
         [FromBody] BulkUpdateSocketsCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count > 0 ? TypedResults.Ok(result) : TypedResults.BadRequest();
+        return result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> BulkDeleteSockets(

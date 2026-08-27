@@ -4,15 +4,15 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Ram : ProductEntity
 {
-    public string Color { get; set; } = string.Empty;
-    public DdrGeneration DdrGeneration { get; set; }
-    public RamFormFactor RamFormFactor { get; set; }
-    public RamRank RamRank { get; set; }
-    public int MemorySizePerStickGb { get; set; }
-    public int TotalMemorySizeGb { get; set; }
-    public int ModulesCount { get; set; }
-    public int MaxMemorySpeedMts { get; set; }
-    public decimal HeightMm { get; set; }
+    public string Color { get; private set; } = string.Empty;
+    public DdrGeneration DdrGeneration { get; private set; }
+    public RamFormFactor RamFormFactor { get; private set; }
+    public RamRank RamRank { get; private set; }
+    public int MemorySizePerStickGb { get; private set; }
+    public int TotalMemorySizeGb { get; private set; }
+    public int ModulesCount { get; private set; }
+    public int MaxMemorySpeedMts { get; private set; }
+    public decimal HeightMm { get; private set; }
     
     protected Ram() {}
 

@@ -1,13 +1,18 @@
 ﻿using FluentValidation;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkCreateGpuSeries;
 
 namespace PcBuilderBackend.Application.MasterData.GpuSeries.Validators;
 
 public class BulkCreateGpuSeriesCommandValidator: AbstractValidator<BulkCreateGpuSeriesCommand>
 {
-    public BulkCreateGpuSeriesCommandValidator()
+    public BulkCreateGpuSeriesCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x =>x.GpuSeries).NotEmpty().WithMessage("GpuSeries list cannot be empty.");
+        RuleFor(x => x.GpuSeries.Select(g => g.ManufacturerId))
+            .MustAllBeActiveManufacturers(db)
+            .When(x => x.GpuSeries is { Count: > 0 });
         
         RuleForEach(x => x.GpuSeries).ChildRules(gpuSeries =>
         {

@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.CreateMemory;
 
-public class CreateMemoryHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<CreateMemoryCommand, RamDto>
+public class CreateMemoryHandler(IRamRepository memories, IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<CreateMemoryCommand, RamDto>
 {
     public async Task<RamDto> Handle(CreateMemoryCommand request, CancellationToken cancellationToken)
     {
@@ -23,8 +23,8 @@ public class CreateMemoryHandler(IApplicationDbContext context, IMapper mapper) 
             request.MaxMemorySpeedMts,
             request.HeightMm);
 
-        context.Rams.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        memories.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return mapper.Map<RamDto>(entity);
     }

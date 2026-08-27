@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -9,15 +8,15 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.UpdateChassis;
 
 public class UpdateChassisHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<UpdateChassisHandler> logger)
     : IRequestHandler<UpdateChassisCommand, ChassisDto?>
 {
     public async Task<ChassisDto?> Handle(UpdateChassisCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Chassis
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await chassis.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -37,7 +36,7 @@ public class UpdateChassisHandler(
             request.MaxGraphicsCardLengthMm,
             request.MaxPsuLengthMm);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.Chassis, entity.Id);
 

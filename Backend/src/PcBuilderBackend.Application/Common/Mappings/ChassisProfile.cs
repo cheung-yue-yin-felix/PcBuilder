@@ -23,7 +23,7 @@ public class ChassisProfile : Profile
             .ForMember(d => d.Location, o => o.MapFrom(s => s.MountLocation));
 
         CreateMap<Chassis, ChassisListItemDto>()
-            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer.Name));
+            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer != null ? s.Manufacturer.Name : string.Empty));
 
         CreateMap<Chassis, ChassisDto>()
             .IncludeBase<Chassis, ChassisListItemDto>()

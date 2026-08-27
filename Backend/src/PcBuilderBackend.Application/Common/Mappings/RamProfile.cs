@@ -8,6 +8,7 @@ public class RamProfile : Profile
 {
     public RamProfile()
     {
-        CreateMap<Ram, RamDto>();
+        CreateMap<Ram, RamDto>()
+            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer != null ? s.Manufacturer.Name : string.Empty));
     }
 }

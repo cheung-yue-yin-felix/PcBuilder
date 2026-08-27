@@ -8,7 +8,11 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkCreateCpus;
 
-public class BulkCreateCpusHandler(IApplicationDbContext context, IMapper mapper, ILogger<BulkCreateCpusHandler> logger)
+public class BulkCreateCpusHandler(
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    ILogger<BulkCreateCpusHandler> logger)
     : IRequestHandler<BulkCreateCpusCommand, List<CpuDto>>
 {
     public async Task<List<CpuDto>> Handle(BulkCreateCpusCommand request, CancellationToken cancellationToken)
@@ -46,11 +50,11 @@ public class BulkCreateCpusHandler(IApplicationDbContext context, IMapper mapper
                     support.RequiresBiosUpdate));
             }
 
-            context.Cpus.Add(entity);
+            cpus.Add(entity);
             result.Add(mapper.Map<CpuDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.BulkCreated(logger, result.Count, EntityLog.Cpu);
 

@@ -1,20 +1,21 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkDeleteCpus;
 
-public class BulkDeleteCpusHandler(IApplicationDbContext context, ILogger<BulkDeleteCpusHandler> logger) : IRequestHandler<BulkDeleteCpusCommand, bool>
+public class BulkDeleteCpusHandler(
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    ILogger<BulkDeleteCpusHandler> logger)
+    : IRequestHandler<BulkDeleteCpusCommand, bool>
 {
     public async Task<bool> Handle(BulkDeleteCpusCommand request, CancellationToken cancellationToken)
     {
         var ids = request.CpuIds.Distinct().ToList();
 
-        var entities = await context.Cpus
-            .Where(x => ids.Contains(x.Id) && x.IsActive)
-            .ToListAsync(cancellationToken);
+        var entities = await cpus.GetByIdsAsync(ids, cancellationToken);
 
         if (entities.Count != ids.Count)
         {
@@ -27,10 +28,10 @@ public class BulkDeleteCpusHandler(IApplicationDbContext context, ILogger<BulkDe
             entity.Deactivate();
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.BulkDeleted(logger, entities.Count, EntityLog.Cpu);
-        
+
         return true;
     }
 }

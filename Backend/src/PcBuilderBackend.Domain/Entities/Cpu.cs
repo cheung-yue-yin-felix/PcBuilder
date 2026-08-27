@@ -5,18 +5,22 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Cpu : ProductEntity
 {
-    public Guid SocketId { get; set; }
-    public int MaxMemoryGb { get; set; }
-    public Guid SeriesId { get; set; }
-    public bool IntegratedGraphics { get; set; }
-    public bool IncludedStockCooler { get; set; }
-    public int ThermalDesignPower { get; set; }
-    public int PowerConsumptionWatts { get; set; }
+    public Guid SocketId { get; private set; }
+    public int MaxMemoryGb { get; private set; }
+    public Guid SeriesId { get; private set; }
+    public bool IntegratedGraphics { get; private set; }
+    public bool IncludedStockCooler { get; private set; }
+    public int ThermalDesignPower { get; private set; }
+    public int PowerConsumptionWatts { get; private set; }
     public Socket Socket { get; init; } = null!;
     public CpuSeries Series { get; init; } = null!;
-    public ICollection<CpuRamCompat> RamCompats { get; init; } = new List<CpuRamCompat>();
-    public ICollection<CpuSupportChipset> SupportedChipsets { get; init; } = new List<CpuSupportChipset>();
+    
+    private readonly List<CpuRamCompat> _ramCompats = [];
+    public IReadOnlyCollection<CpuRamCompat> RamCompats => _ramCompats;
 
+    private readonly List<CpuSupportChipset> _supportedChipsets = [];
+    public IReadOnlyCollection<CpuSupportChipset> SupportedChipsets => _supportedChipsets;
+    
     protected Cpu()
     {
     }
@@ -46,7 +50,7 @@ public class Cpu : ProductEntity
                 x.RamRank == ramCompat.RamRank))
             throw new ArgumentException("CPU RAM compatibility entry already exists.");
 
-        RamCompats.Add(ramCompat);
+        _ramCompats.Add(ramCompat);
     }
 
     public void RemoveRamCompat(CpuRamCompat ramCompat)
@@ -57,7 +61,7 @@ public class Cpu : ProductEntity
                 x.RamRank == ramCompat.RamRank))
             throw new ArgumentException("CPU RAM compatibility entry does not exist.");
 
-        RamCompats.Remove(ramCompat);
+        _ramCompats.Remove(ramCompat);
     }
 
     public void AddSupportedChipset(CpuSupportChipset supportChipset)
@@ -65,7 +69,7 @@ public class Cpu : ProductEntity
         if (SupportedChipsets.Any(x => x.ChipsetId == supportChipset.ChipsetId))
             throw new ArgumentException("CPU already has a support entry for this chipset.");
 
-        SupportedChipsets.Add(supportChipset);
+        _supportedChipsets.Add(supportChipset);
     }
 
     public void RemoveSupportedChipset(CpuSupportChipset supportChipset)
@@ -73,7 +77,7 @@ public class Cpu : ProductEntity
         if (SupportedChipsets.All(x => x.ChipsetId != supportChipset.ChipsetId))
             throw new ArgumentException("CPU does not have a support entry for this chipset.");
 
-        SupportedChipsets.Remove(supportChipset);
+        _supportedChipsets.Remove(supportChipset);
     }
 
     public PartsCompatibilityResult CheckMemoryCompatibility(Ram memory)

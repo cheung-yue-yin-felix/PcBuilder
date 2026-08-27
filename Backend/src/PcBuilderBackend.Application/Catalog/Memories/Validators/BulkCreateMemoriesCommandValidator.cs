@@ -1,12 +1,19 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Memories.Commands.BulkCreateMemories;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Validators;
 
 public class BulkCreateMemoriesCommandValidator: AbstractValidator<BulkCreateMemoriesCommand>
 {
-    public BulkCreateMemoriesCommandValidator()
+    public BulkCreateMemoriesCommandValidator(IActiveEntityLookup db)
     {
+        RuleFor(x => x.Memories).NotEmpty().WithMessage("At least one RAM module is required");
+        RuleFor(x => x.Memories.Select(m => m.ManufacturerId))
+            .MustAllBeActiveManufacturers(db)
+            .When(x => x.Memories is { Count: > 0 });
+
         RuleForEach(x => x.Memories).ChildRules(memory =>
         {
             memory.RuleFor(x => x.Name)

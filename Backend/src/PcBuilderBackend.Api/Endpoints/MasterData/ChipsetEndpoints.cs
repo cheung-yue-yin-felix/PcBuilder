@@ -42,7 +42,7 @@ public static class ChipsetEndpoints
             .WithDescription("\n    POST /master-data/chipset");
 
         subgroup.MapPost("/bulk", BulkCreateChipsets)
-            .Produces<List<ChipsetDto>>()
+            .Produces<List<ChipsetDto>>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Add multiple new Chipsets")
             .WithDescription("\n    POST /master-data/chipset/bulk");
@@ -56,7 +56,7 @@ public static class ChipsetEndpoints
         
         subgroup.MapPut("/bulk", BulkUpdateChipsets)
             .Produces<List<ChipsetDto>>()
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple Chipsets")
             .WithDescription("\n    PUT /master-data/chipset/bulk");
@@ -70,7 +70,7 @@ public static class ChipsetEndpoints
         
         subgroup.MapDelete("/bulk", BulkDeleteChipsets)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple Chipsets")
             .WithDescription("\n    DELETE /master-data/chipset/bulk");
@@ -122,29 +122,31 @@ public static class ChipsetEndpoints
         return success ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 
-    private static async Task<Ok<List<ChipsetDto>>> BulkCreateChipsets(
-        [FromBody] BulkCreateChipsetsCommand command,
+    private static async Task<Created<List<ChipsetDto>>> BulkCreateChipsets(
+        [Validate] [FromBody] BulkCreateChipsetsCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(command, cancellationToken));
+        var result = await sender.Send(command, cancellationToken);
+        return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
 
-    private static async Task<Results<Ok<List<ChipsetDto>>, BadRequest>> BulkUpdateChipsets(
+    private static async Task<Results<Ok<List<ChipsetDto>>, NotFound>> BulkUpdateChipsets(
         [FromBody] BulkUpdateChipsetsCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result is null ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result is null || result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
     
-    private static async Task<Results<NoContent, BadRequest>> BulkDeleteChipsets(
+    private static async Task<Results<NoContent, NotFound>> BulkDeleteChipsets(
         [FromBody] BulkDeleteChipsetsCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var success = await sender.Send(command, cancellationToken);
-        return success ? TypedResults.NoContent() : TypedResults.BadRequest();
+        return success ? TypedResults.NoContent() : TypedResults.NotFound();
     }
 }

@@ -53,6 +53,7 @@ public static class MemoryEndpoints
         
         subgroup.MapPut("/bulk", BulkUpdateMemories)
             .Produces<List<RamDto>>()
+            .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Edit multiple RAMs")
             .WithDescription("\n    PUT /catalog/ram/bulk");
@@ -120,12 +121,14 @@ public static class MemoryEndpoints
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
-    private static async Task<Ok<RamDto>> CreateMemory(
+    private static async Task<Created<RamDto>> CreateMemory(
         [Validate] [FromBody] CreateMemoryCommand command,
         [FromServices] ISender sender,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        return TypedResults.Ok(await sender.Send(command, cancellationToken));
+        var result = await sender.Send(command, cancellationToken);
+        return TypedResults.Created($"{httpContext.Request.Path}/{result.Id}", result);
     }
 
     private static async Task<Results<Ok<RamDto>, NotFound>> UpdateMemory(
@@ -147,7 +150,7 @@ public static class MemoryEndpoints
     }
 
     private static async Task<Created<List<RamDto>>> BulkCreateMemories(
-        [FromBody] BulkCreateMemoriesCommand command,
+        [Validate] [FromBody] BulkCreateMemoriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken,
         HttpContext httpContext)
@@ -156,13 +159,13 @@ public static class MemoryEndpoints
         return TypedResults.Created($"{httpContext.Request.Path}", result);
     }
 
-    private static async Task<Results<Ok<List<RamDto>>, BadRequest>> BulkUpdateMemories(
+    private static async Task<Results<Ok<List<RamDto>>, NotFound>> BulkUpdateMemories(
         [FromBody] BulkUpdateMemoriesCommand command,
         [FromServices] ISender sender,
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
-        return result.Count == 0 ? TypedResults.BadRequest() : TypedResults.Ok(result);
+        return result.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<NoContent, NotFound>> BulkDeleteMemories(

@@ -1,5 +1,6 @@
 @PcBuilderBackend.Api_HostAddress = http://localhost:5155
 @ContentType = application/json
+@accessToken =
 
 ### Shared placeholders (replace with real IDs from GET responses)
 @manufacturerId = 392b5b1b-6f13-4116-b365-170bad4f765d
@@ -12,7 +13,72 @@
 @graphicsCardId = 00000000-0000-0000-0000-000000000008
 @memoryId = 00000000-0000-0000-0000-000000000009
 @motherboardId = 00000000-0000-0000-0000-00000000000a
+@cpuCoolerId = 00000000-0000-0000-0000-00000000000b
+@chassisId = 00000000-0000-0000-0000-00000000000c
+@chassisFanId = 00000000-0000-0000-0000-00000000000d
+@storageDriveId = 00000000-0000-0000-0000-00000000000e
+@wiredNetworkAdapterId = 00000000-0000-0000-0000-00000000000f
+@wirelessNetworkAdapterId = 00000000-0000-0000-0000-000000000010
+@psuId = 00000000-0000-0000-0000-000000000011
 
+
+###############################################################################
+# Auth
+# Routes: /api/auth
+###############################################################################
+
+### Register Member
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/register
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "email": "member@localhost",
+  "password": "ChangeMe!Member1",
+  "firstName": "Test",
+  "lastName": "Member"
+}
+
+###
+
+### Login
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/login
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "email": "admin@localhost",
+  "password": "ChangeMe!Admin1"
+}
+
+###
+
+### Refresh
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/refresh
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "refreshToken": ""
+}
+
+###
+
+### Current user
+GET {{PcBuilderBackend.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+### Logout
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/logout
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{}
+
+###
 
 ### Get Specification
 
@@ -38,6 +104,7 @@ Accept: application/json
 
 ### Create Manufacturer
 POST {{PcBuilderBackend.Api_HostAddress}}/api/master-data/manufacturer
+Authorization: Bearer {{accessToken}}
 Content-Type: {{ContentType}}
 Accept: application/json
 
@@ -990,6 +1057,20 @@ Accept: application/json
 
 ###
 
+### Import Graphics Cards from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/graphics-card/import
+Content-Type: multipart/form-data; boundary=----GraphicsCardImportBoundary
+Accept: application/json
+
+------GraphicsCardImportBoundary
+Content-Disposition: form-data; name="file"; filename="graphics-cards.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./graphics-cards.xlsx
+------GraphicsCardImportBoundary--
+
+###
+
 ###############################################################################
 # Catalog - RAM (Memory)
 # Routes: /api/catalog/ram
@@ -1386,6 +1467,1322 @@ Accept: application/json
     "usbVersion": 4,
     "usbType": 2,
     "portCount": 2
+  }
+]
+
+###
+
+###############################################################################
+# Catalog - CPU Cooler
+# Routes: /api/catalog/cpu-cooler
+# Enums: CpuCoolerType (Air=1, Water=2)
+#        RadiatorLength (Mm120=1, Mm140=2, Mm240=3, Mm280=4, Mm360=5, Mm420=6)
+###############################################################################
+
+### Get CPU Coolers (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter CPU Coolers
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "type": 1,
+    "socketId": "{{socketId}}",
+    "cpuId": "{{cpuId}}",
+    "chassisId": "{{chassisId}}",
+    "ramId": "{{memoryId}}",
+    "motherboardId": "{{motherboardId}}"
+  }
+}
+
+###
+
+### Get CPU Cooler by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/{{cpuCoolerId}}
+Accept: application/json
+
+###
+
+### Create Air CPU Cooler
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Noctua NH-D15",
+  "manufacturerId": "{{manufacturerId}}",
+  "maxTdp": 220,
+  "type": 1,
+  "coolerHeightMm": 165.0,
+  "maxRamHeightMm": 32.0,
+  "radiatorLength": null,
+  "sockets": [
+    {
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Create Liquid CPU Cooler
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "NZXT Kraken 360",
+  "manufacturerId": "{{manufacturerId}}",
+  "maxTdp": 280,
+  "type": 2,
+  "coolerHeightMm": null,
+  "maxRamHeightMm": null,
+  "radiatorLength": 5,
+  "sockets": [
+    {
+      "socketId": "{{socketId}}"
+    }
+  ]
+}
+
+###
+
+### Update CPU Cooler
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{cpuCoolerId}}",
+  "name": "Noctua NH-D15",
+  "manufacturerId": "{{manufacturerId}}",
+  "maxTdp": 220,
+  "type": 1,
+  "coolerHeightMm": 165.0,
+  "maxRamHeightMm": 32.0,
+  "radiatorLength": null
+}
+
+###
+
+### Delete CPU Cooler
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/{{cpuCoolerId}}
+Accept: application/json
+
+###
+
+### Bulk Create CPU Coolers
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuCoolers": [
+    {
+      "name": "Noctua NH-D15",
+      "manufacturerId": "{{manufacturerId}}",
+      "maxTdp": 220,
+      "type": 1,
+      "coolerHeightMm": 165.0,
+      "maxRamHeightMm": 32.0,
+      "sockets": [
+        {
+          "socketId": "{{socketId}}"
+        }
+      ]
+    }
+  ]
+}
+
+###
+
+### Bulk Update CPU Coolers
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuCoolers": [
+    {
+      "id": "{{cpuCoolerId}}",
+      "name": "Noctua NH-D15",
+      "manufacturerId": "{{manufacturerId}}",
+      "maxTdp": 220,
+      "type": 1,
+      "coolerHeightMm": 165.0,
+      "maxRamHeightMm": 32.0,
+      "sockets": [
+        {
+          "socketId": "{{socketId}}"
+        }
+      ]
+    }
+  ]
+}
+
+###
+
+### Bulk Delete CPU Coolers
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "cpuCoolerIds": [
+    "{{cpuCoolerId}}"
+  ]
+}
+
+###
+
+### Get CPU Cooler Sockets
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/{{cpuCoolerId}}/socket
+Accept: application/json
+
+###
+
+### Replace CPU Cooler Sockets
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/{{cpuCoolerId}}/socket
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "socketId": "{{socketId}}"
+  }
+]
+
+###
+
+### Import CPU Coolers from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/cpu-cooler/import
+Content-Type: multipart/form-data; boundary=----CpuCoolerImportBoundary
+Accept: application/json
+
+------CpuCoolerImportBoundary
+Content-Disposition: form-data; name="file"; filename="cpu-coolers.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./cpu-coolers.xlsx
+------CpuCoolerImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - Chassis
+# Routes: /api/catalog/chassis
+# Enums: DriveBayFormFactor (Inch25=1, Inch35=2, Inch525=3)
+#        FanMountLocation / RadiatorMountLocation (Front=1, Top=2, Bottom=3, Rear=4, Sides=5)
+#        FanDiameterMm (Mm80=80, Mm92=92, Mm120=120, Mm140=140, Mm200=200)
+#        RadiatorLength (Mm120=1, Mm140=2, Mm240=3, Mm280=4, Mm360=5, Mm420=6)
+#        PcieOrientation (Vertical=1, Horizontal=2)
+#        MbFormFactor (Mitx=1, Matx=2, Atx=3, Eatx=4)
+#        PsuFormFactor (FlexAtx=1, Tfx=2, Sfx=3, SfxL=4, Atx=5)
+###############################################################################
+
+### Import Chassis from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/import
+Content-Type: multipart/form-data; boundary=----ChassisImportBoundary
+Accept: application/json
+
+------ChassisImportBoundary
+Content-Disposition: form-data; name="file"; filename="chassis.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./chassis.xlsx
+------ChassisImportBoundary--
+
+###
+
+### Get Chassis Drive Bays
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/drive-bay
+Accept: application/json
+
+###
+
+### Replace Chassis Drive Bays
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/drive-bay
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "formFactor": 1,
+    "slotCount": 2
+  },
+  {
+    "formFactor": 2,
+    "slotCount": 2
+  }
+]
+
+###
+
+### Get Chassis Fan Mounts
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/fan-mount
+Accept: application/json
+
+###
+
+### Replace Chassis Fan Mounts
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/fan-mount
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "location": 1,
+    "singleDiameterOnly": false,
+    "options": [
+      { "diameter": 120, "slotCount": 3 },
+      { "diameter": 140, "slotCount": 2 }
+    ]
+  }
+]
+
+###
+
+### Get Chassis PCIe Slots
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/pcie-slot
+Accept: application/json
+
+###
+
+### Replace Chassis PCIe Slots
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/pcie-slot
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "lowProfileSlots": false,
+    "slotCount": 7,
+    "orientation": 2
+  }
+]
+
+###
+
+### Get Chassis Radiators
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/radiator
+Accept: application/json
+
+###
+
+### Replace Chassis Radiators
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/radiator
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "length": 5,
+    "location": 2,
+    "radiatorCount": 1
+  }
+]
+
+###
+
+### Get Chassis Motherboard Form Factors
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/mb-form-factor
+Accept: application/json
+
+###
+
+### Replace Chassis Motherboard Form Factors
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/mb-form-factor
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[2, 3]
+
+###
+
+### Get Chassis PSU Form Factors
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/psu-form-factor
+Accept: application/json
+
+###
+
+### Replace Chassis PSU Form Factors
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis/{{chassisId}}/psu-form-factor
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[3, 5]
+
+###
+
+###############################################################################
+# Catalog - Chassis Fan
+# Routes: /api/catalog/chassis-fan
+# Enums: FanDiameterMm (Mm80=80, Mm92=92, Mm120=120, Mm140=140, Mm200=200)
+###############################################################################
+
+@chassisFanId = 00000000-0000-0000-0000-00000000000d
+
+### Get Chassis Fans (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter Chassis Fans
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "diameterMm": 120,
+    "fansCountPerPack": 3,
+    "chassisId": "{{chassisId}}"
+  }
+}
+
+###
+
+### Get Chassis Fan by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/{{chassisFanId}}
+Accept: application/json
+
+###
+
+### Create Chassis Fan
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Noctua NF-A12x25 PWM 3-pack",
+  "manufacturerId": "{{manufacturerId}}",
+  "diameterMm": 120,
+  "fansCountPerPack": 3
+}
+
+###
+
+### Update Chassis Fan
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{chassisFanId}}",
+  "name": "Noctua NF-A12x25 PWM 3-pack",
+  "manufacturerId": "{{manufacturerId}}",
+  "diameterMm": 120,
+  "fansCountPerPack": 3
+}
+
+###
+
+### Delete Chassis Fan
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/{{chassisFanId}}
+Accept: application/json
+
+###
+
+### Bulk Create Chassis Fans
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "fans": [
+    {
+      "name": "Noctua NF-A12x25 PWM 3-pack",
+      "manufacturerId": "{{manufacturerId}}",
+      "diameterMm": 120,
+      "fansCountPerPack": 3
+    }
+  ]
+}
+
+###
+
+### Bulk Update Chassis Fans
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "fans": [
+    {
+      "id": "{{chassisFanId}}",
+      "name": "Noctua NF-A12x25 PWM 3-pack",
+      "manufacturerId": "{{manufacturerId}}",
+      "diameterMm": 120,
+      "fansCountPerPack": 3
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Chassis Fans
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{chassisFanId}}"
+  ]
+}
+
+###
+
+### Import Chassis Fans from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/chassis-fan/import
+Content-Type: multipart/form-data; boundary=----ChassisFanImportBoundary
+Accept: application/json
+
+------ChassisFanImportBoundary
+Content-Disposition: form-data; name="file"; filename="chassis-fans.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./chassis-fans.xlsx
+------ChassisFanImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - Storage Drive
+# Routes: /api/catalog/storage-drive
+# Enums: StorageMedia (Hdd=1, Ssd=2)
+#        StorageInterface (Sata=1, Nvme=2)
+#        StorageFormFactor (M22230=1, M22242=2, M22260=3, M22280=4, M222110=5, Sata25=6, Sata35=7)
+#        PcieGeneration (Gen3=3, Gen4=4, Gen5=5, Gen6=6)
+###############################################################################
+
+### Get Storage Drives (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter Storage Drives
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "media": 2,
+    "interface": 2,
+    "formFactor": 4,
+    "capacityGb": {
+      "min": 256,
+      "max": 4000
+    },
+    "pcieGeneration": 4,
+    "motherboardId": "{{motherboardId}}",
+    "chassisId": "{{chassisId}}"
+  }
+}
+
+###
+
+### Get Storage Drive by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/{{storageDriveId}}
+Accept: application/json
+
+###
+
+### Create Storage Drive (NVMe SSD)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Samsung 990 PRO 2TB",
+  "manufacturerId": "{{manufacturerId}}",
+  "media": 2,
+  "interface": 2,
+  "formFactor": 4,
+  "capacityGb": 2000,
+  "pcieGeneration": 4
+}
+
+###
+
+### Create Storage Drive (SATA HDD)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Seagate Barracuda 4TB",
+  "manufacturerId": "{{manufacturerId}}",
+  "media": 1,
+  "interface": 1,
+  "formFactor": 7,
+  "capacityGb": 4000,
+  "rpm": 5400
+}
+
+###
+
+### Update Storage Drive
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{storageDriveId}}",
+  "name": "Samsung 990 PRO 2TB",
+  "manufacturerId": "{{manufacturerId}}",
+  "media": 2,
+  "interface": 2,
+  "formFactor": 4,
+  "capacityGb": 2000,
+  "pcieGeneration": 4
+}
+
+###
+
+### Delete Storage Drive
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/{{storageDriveId}}
+Accept: application/json
+
+###
+
+### Bulk Create Storage Drives
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "drives": [
+    {
+      "name": "Samsung 990 PRO 2TB",
+      "manufacturerId": "{{manufacturerId}}",
+      "media": 2,
+      "interface": 2,
+      "formFactor": 4,
+      "capacityGb": 2000,
+      "pcieGeneration": 4
+    },
+    {
+      "name": "Seagate Barracuda 4TB",
+      "manufacturerId": "{{manufacturerId}}",
+      "media": 1,
+      "interface": 1,
+      "formFactor": 7,
+      "capacityGb": 4000,
+      "rpm": 5400
+    }
+  ]
+}
+
+###
+
+### Bulk Update Storage Drives
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "drives": [
+    {
+      "id": "{{storageDriveId}}",
+      "name": "Samsung 990 PRO 2TB",
+      "manufacturerId": "{{manufacturerId}}",
+      "media": 2,
+      "interface": 2,
+      "formFactor": 4,
+      "capacityGb": 2000,
+      "pcieGeneration": 4
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Storage Drives
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{storageDriveId}}"
+  ]
+}
+
+###
+
+### Import Storage Drives from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/storage-drive/import
+Content-Type: multipart/form-data; boundary=----StorageDriveImportBoundary
+Accept: application/json
+
+------StorageDriveImportBoundary
+Content-Disposition: form-data; name="file"; filename="storage-drives.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./storage-drives.xlsx
+------StorageDriveImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - Wired Network Adapter
+# Routes: /api/catalog/wired-network-adapter
+# Enums: WiredHostInterface (Pcie=0, Usb=1)
+#        UsbVersion (Usb20=1, Usb32Gen1=2, Usb32Gen2=3, Usb4=4)
+#        UsbType (TypeA=1, TypeC=2)
+#        PcieSlotType (X1=1, X4=4, X8=8, X16=16)
+###############################################################################
+
+### Get Wired Network Adapters (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter Wired Network Adapters
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "hostInterface": 0,
+    "maxSpeedMbps": {
+      "min": 1000,
+      "max": 10000
+    },
+    "pcieSlotType": 1,
+    "motherboardId": "{{motherboardId}}"
+  }
+}
+
+###
+
+### Get Wired Network Adapter by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/{{wiredNetworkAdapterId}}
+Accept: application/json
+
+###
+
+### Create Wired Network Adapter (PCIe)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Intel X710-T2L",
+  "manufacturerId": "{{manufacturerId}}",
+  "hostInterface": 0,
+  "maxSpeedMbps": 10000,
+  "pcieSlotType": 4
+}
+
+###
+
+### Create Wired Network Adapter (USB)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "TP-Link UE300C",
+  "manufacturerId": "{{manufacturerId}}",
+  "hostInterface": 1,
+  "maxSpeedMbps": 1000,
+  "usbVersion": 2,
+  "usbType": 2
+}
+
+###
+
+### Update Wired Network Adapter
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{wiredNetworkAdapterId}}",
+  "name": "Intel X710-T2L",
+  "manufacturerId": "{{manufacturerId}}",
+  "hostInterface": 0,
+  "maxSpeedMbps": 10000,
+  "pcieSlotType": 4
+}
+
+###
+
+### Delete Wired Network Adapter
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/{{wiredNetworkAdapterId}}
+Accept: application/json
+
+###
+
+### Bulk Create Wired Network Adapters
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "adapters": [
+    {
+      "name": "Intel X710-T2L",
+      "manufacturerId": "{{manufacturerId}}",
+      "hostInterface": 0,
+      "maxSpeedMbps": 10000,
+      "pcieSlotType": 4
+    },
+    {
+      "name": "TP-Link UE300C",
+      "manufacturerId": "{{manufacturerId}}",
+      "hostInterface": 1,
+      "maxSpeedMbps": 1000,
+      "usbVersion": 2,
+      "usbType": 2
+    }
+  ]
+}
+
+###
+
+### Bulk Update Wired Network Adapters
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "adapters": [
+    {
+      "id": "{{wiredNetworkAdapterId}}",
+      "name": "Intel X710-T2L",
+      "manufacturerId": "{{manufacturerId}}",
+      "hostInterface": 0,
+      "maxSpeedMbps": 10000,
+      "pcieSlotType": 4
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Wired Network Adapters
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{wiredNetworkAdapterId}}"
+  ]
+}
+
+###
+
+### Import Wired Network Adapters from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wired-network-adapter/import
+Content-Type: multipart/form-data; boundary=----WiredNetworkAdapterImportBoundary
+Accept: application/json
+
+------WiredNetworkAdapterImportBoundary
+Content-Disposition: form-data; name="file"; filename="wired-network-adapters.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./wired-network-adapters.xlsx
+------WiredNetworkAdapterImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - Wireless Network Adapter
+# Routes: /api/catalog/wireless-network-adapter
+# Enums: WifiStandard (Wifi4=0, Wifi5=1, Wifi6=2, Wifi6E=3, Wifi7=4)
+#        WirelessHostInterface (M2=0, Pcie=1, Usb=2)
+#        BluetoothVersion (V5Point0=0, V5Point1=1, V5Point2=2, V5Point3=3, V5Point4=4)
+#        PcieSlotType (X1=1, X4=4, X8=8, X16=16)
+#        M2Key (M=1, B=2, E=3, BM=4)
+#        M2FormFactor (M22230=1, M22242=2, M22260=3, M22280=4, M222110=5)
+#        UsbVersion (Usb20=1, Usb32Gen1=2, Usb32Gen2=3, Usb4=4)
+#        UsbType (TypeA=1, TypeC=2)
+###############################################################################
+
+### Get Wireless Network Adapters (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter Wireless Network Adapters
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "wifiStandard": 3,
+    "hostInterface": 0,
+    "key": 3,
+    "m2FormFactor": 4,
+    "motherboardId": "{{motherboardId}}"
+  }
+}
+
+###
+
+### Get Wireless Network Adapter by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/{{wirelessNetworkAdapterId}}
+Accept: application/json
+
+###
+
+### Create Wireless Network Adapter (M.2)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Intel Wi-Fi 6E AX210",
+  "manufacturerId": "{{manufacturerId}}",
+  "wifiStandard": 3,
+  "hostInterface": 0,
+  "maxSpeedMbps": 2400,
+  "maxSpeedMbps5G": 2400,
+  "maxSpeedMbps6G": 2400,
+  "bluetoothVersion": 2,
+  "key": 3,
+  "m2FormFactor": 1
+}
+
+###
+
+### Create Wireless Network Adapter (PCIe)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "ASUS PCE-AXE59BT",
+  "manufacturerId": "{{manufacturerId}}",
+  "wifiStandard": 3,
+  "hostInterface": 1,
+  "maxSpeedMbps": 2400,
+  "bluetoothVersion": 2,
+  "pcieSlotType": 1
+}
+
+###
+
+### Create Wireless Network Adapter (USB)
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "TP-Link Archer TX20U",
+  "manufacturerId": "{{manufacturerId}}",
+  "wifiStandard": 2,
+  "hostInterface": 2,
+  "maxSpeedMbps": 1201,
+  "usbVersion": 2,
+  "usbType": 1
+}
+
+###
+
+### Update Wireless Network Adapter
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{wirelessNetworkAdapterId}}",
+  "name": "Intel Wi-Fi 6E AX210",
+  "manufacturerId": "{{manufacturerId}}",
+  "wifiStandard": 3,
+  "hostInterface": 0,
+  "maxSpeedMbps": 2400,
+  "maxSpeedMbps5G": 2400,
+  "maxSpeedMbps6G": 2400,
+  "bluetoothVersion": 2,
+  "key": 3,
+  "m2FormFactor": 1
+}
+
+###
+
+### Delete Wireless Network Adapter
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/{{wirelessNetworkAdapterId}}
+Accept: application/json
+
+###
+
+### Bulk Create Wireless Network Adapters
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "adapters": [
+    {
+      "name": "Intel Wi-Fi 6E AX210",
+      "manufacturerId": "{{manufacturerId}}",
+      "wifiStandard": 3,
+      "hostInterface": 0,
+      "maxSpeedMbps": 2400,
+      "bluetoothVersion": 2,
+      "key": 3,
+      "m2FormFactor": 1
+    },
+    {
+      "name": "TP-Link Archer TX20U",
+      "manufacturerId": "{{manufacturerId}}",
+      "wifiStandard": 2,
+      "hostInterface": 2,
+      "maxSpeedMbps": 1201,
+      "usbVersion": 2,
+      "usbType": 1
+    }
+  ]
+}
+
+###
+
+### Bulk Update Wireless Network Adapters
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "adapters": [
+    {
+      "id": "{{wirelessNetworkAdapterId}}",
+      "name": "Intel Wi-Fi 6E AX210",
+      "manufacturerId": "{{manufacturerId}}",
+      "wifiStandard": 3,
+      "hostInterface": 0,
+      "maxSpeedMbps": 2400,
+      "bluetoothVersion": 2,
+      "key": 3,
+      "m2FormFactor": 1
+    }
+  ]
+}
+
+###
+
+### Bulk Delete Wireless Network Adapters
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{wirelessNetworkAdapterId}}"
+  ]
+}
+
+###
+
+### Import Wireless Network Adapters from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/wireless-network-adapter/import
+Content-Type: multipart/form-data; boundary=----WirelessNetworkAdapterImportBoundary
+Accept: application/json
+
+------WirelessNetworkAdapterImportBoundary
+Content-Disposition: form-data; name="file"; filename="wireless-network-adapters.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./wireless-network-adapters.xlsx
+------WirelessNetworkAdapterImportBoundary--
+
+###
+
+###############################################################################
+# Catalog - PSU
+# Routes: /api/catalog/psu
+# Enums: PsuModularity (NonModular=0, SemiModular=1, FullModular=2)
+#        PsuFormFactor (FlexAtx=1, Tfx=2, Sfx=3, SfxL=4, Atx=5)
+#        PsuCableType (Motherboard24Pin=1, Cpu4Plus4Pin=2, Pcie6Plus2Pin=3,
+#                      Pcie12VHighPower=4, Pcie12V2X6=5, Sata=6, Molex=7, Floppy=8)
+###############################################################################
+
+### Get PSUs (paged)
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu?pageIndex=0&pageSize=10&sortBy=name&sortDirection=asc
+Accept: application/json
+
+###
+
+### Filter PSUs
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/query
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "pageIndex": 0,
+  "pageSize": 10,
+  "sortBy": "name",
+  "sortDirection": "asc",
+  "filter": {
+    "name": "",
+    "manufacturerId": "{{manufacturerId}}",
+    "wattage": {
+      "min": 650,
+      "max": 1200
+    },
+    "modularity": 2,
+    "formFactor": 5,
+    "lengthMm": {
+      "min": 100,
+      "max": 180
+    },
+    "chassisId": "{{chassisId}}",
+    "motherboardId": "{{motherboardId}}",
+    "graphicsCardId": "{{graphicsCardId}}",
+    "cpuId": "{{cpuId}}"
+  }
+}
+
+###
+
+### Get PSU by Id
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/{{psuId}}
+Accept: application/json
+
+###
+
+### Create PSU
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "name": "Corsair RM850x",
+  "manufacturerId": "{{manufacturerId}}",
+  "wattage": 850,
+  "modularity": 2,
+  "formFactor": 5,
+  "lengthMm": 160,
+  "widthMm": 150,
+  "heightMm": 86,
+  "cables": [
+    {
+      "type": 1,
+      "cablesCount": 1,
+      "connectorsCount": 1
+    },
+    {
+      "type": 2,
+      "cablesCount": 2,
+      "connectorsCount": 1
+    },
+    {
+      "type": 3,
+      "cablesCount": 4,
+      "connectorsCount": 1
+    },
+    {
+      "type": 6,
+      "cablesCount": 4,
+      "connectorsCount": 4
+    }
+  ]
+}
+
+###
+
+### Update PSU
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "id": "{{psuId}}",
+  "name": "Corsair RM850x",
+  "manufacturerId": "{{manufacturerId}}",
+  "wattage": 850,
+  "modularity": 2,
+  "formFactor": 5,
+  "lengthMm": 160,
+  "widthMm": 150,
+  "heightMm": 86
+}
+
+###
+
+### Delete PSU
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/{{psuId}}
+Accept: application/json
+
+###
+
+### Bulk Create PSUs
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "psus": [
+    {
+      "name": "Corsair RM850x",
+      "manufacturerId": "{{manufacturerId}}",
+      "wattage": 850,
+      "modularity": 2,
+      "formFactor": 5,
+      "lengthMm": 160,
+      "widthMm": 150,
+      "heightMm": 86,
+      "cables": [
+        {
+          "type": 1,
+          "cablesCount": 1,
+          "connectorsCount": 1
+        },
+        {
+          "type": 2,
+          "cablesCount": 2,
+          "connectorsCount": 1
+        }
+      ]
+    },
+    {
+      "name": "Corsair SF750",
+      "manufacturerId": "{{manufacturerId}}",
+      "wattage": 750,
+      "modularity": 2,
+      "formFactor": 3,
+      "lengthMm": 100,
+      "widthMm": 125,
+      "heightMm": 63.5
+    }
+  ]
+}
+
+###
+
+### Bulk Update PSUs
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "psus": [
+    {
+      "id": "{{psuId}}",
+      "name": "Corsair RM850x",
+      "manufacturerId": "{{manufacturerId}}",
+      "wattage": 850,
+      "modularity": 2,
+      "formFactor": 5,
+      "lengthMm": 160,
+      "widthMm": 150,
+      "heightMm": 86
+    }
+  ]
+}
+
+###
+
+### Bulk Delete PSUs
+DELETE {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/bulk
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "ids": [
+    "{{psuId}}"
+  ]
+}
+
+###
+
+### Import PSUs from Excel
+POST {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/import
+Content-Type: multipart/form-data; boundary=----PsuImportBoundary
+Accept: application/json
+
+------PsuImportBoundary
+Content-Disposition: form-data; name="file"; filename="psus.xlsx"
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< ./psus.xlsx
+------PsuImportBoundary--
+
+###
+
+### Get PSU Cables
+GET {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/{{psuId}}/cable
+Accept: application/json
+
+###
+
+### Replace PSU Cables
+PUT {{PcBuilderBackend.Api_HostAddress}}/api/catalog/psu/{{psuId}}/cable
+Content-Type: {{ContentType}}
+Accept: application/json
+
+[
+  {
+    "type": 1,
+    "cablesCount": 1,
+    "connectorsCount": 1
+  },
+  {
+    "type": 2,
+    "cablesCount": 2,
+    "connectorsCount": 1
+  },
+  {
+    "type": 3,
+    "cablesCount": 4,
+    "connectorsCount": 1
+  },
+  {
+    "type": 5,
+    "cablesCount": 1,
+    "connectorsCount": 1
+  },
+  {
+    "type": 6,
+    "cablesCount": 4,
+    "connectorsCount": 4
   }
 ]
 

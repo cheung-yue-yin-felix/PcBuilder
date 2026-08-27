@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardUsbPorts;
 
 public class BulkUpdateMotherboardUsbPortsHandler(
-    IApplicationDbContext context,
+    IMotherboardRepository motherboards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateMotherboardUsbPortsHandler> logger)
     : IRequestHandler<BulkUpdateMotherboardUsbPortsCommand, List<MotherboardUsbDto>?>
@@ -20,9 +20,7 @@ public class BulkUpdateMotherboardUsbPortsHandler(
         BulkUpdateMotherboardUsbPortsCommand request,
         CancellationToken cancellationToken)
     {
-        var motherboard = await context.Motherboards
-            .Include(x => x.UsbPorts)
-            .FirstOrDefaultAsync(x => x.Id == request.MotherboardId && x.IsActive, cancellationToken);
+        var motherboard = await motherboards.GetWithChildrenAsync(request.MotherboardId, cancellationToken);
 
         if (motherboard is null)
         {
@@ -56,9 +54,10 @@ public class BulkUpdateMotherboardUsbPortsHandler(
                      !touchedKeys.Contains((x.UsbType, x.UsbVersion))))
         {
             motherboard.RemoveUsbPort(existing);
+            motherboards.DeleteUsbPort(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.MotherboardUsbPortsUpdated(logger, motherboard.Id);
 

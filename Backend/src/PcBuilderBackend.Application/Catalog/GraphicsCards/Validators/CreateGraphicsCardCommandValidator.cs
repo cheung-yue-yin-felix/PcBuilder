@@ -1,15 +1,17 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Validators;
 
 public class CreateGraphicsCardCommandValidator : AbstractValidator<CreateGraphicsCardCommand>
 {
-    public CreateGraphicsCardCommandValidator()
+    public CreateGraphicsCardCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ManufacturerId).NotEmpty();
-        RuleFor(x => x.GpuId).NotEmpty();
+        RuleFor(x => x.ManufacturerId).NotEmpty().MustBeActiveManufacturer(db);
+        RuleFor(x => x.GpuId).NotEmpty().MustBeActiveGpu(db);
         RuleFor(x => x.VideoMemoryGb).GreaterThan(0);
         RuleFor(x => x.PcieSlotsUsed).GreaterThan(0);
         RuleFor(x => x.PcieGeneration).IsInEnum();

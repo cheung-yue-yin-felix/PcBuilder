@@ -4,11 +4,11 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class MotherboardPcie : BaseEntity
 {
-    public Guid MotherboardId { get; set; }
-    public PcieSlotType SlotType { get; set; }
-    public PcieSlotLane SlotLanes { get; set; }
-    public PcieGeneration Generation { get; set; }
-    public int SlotCount { get; set; }
+    public Guid MotherboardId { get; private set; }
+    public PcieSlotType SlotType { get; private set; }
+    public PcieSlotLane SlotLanes { get; private set; }
+    public PcieGeneration Generation { get; private set; }
+    public int SlotCount { get; private set; }
 
     protected MotherboardPcie() {}
 

@@ -4,10 +4,10 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class ChassisDriveBay : BaseEntity
 {
-    public Guid ChassisId { get; set; }
-    public DriveBayFormFactor DriveBayFormFactor { get; set; }
-    public int BayCount { get; set; }
-    public Chassis Chassis { get; set; } = null!;
+    public Guid ChassisId { get; private set; }
+    public DriveBayFormFactor DriveBayFormFactor { get; private set; }
+    public int BayCount { get; private set; }
+    public Chassis Chassis { get; private set; } = null!;
     
     protected ChassisDriveBay() {}
 
@@ -27,7 +27,7 @@ public class ChassisDriveBay : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID cannot be empty.");
         
-        if (!Enum.IsDefined(formFactor))
+        if (!Enum.IsDefined(typeof(DriveBayFormFactor), formFactor))
             throw new ArgumentException("Drive bay form factor is invalid.");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bayCount);

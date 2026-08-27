@@ -2,11 +2,15 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class Chipset : ProductEntity
 {
-    public Guid SocketId { get; set; }
-    public Socket Socket { get; set; } = null!;
-    public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
-    public ICollection<CpuSupportChipset> SupportedCpus { get; set; } = new List<CpuSupportChipset>();
-    
+    public Guid SocketId { get; private set; }
+    public Socket Socket { get; private set; } = null!;
+
+    private readonly List<CpuSupportChipset> _supportedCpus = [];
+    public IReadOnlyCollection<CpuSupportChipset> SupportedCpus => _supportedCpus;
+
+    private readonly List<Motherboard> _motherboards = [];
+    public IReadOnlyCollection<Motherboard> Motherboards => _motherboards;
+
     protected Chipset() {}
 
     public Chipset(string name, Guid manufacturerId, Guid socketId)

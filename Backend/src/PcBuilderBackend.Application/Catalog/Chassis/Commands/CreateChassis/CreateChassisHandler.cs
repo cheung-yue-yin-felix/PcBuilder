@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.CreateChassis;
 
 public class CreateChassisHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateChassisHandler> logger)
     : IRequestHandler<CreateChassisCommand, ChassisDto>
@@ -30,8 +31,8 @@ public class CreateChassisHandler(
 
         ApplyChildCollections(entity, request);
 
-        context.Chassis.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        chassis.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.Chassis, entity.Id);
 

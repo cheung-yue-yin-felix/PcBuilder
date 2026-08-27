@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardPcieSlots;
 
 public class BulkUpdateMotherboardPcieSlotsHandler(
-    IApplicationDbContext context,
+    IMotherboardRepository motherboards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateMotherboardPcieSlotsHandler> logger)
     : IRequestHandler<BulkUpdateMotherboardPcieSlotsCommand, List<MotherboardPcieDto>?>
@@ -20,9 +20,7 @@ public class BulkUpdateMotherboardPcieSlotsHandler(
         BulkUpdateMotherboardPcieSlotsCommand request,
         CancellationToken cancellationToken)
     {
-        var motherboard = await context.Motherboards
-            .Include(x => x.PcieSlots)
-            .FirstOrDefaultAsync(x => x.Id == request.MotherboardId && x.IsActive, cancellationToken);
+        var motherboard = await motherboards.GetWithChildrenAsync(request.MotherboardId, cancellationToken);
 
         if (motherboard is null)
         {
@@ -30,8 +28,7 @@ public class BulkUpdateMotherboardPcieSlotsHandler(
             return null;
         }
 
-        var existingByKey = motherboard.PcieSlots.ToDictionary(
-            x => (x.SlotType, x.SlotLanes, x.Generation));
+        var existingByKey = motherboard.PcieSlots.ToDictionary(x => (x.SlotType, x.SlotLanes, x.Generation));
 
         var touchedKeys = new HashSet<(PcieSlotType, PcieSlotLane, PcieGeneration)>();
 
@@ -59,9 +56,10 @@ public class BulkUpdateMotherboardPcieSlotsHandler(
                      !touchedKeys.Contains((x.SlotType, x.SlotLanes, x.Generation))))
         {
             motherboard.RemovePcieSlot(existing);
+            motherboards.DeletePcieSlot(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.MotherboardPcieSlotsUpdated(logger, motherboard.Id);
 

@@ -4,18 +4,18 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class GraphicsCard : ProductEntity
 {
-    public Guid GpuId { get; set; }
-    public int VideoMemoryGb { get; set; }
-    public int PcieSlotsUsed { get; set; }
-    public PcieGeneration PcieGeneration { get; set; }
-    public bool IsLowProfile { get; set; }
-    public decimal LengthMm { get; set; }
-    public decimal WidthMm { get; set; }
-    public decimal HeightMm { get; set; }
-    public decimal PowerConsumptionWatts { get; set; }
-    public Gpu Gpu { get; set; } = null!;
-    public PsuCableType PowerConnectorType { get; set; }
-    public int PowerConnectorCount { get; set; }
+    public Guid GpuId { get; private set; }
+    public int VideoMemoryGb { get; private set; }
+    public int PcieSlotsUsed { get; private set; }
+    public PcieGeneration PcieGeneration { get; private set; }
+    public bool IsLowProfile { get; private set; }
+    public decimal LengthMm { get; private set; }
+    public decimal WidthMm { get; private set; }
+    public decimal HeightMm { get; private set; }
+    public int PowerConsumptionWatts { get; private set; }
+    public Gpu Gpu { get; private set; } = null!;
+    public PsuCableType PowerConnectorType { get; private set; }
+    public int PowerConnectorCount { get; private set; }
 
     protected GraphicsCard()
     {
@@ -28,6 +28,7 @@ public class GraphicsCard : ProductEntity
         int videoMemoryGb,
         int pcieSlotsUsed,
         PcieGeneration pcieGeneration,
+        bool isLowProfile,
         decimal lengthMm,
         decimal widthMm,
         decimal heightMm,
@@ -37,7 +38,7 @@ public class GraphicsCard : ProductEntity
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, lengthMm, widthMm, heightMm,
+        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, isLowProfile, lengthMm, widthMm, heightMm,
             powerConsumptionWatts, powerConnectorType, powerConnectorCount);
     }
 
@@ -46,6 +47,7 @@ public class GraphicsCard : ProductEntity
         int videoMemoryGb,
         int pcieSlotsUsed,
         PcieGeneration pcieGeneration,
+        bool isLowProfile,
         decimal lengthMm,
         decimal widthMm,
         decimal heightMm,
@@ -53,7 +55,7 @@ public class GraphicsCard : ProductEntity
         PsuCableType powerConnectorType,
         int powerConnectorCount)
     {
-        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, lengthMm, widthMm, heightMm,
+        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, isLowProfile, lengthMm, widthMm, heightMm,
             powerConsumptionWatts, powerConnectorType, powerConnectorCount);
         UpdatedAtUtc = DateTime.UtcNow;
     }
@@ -63,6 +65,7 @@ public class GraphicsCard : ProductEntity
         int videoMemoryGb,
         int pcieSlotsUsed,
         PcieGeneration pcieGeneration,
+        bool isLowProfile,
         decimal lengthMm,
         decimal widthMm,
         decimal heightMm,
@@ -107,6 +110,7 @@ public class GraphicsCard : ProductEntity
         LengthMm = lengthMm;
         WidthMm = widthMm;
         HeightMm = heightMm;
+        IsLowProfile = isLowProfile;
         PowerConsumptionWatts = powerConsumptionWatts;
         PowerConnectorType = powerConnectorType;
         PowerConnectorCount = powerConnectorCount;

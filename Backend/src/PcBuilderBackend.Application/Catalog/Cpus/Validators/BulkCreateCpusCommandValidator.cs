@@ -1,13 +1,27 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkCreateCpus;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Validation;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Validators;
 
 public class BulkCreateCpusCommandValidator : AbstractValidator<BulkCreateCpusCommand>
 {
-    public BulkCreateCpusCommandValidator()
+    public BulkCreateCpusCommandValidator(IActiveEntityLookup db)
     {
         RuleFor(x => x.Cpus).NotEmpty().WithMessage("At least one CPU is required");
+        RuleFor(x => x.Cpus.Select(c => c.ManufacturerId))
+            .MustAllBeActiveManufacturers(db)
+            .When(x => x.Cpus is { Count: > 0 });
+        RuleFor(x => x.Cpus.Select(c => c.SocketId))
+            .MustAllBeActiveSockets(db)
+            .When(x => x.Cpus is { Count: > 0 });
+        RuleFor(x => x.Cpus.Select(c => c.SeriesId))
+            .MustAllBeActiveCpuSeries(db)
+            .When(x => x.Cpus is { Count: > 0 });
+        RuleFor(x => x.Cpus.SelectMany(c => c.SupportChipsets.Select(s => s.ChipsetId)))
+            .MustAllBeActiveChipsets(db)
+            .When(x => x.Cpus is { Count: > 0 });
         RuleForEach(x => x.Cpus).ChildRules(cpu =>
         {
             cpu.RuleFor(x => x.Name)

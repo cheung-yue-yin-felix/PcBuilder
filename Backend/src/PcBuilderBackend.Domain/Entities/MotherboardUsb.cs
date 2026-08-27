@@ -4,10 +4,10 @@ namespace PcBuilderBackend.Domain.Entities;
 
 public class MotherboardUsb : BaseEntity
 {
-    public Guid MotherboardId { get; set; }
-    public UsbVersion UsbVersion { get; set; }
-    public UsbType UsbType { get; set; }
-    public int PortCount { get; set; }
+    public Guid MotherboardId { get; private set; }
+    public UsbVersion UsbVersion { get; private set; }
+    public UsbType UsbType { get; private set; }
+    public int PortCount { get; private set; }
 
     protected MotherboardUsb() {}
 

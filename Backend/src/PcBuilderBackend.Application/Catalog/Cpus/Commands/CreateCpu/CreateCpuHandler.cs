@@ -8,7 +8,11 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 
-public class CreateCpuHandler(IApplicationDbContext context, IMapper mapper, ILogger<CreateCpuHandler> logger)
+public class CreateCpuHandler(
+    ICpuRepository cpus,
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    ILogger<CreateCpuHandler> logger)
     : IRequestHandler<CreateCpuCommand, CpuDto>
 {
     public async Task<CpuDto> Handle(CreateCpuCommand request, CancellationToken cancellationToken)
@@ -42,8 +46,8 @@ public class CreateCpuHandler(IApplicationDbContext context, IMapper mapper, ILo
                 support.RequiresBiosUpdate));
         }
 
-        context.Cpus.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        cpus.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.Cpu, entity.Id);
 

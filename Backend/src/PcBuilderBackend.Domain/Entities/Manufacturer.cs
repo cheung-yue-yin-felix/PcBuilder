@@ -13,27 +13,53 @@ public class Manufacturer : BaseEntity
 
     public string Name { get; private set; } = string.Empty;
 
-    public ICollection<Socket> Sockets { get; set; } = new List<Socket>();
-    public ICollection<Chipset> Chipsets { get; set; } = new List<Chipset>();
-    public ICollection<Gpu> Gpus { get; set; } = new List<Gpu>();
-    public ICollection<Cpu> Cpus { get; set; } = new List<Cpu>();
-    public ICollection<Ram> Rams { get; set; } = new List<Ram>();
-    public ICollection<GraphicsCard> GraphicsCards { get; set; } = new List<GraphicsCard>();
-    public ICollection<Motherboard> Motherboards { get; set; } = new List<Motherboard>();
-    public ICollection<Psu> Psus { get; set; } = new List<Psu>();
-    public ICollection<Chassis> Chassis { get; set; } = new List<Chassis>();
-    public ICollection<StorageDrive> StorageDrives { get; set; } = new List<StorageDrive>();
-    public ICollection<CpuCooler> CpuCoolers { get; set; } = new List<CpuCooler>();
-    public ICollection<CpuSeries> CpuSeries { get; set; } = new List<CpuSeries>();
-    public ICollection<GpuSeries> GpuSeries { get; set; } = new List<GpuSeries>();
+    private readonly List<Socket> _sockets = [];
+    public IReadOnlyCollection<Socket> Sockets => _sockets;
 
-    public ICollection<WiredNetworkAdapter> WiredNetworkAdapters { get; set; } =
-        new List<WiredNetworkAdapter>();
+    private readonly List<Chipset> _chipsets = [];
+    public IReadOnlyCollection<Chipset> Chipsets => _chipsets;
+    
+    private readonly List<Gpu> _gpus = [];
+    public IReadOnlyCollection<Gpu> Gpus => _gpus;
 
-    public ICollection<WirelessNetworkAdapter> WirelessNetworkAdapters { get; set; } =
-        new List<WirelessNetworkAdapter>();
+    private readonly List<Cpu> _cpus = [];
+    public IReadOnlyCollection<Cpu> Cpus => _cpus;
 
-    public ICollection<ChassisFan> ChassisFans { get; set; } = new List<ChassisFan>();
+    private readonly List<Ram> _rams = [];
+    public IReadOnlyCollection<Ram> Rams => _rams;
+
+    private readonly List<GraphicsCard> _graphicsCards = [];
+    public IReadOnlyCollection<GraphicsCard> GraphicsCards => _graphicsCards;
+
+    private readonly List<Motherboard> _motherboards = [];
+    public IReadOnlyCollection<Motherboard> Motherboards => _motherboards;
+
+    private readonly List<Psu> _psus = [];
+    public IReadOnlyCollection<Psu> Psus => _psus;
+
+    private readonly List<Chassis> _chassis = [];
+    public IReadOnlyCollection<Chassis> Chassis => _chassis;
+
+    private readonly List<StorageDrive> _storageDrives = [];
+    public IReadOnlyCollection<StorageDrive> StorageDrives => _storageDrives;
+
+    private readonly List<CpuCooler> _cpuCoolers = [];
+    public IReadOnlyCollection<CpuCooler> CpuCoolers => _cpuCoolers;
+
+    private readonly List<CpuSeries> _cpuSeries = [];
+    public IReadOnlyCollection<CpuSeries> CpuSeries => _cpuSeries;
+
+    private readonly List<GpuSeries> _gpuSeries = [];
+    public IReadOnlyCollection<GpuSeries> GpuSeries => _gpuSeries;
+
+    private readonly List<WiredNetworkAdapter> _wiredNetworkAdapters = [];
+    public IReadOnlyCollection<WiredNetworkAdapter> WiredNetworkAdapters => _wiredNetworkAdapters;
+
+    private readonly List<WirelessNetworkAdapter> _wirelessNetworkAdapters = [];
+    public IReadOnlyCollection<WirelessNetworkAdapter> WirelessNetworkAdapters => _wirelessNetworkAdapters;
+
+    private readonly List<ChassisFan> _chassisFans = [];
+    public IReadOnlyCollection<ChassisFan> ChassisFans => _chassisFans;
 
     public void Rename(string name)
     {

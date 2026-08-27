@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassisRadiators;
 
 public class BulkUpdateChassisRadiatorsHandler(
-    IApplicationDbContext context,
+    IChassisRepository chassis,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisRadiatorsHandler> logger)
     : IRequestHandler<BulkUpdateChassisRadiatorsCommand, List<ChassisRadiatorDto>?>
@@ -20,17 +20,15 @@ public class BulkUpdateChassisRadiatorsHandler(
         BulkUpdateChassisRadiatorsCommand request,
         CancellationToken cancellationToken)
     {
-        var chassis = await context.Chassis
-            .Include(x => x.Radiators)
-            .FirstOrDefaultAsync(x => x.Id == request.ChassisId && x.IsActive, cancellationToken);
+        var entity = await chassis.GetWithChildrenAsync(request.ChassisId, cancellationToken);
 
-        if (chassis is null)
+        if (entity is null)
         {
             EntityLog.NotFound(logger, EntityLog.Chassis, request.ChassisId);
             return null;
         }
 
-        var existingByKey = chassis.Radiators.ToDictionary(x => (x.Length, x.MountLocation));
+        var existingByKey = entity.Radiators.ToDictionary(x => (x.Length, x.MountLocation));
         var touchedKeys = new HashSet<(RadiatorLength Length, RadiatorMountLocation MountLocation)>();
 
         foreach (var radiator in request.Radiators)
@@ -48,7 +46,7 @@ public class BulkUpdateChassisRadiatorsHandler(
             }
             else
             {
-                chassis.AddRadiator(new ChassisRadiator(
+                entity.AddRadiator(new ChassisRadiator(
                     request.ChassisId,
                     radiator.Length,
                     radiator.Location,
@@ -59,15 +57,15 @@ public class BulkUpdateChassisRadiatorsHandler(
         foreach (var existing in existingByKey.Values.Where(x =>
                      !touchedKeys.Contains((x.Length, x.MountLocation))))
         {
-            chassis.RemoveRadiator(existing);
-            context.ChassisRadiators.Remove(existing);
+            entity.RemoveRadiator(existing);
+            chassis.DeleteRadiator(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        EntityLog.ChassisRadiatorsUpdated(logger, chassis.Id);
+        EntityLog.ChassisRadiatorsUpdated(logger, entity.Id);
 
-        return [.. chassis.Radiators
+        return [.. entity.Radiators
             .Where(x => x.IsActive)
             .Select(mapper.Map<ChassisRadiatorDto>)];
     }
