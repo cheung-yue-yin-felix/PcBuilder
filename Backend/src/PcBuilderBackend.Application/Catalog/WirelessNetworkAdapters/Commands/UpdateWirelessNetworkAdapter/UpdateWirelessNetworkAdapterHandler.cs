@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.UpdateWirelessNetworkAdapter;
 
 public class UpdateWirelessNetworkAdapterHandler(
-    IApplicationDbContext context,
+    IWirelessNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<UpdateWirelessNetworkAdapterHandler> logger)
     : IRequestHandler<UpdateWirelessNetworkAdapterCommand, WirelessNetworkAdapterDto?>
@@ -18,8 +19,7 @@ public class UpdateWirelessNetworkAdapterHandler(
         UpdateWirelessNetworkAdapterCommand request,
         CancellationToken cancellationToken)
     {
-        var entity = await context.WirelessNetworkAdapters
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await adapters.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -42,7 +42,7 @@ public class UpdateWirelessNetworkAdapterHandler(
             request.UsbVersion,
             request.UsbType);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.WirelessNetworkAdapter, entity.Id);
 

@@ -27,7 +27,8 @@ public class PsuCommandHandlerTests : IDisposable
     [Fact]
     public async Task Create_persists_psu_and_cables()
     {
-        var handler = new CreatePsuHandler(_fixture.Context, _fixture.Mapper, NullLogger<CreatePsuHandler>.Instance);
+        var handler = new CreatePsuHandler(
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Mapper, NullLogger<CreatePsuHandler>.Instance);
 
         var result = await handler.Handle(_fixture.ValidCreate(), CancellationToken.None);
 
@@ -42,7 +43,8 @@ public class PsuCommandHandlerTests : IDisposable
     public async Task Update_changes_specs_and_returns_null_when_missing()
     {
         var psu = _fixture.SeedPsu();
-        var handler = new UpdatePsuHandler(_fixture.Context, _fixture.Mapper, NullLogger<UpdatePsuHandler>.Instance);
+        var handler = new UpdatePsuHandler(
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Mapper, NullLogger<UpdatePsuHandler>.Instance);
 
         var updated = await handler.Handle(new UpdatePsuCommand
         {
@@ -82,7 +84,8 @@ public class PsuCommandHandlerTests : IDisposable
     public async Task Delete_soft_deletes_and_returns_false_when_missing()
     {
         var psu = _fixture.SeedPsu();
-        var handler = new DeletePsuHandler(_fixture.Context, NullLogger<DeletePsuHandler>.Instance);
+        var handler = new DeletePsuHandler(
+            _fixture.Psus, _fixture.UnitOfWork, NullLogger<DeletePsuHandler>.Instance);
 
         (await handler.Handle(new DeletePsuCommand(psu.Id), CancellationToken.None)).Should().BeTrue();
         (await _fixture.Context.Psus.FirstOrDefaultAsync(x => x.Id == psu.Id)).Should().BeNull();
@@ -93,7 +96,7 @@ public class PsuCommandHandlerTests : IDisposable
     public async Task Bulk_create_inserts_all_items()
     {
         var handler = new BulkCreatePsusHandler(
-            _fixture.Context, _fixture.Mapper, NullLogger<BulkCreatePsusHandler>.Instance);
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Mapper, NullLogger<BulkCreatePsusHandler>.Instance);
 
         var result = await handler.Handle(new BulkCreatePsusCommand(
         [
@@ -130,7 +133,7 @@ public class PsuCommandHandlerTests : IDisposable
     {
         var psu = _fixture.SeedPsu();
         var handler = new BulkUpdatePsusHandler(
-            _fixture.Context, _fixture.Mapper, NullLogger<BulkUpdatePsusHandler>.Instance);
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Mapper, NullLogger<BulkUpdatePsusHandler>.Instance);
 
         var result = await handler.Handle(new BulkUpdatePsusCommand(
         [
@@ -167,7 +170,8 @@ public class PsuCommandHandlerTests : IDisposable
     public async Task Bulk_delete_requires_all_ids_to_exist()
     {
         var psu = _fixture.SeedPsu();
-        var handler = new BulkDeletePsusHandler(_fixture.Context, NullLogger<BulkDeletePsusHandler>.Instance);
+        var handler = new BulkDeletePsusHandler(
+            _fixture.Psus, _fixture.UnitOfWork, NullLogger<BulkDeletePsusHandler>.Instance);
 
         (await handler.Handle(new BulkDeletePsusCommand([psu.Id, Guid.NewGuid()]), CancellationToken.None))
             .Should().BeFalse();
@@ -186,7 +190,7 @@ public class PsuCommandHandlerTests : IDisposable
         await _fixture.Context.SaveChangesAsync();
 
         var handler = new BulkUpdatePsuCablesHandler(
-            _fixture.Context, _fixture.Mapper, NullLogger<BulkUpdatePsuCablesHandler>.Instance);
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Mapper, NullLogger<BulkUpdatePsuCablesHandler>.Instance);
 
         var result = await handler.Handle(new BulkUpdatePsuCablesCommand(psu.Id,
         [
@@ -235,7 +239,8 @@ public class PsuCommandHandlerTests : IDisposable
             ]);
 
         var handler = new ImportPsusHandler(
-            _fixture.Context, _fixture.Lookup, excel, _fixture.Mapper, NullLogger<ImportPsusHandler>.Instance);
+            _fixture.Psus, _fixture.UnitOfWork, _fixture.Lookup, excel, _fixture.Mapper,
+            NullLogger<ImportPsusHandler>.Instance);
 
         var imported = await handler.Handle(new ImportPsusCommand(Stream.Null), CancellationToken.None);
 

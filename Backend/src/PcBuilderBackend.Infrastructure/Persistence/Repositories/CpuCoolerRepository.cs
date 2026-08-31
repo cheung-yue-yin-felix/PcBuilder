@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public sealed class CpuCoolerRepository(IApplicationDbContext db) : ICpuCoolerRepository
+public sealed class CpuCoolerRepository(PcBuilderDbContext db) : ICpuCoolerRepository
 {
     public Task<CpuCooler?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.CpuCoolers.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

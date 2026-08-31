@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.CreateChassisFan;
 
 public class CreateChassisFanHandler(
-    IApplicationDbContext context,
+    IChassisFanRepository chassisFans,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateChassisFanHandler> logger)
     : IRequestHandler<CreateChassisFanCommand, ChassisFanDto>
@@ -22,8 +23,8 @@ public class CreateChassisFanHandler(
             request.DiameterMm,
             request.FansCountPerPack);
 
-        context.ChassisFans.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        chassisFans.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.ChassisFan, entity.Id);
 

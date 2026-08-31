@@ -10,7 +10,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.ImportPsus;
 
 public class ImportPsusHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
@@ -43,11 +44,11 @@ public class ImportPsusHandler(
                 entity.AddCable(new PsuCable(entity.Id, cable.Type, cable.CablesCount, cable.ConnectorsCount));
             }
 
-            context.Psus.Add(entity);
+            psus.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.Psu);
 

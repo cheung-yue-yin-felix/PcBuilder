@@ -5,7 +5,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public sealed class CpuRepository(IApplicationDbContext db) : ICpuRepository
+public sealed class CpuRepository(PcBuilderDbContext db) : ICpuRepository
 {
     public Task<Cpu?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.Cpus.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

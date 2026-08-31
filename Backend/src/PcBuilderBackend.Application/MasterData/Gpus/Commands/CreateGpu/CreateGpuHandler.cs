@@ -9,7 +9,8 @@ using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.CreateGpu;
 
 public class CreateGpuHandler(
-    IApplicationDbContext context,
+    IRepository<Domain.Entities.Gpu> gpus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ICacheService cache,
     ILogger<CreateGpuHandler> logger) : IRequestHandler<CreateGpuCommand, GpuDto>
@@ -17,8 +18,8 @@ public class CreateGpuHandler(
     public async Task<GpuDto> Handle(CreateGpuCommand request, CancellationToken cancellationToken)
     {
         var gpu = new Domain.Entities.Gpu(request.Name, request.ManufacturerId, request.GpuSeriesId);
-        context.Gpus.Add(gpu);
-        await context.SaveChangesAsync(cancellationToken);
+        gpus.Add(gpu);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
         EntityLog.Created(logger, EntityLog.Gpu, gpu.Id);
         return mapper.Map<GpuDto>(gpu);

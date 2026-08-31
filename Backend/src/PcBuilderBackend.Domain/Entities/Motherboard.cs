@@ -129,85 +129,221 @@ public class Motherboard : ProductEntity
 
     public PartsCompatibilityResult CheckStorageCompatibility(StorageDrive storage)
     {
-        if (storage.FormFactor is StorageFormFactor.Sata25 or StorageFormFactor.Sata35)
+        ArgumentNullException.ThrowIfNull(storage);
+        return CheckStorageCompatibility([storage]);
+    }
+
+    /// <param name="drives">
+    /// Selected drives (one entry per unit; expand quantity by repeating the product).
+    /// 2.5" and 3.5" SATA drives consume <see cref="SataPorts"/>. M.2 drives consume
+    /// matching M.2 <see cref="MotherboardM2.SlotCount"/>.
+    /// </param>
+    public PartsCompatibilityResult CheckStorageCompatibility(IEnumerable<StorageDrive> drives)
+    {
+        ArgumentNullException.ThrowIfNull(drives);
+
+        var list = drives as IList<StorageDrive> ?? [.. drives];
+        if (list.Count == 0)
+            return PartsCompatibilityResult.Compatible();
+
+        foreach (var drive in list)
         {
-            return SataPorts < 1
-                ? PartsCompatibilityResult.Incompatible(CompatibilityReason.InsufficientSataPorts)
-                : PartsCompatibilityResult.Compatible();
+            if (drive.FormFactor is StorageFormFactor.Sata25 or StorageFormFactor.Sata35 || drive.IsM2)
+                continue;
+
+            throw new ArgumentOutOfRangeException(nameof(drives), "Storage form factor is not recognized.");
         }
 
-        if (storage.ModuleKey is not { } moduleKey || storage.M2FormFactor is not { } formFactor)
-            throw new ArgumentOutOfRangeException(nameof(storage), "Storage form factor is not recognized.");
+        var sataBayCount = list.Count(drive =>
+            drive.FormFactor is StorageFormFactor.Sata25 or StorageFormFactor.Sata35);
 
-        var candidates = _m2Slots
-            .Where(slot => moduleKey.FitsSlot(slot.Key))
-            .Where(slot => slot.FormFactors.Any(x => x.FormFactor == formFactor))
-            .ToList();
+        if (sataBayCount > SataPorts)
+            return PartsCompatibilityResult.Incompatible(CompatibilityReason.InsufficientSataPorts);
 
-        if (candidates.Count == 0)
-            return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingM2Slot);
-
-        if (storage.Interface == StorageInterface.Sata)
-        {
-            return candidates.Any(slot => slot.SupportsSata)
-                ? PartsCompatibilityResult.Compatible()
-                : PartsCompatibilityResult.Incompatible(CompatibilityReason.SlotDoesNotSupportSata);
-        }
-
-        var maxGeneration = candidates.Max(slot => slot.PcieGeneration);
-        var driveGeneration = storage.PcieGeneration!.Value;
-        return driveGeneration > maxGeneration
-            ? PartsCompatibilityResult.CompatibleReduced(
-                CompatibilityReason.PcieGenerationReduced,
-                rated: driveGeneration,
-                executing: maxGeneration)
-            : PartsCompatibilityResult.Compatible();
+        return AssignM2Demands(list.Where(drive => drive.IsM2).Select(ToM2Demand));
     }
 
     public PartsCompatibilityResult CheckWirelessNetworkAdapterCompatibility(WirelessNetworkAdapter adapter)
     {
-        return adapter.HostInterface switch
-        {
-            WirelessHostInterface.Usb => CheckUsbCompatibility(adapter.UsbVersion!.Value, adapter.UsbType!.Value),
-            WirelessHostInterface.Pcie => _pcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
-                ? PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots)
-                : PartsCompatibilityResult.Compatible(),
-            WirelessHostInterface.M2 => adapter is { Key: M2Key.E, M2FormFactor: { } formFactor } &&
-                                        _m2Slots.Any(slot =>
-                                            slot.Key == M2Key.E &&
-                                            slot.FormFactors.Any(x => x.FormFactor == formFactor))
-                ? PartsCompatibilityResult.Compatible()
-                : PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingM2Slot),
-            _ => throw new ArgumentOutOfRangeException(nameof(adapter), "Wireless host interface is not recognized.")
-        };
+        ArgumentNullException.ThrowIfNull(adapter);
+        return CheckNetworkAdapterCompatibility([], [adapter]);
+    }
+
+    public PartsCompatibilityResult CheckWirelessNetworkAdapterCompatibility(
+        IEnumerable<WirelessNetworkAdapter> adapters)
+    {
+        ArgumentNullException.ThrowIfNull(adapters);
+        return CheckNetworkAdapterCompatibility([], adapters);
     }
 
     public PartsCompatibilityResult CheckWiredNetworkAdapterCompatibility(WiredNetworkAdapter adapter)
     {
-        return adapter.HostInterface switch
-        {
-            WiredHostInterface.Usb => CheckUsbCompatibility(adapter.UsbVersion!.Value, adapter.UsbType!.Value),
-            WiredHostInterface.Pcie => _pcieSlots.All(x => x.SlotType != adapter.PcieSlotType)
-                ? PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots)
-                : PartsCompatibilityResult.Compatible(),
-            _ => throw new ArgumentOutOfRangeException(nameof(adapter), "Wired host interface is not recognized.")
-        };
+        ArgumentNullException.ThrowIfNull(adapter);
+        return CheckNetworkAdapterCompatibility([adapter], []);
     }
 
-    private PartsCompatibilityResult CheckUsbCompatibility(UsbVersion usbVersion, UsbType usbType)
+    public PartsCompatibilityResult CheckWiredNetworkAdapterCompatibility(
+        IEnumerable<WiredNetworkAdapter> adapters)
     {
-        var sameType = _usbPorts.Where(port => port.UsbType == usbType).ToList();
-        if (sameType.Count == 0)
-            return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingUsbPort);
-
-        var maxVersion = sameType.Max(port => port.UsbVersion);
-        return usbVersion > maxVersion
-            ? PartsCompatibilityResult.CompatibleReduced(
-                CompatibilityReason.UsbVersionReduced,
-                rated: usbVersion,
-                executing: maxVersion)
-            : PartsCompatibilityResult.Compatible();
+        ArgumentNullException.ThrowIfNull(adapters);
+        return CheckNetworkAdapterCompatibility(adapters, []);
     }
+
+    /// <param name="wired">
+    /// Selected wired adapters (one entry per unit; expand quantity by repeating the product).
+    /// </param>
+    /// <param name="wireless">
+    /// Selected wireless adapters (one entry per unit; expand quantity by repeating the product).
+    /// USB ports, PCIe slots, and E-key M.2 slots are consumed in aggregate across both lists.
+    /// </param>
+    public PartsCompatibilityResult CheckNetworkAdapterCompatibility(
+        IEnumerable<WiredNetworkAdapter> wired,
+        IEnumerable<WirelessNetworkAdapter> wireless)
+    {
+        ArgumentNullException.ThrowIfNull(wired);
+        ArgumentNullException.ThrowIfNull(wireless);
+
+        var wiredList = wired as IList<WiredNetworkAdapter> ?? [.. wired];
+        var wirelessList = wireless as IList<WirelessNetworkAdapter> ?? [.. wireless];
+
+        var pcieNeeded = wiredList
+            .Where(adapter => adapter.HostInterface == WiredHostInterface.Pcie)
+            .Select(adapter => adapter.PcieSlotType!.Value)
+            .Concat(wirelessList
+                .Where(adapter => adapter.HostInterface == WirelessHostInterface.Pcie)
+                .Select(adapter => adapter.PcieSlotType!.Value))
+            .GroupBy(slotType => slotType)
+            .ToList();
+
+        foreach (var group in pcieNeeded)
+        {
+            var available = _pcieSlots
+                .Where(slot => slot.SlotType == group.Key)
+                .Sum(slot => slot.SlotCount);
+
+            if (available < group.Count())
+                return PartsCompatibilityResult.Incompatible(CompatibilityReason.NotEnoughPcieSlots);
+        }
+
+        PartsCompatibilityResult? reduced = null;
+
+        var usbNeeded = wiredList
+            .Where(adapter => adapter.HostInterface == WiredHostInterface.Usb)
+            .Select(adapter => (Type: adapter.UsbType!.Value, Version: adapter.UsbVersion!.Value))
+            .Concat(wirelessList
+                .Where(adapter => adapter.HostInterface == WirelessHostInterface.Usb)
+                .Select(adapter => (Type: adapter.UsbType!.Value, Version: adapter.UsbVersion!.Value)))
+            .GroupBy(usb => usb.Type)
+            .ToList();
+
+        foreach (var group in usbNeeded)
+        {
+            var ports = _usbPorts.Where(port => port.UsbType == group.Key).ToList();
+            if (ports.Count == 0)
+                return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingUsbPort);
+
+            if (ports.Sum(port => port.PortCount) < group.Count())
+                return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingUsbPort);
+
+            var maxVersion = ports.Max(port => port.UsbVersion);
+            var rated = group.Max(usb => usb.Version);
+            if (rated > maxVersion)
+            {
+                reduced = PartsCompatibilityResult.CompatibleReduced(
+                    CompatibilityReason.UsbVersionReduced,
+                    rated,
+                    maxVersion);
+            }
+        }
+
+        var m2Result = AssignM2Demands(
+            wirelessList
+                .Where(adapter => adapter.HostInterface == WirelessHostInterface.M2)
+                .Select(ToM2Demand));
+
+        if (m2Result.Status == PartsCompatibility.Incompatible)
+            return m2Result;
+
+        return reduced ?? m2Result;
+    }
+
+    private PartsCompatibilityResult AssignM2Demands(IEnumerable<M2Demand> demands)
+    {
+        var list = demands as IList<M2Demand> ?? [.. demands];
+        if (list.Count == 0)
+            return PartsCompatibilityResult.Compatible();
+
+        var remaining = _m2Slots.ToDictionary(slot => slot, slot => slot.SlotCount);
+        PartsCompatibilityResult? reduced = null;
+
+        foreach (var demand in list.OrderBy(CountM2Candidates))
+        {
+            var result = TryConsumeM2Slot(demand, remaining);
+            if (result.Status == PartsCompatibility.Incompatible)
+                return result;
+
+            if (result.Status == PartsCompatibility.CompatibleReduced)
+                reduced = result;
+        }
+
+        return reduced ?? PartsCompatibilityResult.Compatible();
+    }
+
+    private int CountM2Candidates(M2Demand demand) =>
+        _m2Slots.Count(slot => IsM2Candidate(slot, demand));
+
+    private PartsCompatibilityResult TryConsumeM2Slot(M2Demand demand, Dictionary<MotherboardM2, int> remaining)
+    {
+        var candidates = _m2Slots.Where(slot => IsM2Candidate(slot, demand)).ToList();
+        if (candidates.Count == 0)
+        {
+            if (demand.RequiresSata &&
+                _m2Slots.Any(slot => MatchesM2KeyAndForm(slot, demand)))
+                return PartsCompatibilityResult.Incompatible(CompatibilityReason.SlotDoesNotSupportSata);
+
+            return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingM2Slot);
+        }
+
+        var available = candidates.Where(slot => remaining[slot] > 0).ToList();
+        if (available.Count == 0)
+            return PartsCompatibilityResult.Incompatible(CompatibilityReason.NoMatchingM2Slot);
+
+        var chosen = available.MaxBy(slot => slot.PcieGeneration)!;
+        remaining[chosen]--;
+
+        if (demand.Generation is { } generation && generation > chosen.PcieGeneration)
+        {
+            return PartsCompatibilityResult.CompatibleReduced(
+                CompatibilityReason.PcieGenerationReduced,
+                rated: generation,
+                executing: chosen.PcieGeneration);
+        }
+
+        return PartsCompatibilityResult.Compatible();
+    }
+
+    private static bool IsM2Candidate(MotherboardM2 slot, M2Demand demand) =>
+        MatchesM2KeyAndForm(slot, demand) && (!demand.RequiresSata || slot.SupportsSata);
+
+    private static bool MatchesM2KeyAndForm(MotherboardM2 slot, M2Demand demand) =>
+        demand.Key.FitsSlot(slot.Key) &&
+        slot.FormFactors.Any(formFactor => formFactor.FormFactor == demand.FormFactor);
+
+    private static M2Demand ToM2Demand(StorageDrive drive) =>
+        new(
+            drive.ModuleKey!.Value,
+            drive.M2FormFactor!.Value,
+            drive.Interface == StorageInterface.Sata,
+            drive.Interface == StorageInterface.Nvme ? drive.PcieGeneration : null);
+
+    private static M2Demand ToM2Demand(WirelessNetworkAdapter adapter) =>
+        new(adapter.Key!.Value, adapter.M2FormFactor!.Value, RequiresSata: false, Generation: null);
+
+    private readonly record struct M2Demand(
+        M2Key Key,
+        M2FormFactor FormFactor,
+        bool RequiresSata,
+        PcieGeneration? Generation);
 
     public Motherboard(
         Guid manufacturerId,

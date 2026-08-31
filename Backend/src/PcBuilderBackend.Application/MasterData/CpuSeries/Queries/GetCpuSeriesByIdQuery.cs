@@ -3,4 +3,4 @@ using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.CpuSeries.Queries;
 
-public record GetCpuSeriesByIdQuery(Guid CpuSeriesId): IRequest<CpuSeriesDto?>;
+public record GetCpuSeriesByIdQuery(Guid Id) : IRequest<CpuSeriesDto?>;

@@ -9,7 +9,8 @@ using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkCreateGpus;
 
 public class BulkCreateGpusHandler(
-    IApplicationDbContext context,
+    IRepository<Domain.Entities.Gpu> gpus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ICacheService cache,
     ILogger<BulkCreateGpusHandler> logger)
@@ -21,11 +22,11 @@ public class BulkCreateGpusHandler(
 
         foreach (var gpu in request.Gpus.Select(g => new Domain.Entities.Gpu(g.Name, g.ManufacturerId, g.GpuSeriesId)))
         {
-            context.Gpus.Add(gpu);
+            gpus.Add(gpu);
             result.Add(mapper.Map<GpuDto>(gpu));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.Gpu);
         return result;

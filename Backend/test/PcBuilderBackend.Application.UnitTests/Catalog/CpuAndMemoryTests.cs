@@ -1,15 +1,18 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Catalog.Cpus.Validators;
+using PcBuilderBackend.Application.Catalog.Memories;
 using PcBuilderBackend.Application.Catalog.Memories.Commands.CreateMemory;
 using PcBuilderBackend.Application.Catalog.Memories.Validators;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Commands.CreateStorageDrive;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Commands.DeleteStorageDrive;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Validators;
 using PcBuilderBackend.Application.UnitTests.Support;
+using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.UnitTests.Catalog;
@@ -68,7 +71,10 @@ public class CpuAndMemoryTests : IDisposable
         (await validator.ValidateAsync(command)).IsValid.Should().BeTrue();
         (await validator.ValidateAsync(command with { TotalMemorySizeGb = 8 })).IsValid.Should().BeFalse();
 
-        var dto = await new CreateMemoryHandler(_fx.Context, _fx.Mapper).Handle(command, CancellationToken.None);
+        var rams = Substitute.For<IRamRepository>();
+        rams.When(x => x.Add(Arg.Any<Ram>())).Do(ci => _fx.Context.Rams.Add(ci.Arg<Ram>()));
+        var dto = await new CreateMemoryHandler(rams, _fx.UnitOfWork, _fx.Mapper)
+            .Handle(command, CancellationToken.None);
         dto.Name.Should().Be("Vengeance");
         (await _fx.Context.Rams.CountAsync()).Should().Be(1);
     }
@@ -90,11 +96,18 @@ public class CpuAndMemoryTests : IDisposable
         (await validator.ValidateAsync(ssd)).IsValid.Should().BeTrue();
         (await validator.ValidateAsync(ssd with { Media = StorageMedia.Hdd })).IsValid.Should().BeFalse();
 
-        var created = await new CreateStorageDriveHandler(_fx.Context, _fx.Mapper, NullLogger<CreateStorageDriveHandler>.Instance)
+        var created = await new CreateStorageDriveHandler(
+                new TestStorageDriveRepository(_fx.Context),
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                NullLogger<CreateStorageDriveHandler>.Instance)
             .Handle(ssd, CancellationToken.None);
         created.IsM2.Should().BeTrue();
 
-        (await new DeleteStorageDriveHandler(_fx.Context, NullLogger<DeleteStorageDriveHandler>.Instance)
+        (await new DeleteStorageDriveHandler(
+                new TestStorageDriveRepository(_fx.Context),
+                _fx.UnitOfWork,
+                NullLogger<DeleteStorageDriveHandler>.Instance)
             .Handle(new DeleteStorageDriveCommand(created.Id), CancellationToken.None)).Should().BeTrue();
         (await _fx.Context.StorageDrives.AnyAsync()).Should().BeFalse();
     }

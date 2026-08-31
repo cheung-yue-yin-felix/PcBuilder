@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.CreatePsu;
 
 public class CreatePsuHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreatePsuHandler> logger)
     : IRequestHandler<CreatePsuCommand, PsuDto>
@@ -31,8 +32,8 @@ public class CreatePsuHandler(
             entity.AddCable(new PsuCable(entity.Id, cable.Type, cable.CablesCount, cable.ConnectorsCount));
         }
 
-        context.Psus.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        psus.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.Psu, entity.Id);
 

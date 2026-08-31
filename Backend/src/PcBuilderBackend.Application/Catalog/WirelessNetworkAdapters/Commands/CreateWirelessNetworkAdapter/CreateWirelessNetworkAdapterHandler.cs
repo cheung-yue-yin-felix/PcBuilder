@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.CreateWirelessNetworkAdapter;
 
 public class CreateWirelessNetworkAdapterHandler(
-    IApplicationDbContext context,
+    IWirelessNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateWirelessNetworkAdapterHandler> logger)
     : IRequestHandler<CreateWirelessNetworkAdapterCommand, WirelessNetworkAdapterDto>
@@ -33,8 +34,8 @@ public class CreateWirelessNetworkAdapterHandler(
             request.UsbVersion,
             request.UsbType);
 
-        context.WirelessNetworkAdapters.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        adapters.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.WirelessNetworkAdapter, entity.Id);
 

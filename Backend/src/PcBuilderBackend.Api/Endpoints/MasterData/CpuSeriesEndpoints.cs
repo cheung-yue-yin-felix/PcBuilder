@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkDeleteCpuSe
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkUpdateCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.CreateCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.DeleteCpuSeries;
+using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.ImportCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.UpdateCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Queries;
@@ -66,6 +67,13 @@ public static class CpuSeriesEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple CPU Series");
+
+        subgroup.MapPost("/import", ImportCpuSeries)
+            .Produces<List<CpuSeriesDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import CPU Series from Excel")
+            .WithDescription("\n    POST /master-data/cpu-series/import");
     }
 
     private static async Task<Ok<List<CpuSeriesDto>>> GetCpuSeries(
@@ -138,5 +146,14 @@ public static class CpuSeriesEndpoints
     {
         var success = await sender.Send(command, cancellationToken);
         return success ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<CpuSeriesDto>>> ImportCpuSeries(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        return TypedResults.Ok(await sender.Send(new ImportCpuSeriesCommand(fileStream), cancellationToken));
     }
 }

@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkUpdateSockets
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkDeleteSockets;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.CreateSocket;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.DeleteSocket;
+using PcBuilderBackend.Application.MasterData.Sockets.Commands.ImportSockets;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.UpdateSocket;
 using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 using PcBuilderBackend.Application.MasterData.Sockets.Queries;
@@ -66,6 +67,13 @@ public static class SocketEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple Sockets");
+
+        subgroup.MapPost("/import", ImportSockets)
+            .Produces<List<SocketDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import Sockets from Excel")
+            .WithDescription("\n    POST /master-data/socket/import");
     }
 
     private static async Task<Ok<List<SocketDto>>> GetSockets(
@@ -139,5 +147,14 @@ public static class SocketEndpoints
     {
         var result = await sender.Send(command, cancellationToken);
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<SocketDto>>> ImportSockets(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        return TypedResults.Ok(await sender.Send(new ImportSocketsCommand(fileStream), cancellationToken));
     }
 }

@@ -10,7 +10,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.ImportWiredNetworkAdapters;
 
 public class ImportWiredNetworkAdaptersHandler(
-    IApplicationDbContext context,
+    IWiredNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
@@ -39,11 +40,11 @@ public class ImportWiredNetworkAdaptersHandler(
                 row.UsbType,
                 row.PcieSlotType);
 
-            context.WiredNetworkAdapters.Add(entity);
+            adapters.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.WiredNetworkAdapter);
 

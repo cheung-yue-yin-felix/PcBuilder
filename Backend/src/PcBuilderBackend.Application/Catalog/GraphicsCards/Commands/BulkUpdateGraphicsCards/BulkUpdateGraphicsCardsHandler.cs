@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -9,7 +8,8 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkUpdateGraphicsCards;
 
 public class BulkUpdateGraphicsCardsHandler(
-    IApplicationDbContext context,
+    IGraphicsCardRepository graphicsCards,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateGraphicsCardsHandler> logger)
     : IRequestHandler<BulkUpdateGraphicsCardsCommand, List<GraphicsCardDto>?>
@@ -22,8 +22,7 @@ public class BulkUpdateGraphicsCardsHandler(
 
         foreach (var item in request.Cards)
         {
-            var entity = await context.GraphicsCards
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await graphicsCards.GetByIdAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -49,7 +48,7 @@ public class BulkUpdateGraphicsCardsHandler(
             result.Add(mapper.Map<GraphicsCardDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.GraphicsCard);
         return result;
     }

@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
@@ -7,14 +6,14 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.DeleteChassisFan;
 
 public class DeleteChassisFanHandler(
-    IApplicationDbContext context,
+    IChassisFanRepository chassisFans,
+    IUnitOfWork unitOfWork,
     ILogger<DeleteChassisFanHandler> logger)
     : IRequestHandler<DeleteChassisFanCommand, bool>
 {
     public async Task<bool> Handle(DeleteChassisFanCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.ChassisFans
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await chassisFans.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -23,7 +22,7 @@ public class DeleteChassisFanHandler(
         }
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.ChassisFan, entity.Id);
         return true;

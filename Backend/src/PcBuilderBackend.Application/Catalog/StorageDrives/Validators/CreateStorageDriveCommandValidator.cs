@@ -17,7 +17,7 @@ public class CreateStorageDriveCommandValidator : AbstractValidator<CreateStorag
         RuleFor(x => x.FormFactor).IsInEnum();
         RuleFor(x => x.CapacityGb).GreaterThan(0);
 
-        When(x => x.FormFactor is StorageFormFactor.Sata25 or StorageFormFactor.Sata35, () =>
+        When(x => x.FormFactor is StorageFormFactor.Sata35, () =>
         {
             RuleFor(x => x.Media)
                 .Equal(StorageMedia.Hdd)
@@ -26,6 +26,21 @@ public class CreateStorageDriveCommandValidator : AbstractValidator<CreateStorag
                 .NotNull()
                 .GreaterThan(0)
                 .WithMessage("RPM is required for HDD.");
+        });
+
+        When(x => x.FormFactor is StorageFormFactor.Sata25 && x.Media == StorageMedia.Hdd, () =>
+        {
+            RuleFor(x => x.Rpm)
+                .NotNull()
+                .GreaterThan(0)
+                .WithMessage("RPM is required for HDD.");
+        });
+
+        When(x => x.FormFactor is StorageFormFactor.Sata25 && x.Media == StorageMedia.Ssd, () =>
+        {
+            RuleFor(x => x.Interface)
+                .Equal(StorageInterface.Sata)
+                .WithMessage("2.5\" SSD must use a SATA interface.");
         });
 
         When(x => x.FormFactor is StorageFormFactor.M22230 or StorageFormFactor.M22242

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Domain.UnitTests.Entities;
 
@@ -8,44 +9,41 @@ public class UserBuildTests
     [Fact]
     public void Constructor_sets_identity_trims_fields_and_components()
     {
-        var userId = Guid.NewGuid();
         var chassisId = Guid.NewGuid();
         var motherboardId = Guid.NewGuid();
         var cpuId = Guid.NewGuid();
         var coolerId = Guid.NewGuid();
         var ramKitId = Guid.NewGuid();
         var gpuId = Guid.NewGuid();
+        var psuId = Guid.NewGuid();
 
-        var build = new UserBuild(
-            userId,
+        var build = new PcBuild(
             "  Gaming Rig  ",
             "  fast  ",
-            true,
             chassisId,
             motherboardId,
             cpuId,
             coolerId,
             ramKitId,
-            gpuId);
+            gpuId,
+            psuId);
 
-        build.UserId.Should().Be(userId);
         build.Name.Should().Be("Gaming Rig");
         build.Description.Should().Be("fast");
-        build.IsPublic.Should().BeTrue();
         build.ChassisId.Should().Be(chassisId);
         build.MotherboardId.Should().Be(motherboardId);
         build.CpuId.Should().Be(cpuId);
         build.CpuCoolerId.Should().Be(coolerId);
         build.RamKitId.Should().Be(ramKitId);
         build.GraphicsCardId.Should().Be(gpuId);
+        build.PsuId.Should().Be(psuId);
     }
 
     [Fact]
     public void Constructor_treats_empty_optional_ids_as_null()
     {
-        var build = CreateBuild(userId: Guid.Empty, cpuCoolerId: Guid.Empty, graphicsCardId: Guid.Empty);
+        var build = CreateBuild(cpuCoolerId: Guid.Empty, graphicsCardId: Guid.Empty);
 
-        build.UserId.Should().BeNull();
         build.CpuCoolerId.Should().BeNull();
         build.GraphicsCardId.Should().BeNull();
     }
@@ -67,11 +65,13 @@ public class UserBuildTests
         var emptyMotherboard = () => CreateBuild(motherboardId: Guid.Empty);
         var emptyCpu = () => CreateBuild(cpuId: Guid.Empty);
         var emptyRam = () => CreateBuild(ramKitId: Guid.Empty);
+        var emptyPsu = () => CreateBuild(psuId: Guid.Empty);
 
         emptyChassis.Should().Throw<ArgumentException>().WithParameterName("chassisId");
         emptyMotherboard.Should().Throw<ArgumentException>().WithParameterName("motherboardId");
         emptyCpu.Should().Throw<ArgumentException>().WithParameterName("cpuId");
         emptyRam.Should().Throw<ArgumentException>().WithParameterName("ramKitId");
+        emptyPsu.Should().Throw<ArgumentException>().WithParameterName("psuId");
     }
 
     [Fact]
@@ -83,17 +83,18 @@ public class UserBuildTests
         var cpuId = Guid.NewGuid();
         var ramKitId = Guid.NewGuid();
 
-        build.Update("New", "desc", true, chassisId, motherboardId, cpuId, null, ramKitId, null);
+        var psuId = Guid.NewGuid();
+        build.Update("New", "desc", chassisId, motherboardId, cpuId, null, ramKitId, null, psuId);
 
         build.Name.Should().Be("New");
         build.Description.Should().Be("desc");
-        build.IsPublic.Should().BeTrue();
         build.ChassisId.Should().Be(chassisId);
         build.MotherboardId.Should().Be(motherboardId);
         build.CpuId.Should().Be(cpuId);
         build.RamKitId.Should().Be(ramKitId);
         build.CpuCoolerId.Should().BeNull();
         build.GraphicsCardId.Should().BeNull();
+        build.PsuId.Should().Be(psuId);
         build.UpdatedAtUtc.Should().NotBeNull();
     }
 
@@ -108,6 +109,8 @@ public class UserBuildTests
 
         var part = build.StorageDevices.Should().ContainSingle().Subject;
         part.PartId.Should().Be(partId);
+        part.Type.Should().Be(PcBuildPartType.StorageDrive);
+        part.PcBuildId.Should().Be(build.Id);
         part.Quantity.Should().Be(3);
     }
 
@@ -151,28 +154,26 @@ public class UserBuildTests
         zeroQty.Should().Throw<ArgumentOutOfRangeException>().WithParameterName("quantity");
     }
 
-    private static UserBuild CreateBuild(
-        Guid? userId = null,
+    private static PcBuild CreateBuild(
         string name = "Build",
         string? description = null,
-        bool isPublic = false,
         Guid? chassisId = null,
         Guid? motherboardId = null,
         Guid? cpuId = null,
         Guid? cpuCoolerId = null,
         Guid? ramKitId = null,
-        Guid? graphicsCardId = null)
+        Guid? graphicsCardId = null,
+        Guid? psuId = null)
     {
-        return new UserBuild(
-            userId ?? Guid.NewGuid(),
+        return new PcBuild(
             name,
             description,
-            isPublic,
             chassisId ?? Guid.NewGuid(),
             motherboardId ?? Guid.NewGuid(),
             cpuId ?? Guid.NewGuid(),
             cpuCoolerId,
             ramKitId ?? Guid.NewGuid(),
-            graphicsCardId);
+            graphicsCardId,
+            psuId ?? Guid.NewGuid());
     }
 }

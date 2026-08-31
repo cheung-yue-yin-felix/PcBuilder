@@ -1,23 +1,31 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Chipsets.Commands.UpdateChipset;
 
-public class UpdateChipsetHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class UpdateChipsetHandler(
+    IRepository<Chipset> chipsets, 
+    ILogger<UpdateChipsetHandler> logger,
+    IUnitOfWork unitOfWork, 
+    IMapper mapper, 
+    ICacheService cache)
     : IRequestHandler<UpdateChipsetCommand, ChipsetDto?>
 {
-    public async Task<ChipsetDto?> Handle(UpdateChipsetCommand request, CancellationToken cancellationToken)
+    public async Task<ChipsetDto?> Handle(UpdateChipsetCommand command, CancellationToken cancellationToken)
     {
-        var entity = await context.Chipsets.FirstOrDefaultAsync(c => c.Id == request.Id && c.IsActive, cancellationToken);
+        var entity = await chipsets.GetByIdAsync(command.Id, cancellationToken);
         if (entity == null) return null;
-        entity.Rename(request.Name);
-        entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(request.SocketId);
-        await context.SaveChangesAsync(cancellationToken);
+        entity.Rename(command.Name);
+        entity.UpdateManufacturer(command.ManufacturerId);
+        entity.UpdateSpecs(command.SocketId);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.Updated(logger, EntityLog.Chipset, entity.Id);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Chipsets.Prefix, cancellationToken);
         return mapper.Map<ChipsetDto>(entity);
     }

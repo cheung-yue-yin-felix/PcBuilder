@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -7,12 +6,16 @@ using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.DeleteGpu;
 
-public class DeleteGpuHandler(IApplicationDbContext context, ICacheService cache, ILogger<DeleteGpuHandler> logger)
+public class DeleteGpuHandler(
+    IRepository<Domain.Entities.Gpu> gpus,
+    IUnitOfWork unitOfWork,
+    ICacheService cache, 
+    ILogger<DeleteGpuHandler> logger)
     : IRequestHandler<DeleteGpuCommand, bool>
 {
     public async Task<bool> Handle(DeleteGpuCommand request, CancellationToken cancellationToken)
     {
-        var gpu = await context.Gpus.FirstOrDefaultAsync(g => g.Id == request.Id && g.IsActive, cancellationToken);
+        var gpu = await gpus.GetByIdAsync(request.Id, cancellationToken);
         if (gpu is null)
         {
             EntityLog.NotFoundOrInactive(logger, EntityLog.Gpu, request.Id);
@@ -21,7 +24,7 @@ public class DeleteGpuHandler(IApplicationDbContext context, ICacheService cache
 
         gpu.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
         EntityLog.Deleted(logger, EntityLog.Gpu, request.Id);
         return true;

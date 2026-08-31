@@ -8,6 +8,6 @@ public class BulkDeleteCpuSeriesCommandValidator: AbstractValidator<BulkDeleteCp
 {
     public BulkDeleteCpuSeriesCommandValidator()
     {
-        RuleFor(x => x.CpuSeriesIds).NotEmpty().WithMessage("CpuSeriesIds cannot be empty.");
+        RuleFor(x => x.Ids).NotEmpty().WithMessage("Ids cannot be empty.");
     }
 }

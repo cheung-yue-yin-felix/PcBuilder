@@ -26,11 +26,15 @@ public sealed class PsuCatalogFixture : IDisposable
         Mapper = new MapperConfiguration(cfg => cfg.AddProfile<PsuProfile>(), NullLoggerFactory.Instance)
             .CreateMapper();
         Lookup = new TestActiveEntityLookup(Context);
+        Psus = new TestPsuRepository(Context);
+        UnitOfWork = new TestUnitOfWork(Context);
     }
 
     public TestApplicationDbContext Context { get; }
     public IMapper Mapper { get; }
     public TestActiveEntityLookup Lookup { get; }
+    public TestPsuRepository Psus { get; }
+    public TestUnitOfWork UnitOfWork { get; }
     public Manufacturer Manufacturer { get; }
 
     public CreatePsuCommand ValidCreate(string name = "RM850x", int wattage = 850) => new()

@@ -5,7 +5,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public class MotherboardRepository(IApplicationDbContext db) : IMotherboardRepository
+public class MotherboardRepository(PcBuilderDbContext db) : IMotherboardRepository
 {
     public Task<Motherboard?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.Motherboards.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

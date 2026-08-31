@@ -10,7 +10,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.ImportStorageDrives;
 
 public class ImportStorageDrivesHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
@@ -40,11 +41,11 @@ public class ImportStorageDrivesHandler(
                 row.PcieGeneration,
                 row.Rpm);
 
-            context.StorageDrives.Add(entity);
+            storageDrives.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.StorageDrive);
 

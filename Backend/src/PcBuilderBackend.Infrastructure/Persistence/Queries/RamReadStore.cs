@@ -10,7 +10,7 @@ using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class RamReadStore(IApplicationDbContext db, IMapper mapper) : IRamReadStore
+public class RamReadStore(PcBuilderDbContext db, IMapper mapper) : IRamReadStore
 {
     public async Task<RamDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {

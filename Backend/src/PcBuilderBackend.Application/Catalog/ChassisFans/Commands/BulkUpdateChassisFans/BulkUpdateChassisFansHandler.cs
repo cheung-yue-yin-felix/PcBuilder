@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.ChassisFans.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.BulkUpdateChassisFans;
 
 public class BulkUpdateChassisFansHandler(
-    IApplicationDbContext context,
+    IChassisFanRepository chassisFans,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateChassisFansHandler> logger)
     : IRequestHandler<BulkUpdateChassisFansCommand, List<ChassisFanDto>?>
@@ -22,8 +23,7 @@ public class BulkUpdateChassisFansHandler(
 
         foreach (var item in request.Fans)
         {
-            var entity = await context.ChassisFans
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await chassisFans.GetByIdAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -38,7 +38,7 @@ public class BulkUpdateChassisFansHandler(
             result.Add(mapper.Map<ChassisFanDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.ChassisFan);
         return result;
     }

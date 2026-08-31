@@ -11,7 +11,7 @@ using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class GraphicsCardReadStore(IApplicationDbContext db, IMapper mapper) : IGraphicsCardReadStore
+public class GraphicsCardReadStore(PcBuilderDbContext db, IMapper mapper) : IGraphicsCardReadStore
 {
     public async Task<GraphicsCardDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await db.GraphicsCards

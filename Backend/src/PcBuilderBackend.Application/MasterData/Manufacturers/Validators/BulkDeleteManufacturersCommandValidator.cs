@@ -7,10 +7,7 @@ public class BulkDeleteManufacturersCommandValidator: AbstractValidator<BulkDele
 {
     public BulkDeleteManufacturersCommandValidator()
     {
-        RuleForEach(x => x.ManufacturerIds).ChildRules(manufacturer =>
-        {
-            manufacturer.RuleFor(x => x)
-                .NotEmpty().WithMessage("ManufacturerId is required");
-        });
+        RuleFor(x => x.Ids).NotEmpty().WithMessage("Ids list cannot be empty.");
+        RuleForEach(x => x.Ids).NotEmpty().WithMessage("Id is required");
     }
 }

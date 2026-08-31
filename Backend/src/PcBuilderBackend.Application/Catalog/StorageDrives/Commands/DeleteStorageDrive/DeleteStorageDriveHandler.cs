@@ -1,20 +1,20 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.DeleteStorageDrive;
 
 public class DeleteStorageDriveHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     ILogger<DeleteStorageDriveHandler> logger)
     : IRequestHandler<DeleteStorageDriveCommand, bool>
 {
     public async Task<bool> Handle(DeleteStorageDriveCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.StorageDrives
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await storageDrives.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -23,7 +23,7 @@ public class DeleteStorageDriveHandler(
         }
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.StorageDrive, entity.Id);
         return true;

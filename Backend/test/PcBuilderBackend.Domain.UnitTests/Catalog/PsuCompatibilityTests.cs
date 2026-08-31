@@ -164,7 +164,7 @@ public class PsuCompatibilityTests
         new("7800X3D", ManufacturerId, Guid.NewGuid(), Guid.NewGuid(), 128, false, false, 120, powerConsumptionWatts);
 
     private static GraphicsCard CreateGpu(int powerConsumptionWatts, PsuCableType connector, int powerConnectorCount) =>
-        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4, 240, 120, 50,
+        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4, false, 240, 120, 50,
             powerConsumptionWatts, connector, powerConnectorCount);
 
     private static Motherboard CreateMotherboard(int epsConnectors) =>

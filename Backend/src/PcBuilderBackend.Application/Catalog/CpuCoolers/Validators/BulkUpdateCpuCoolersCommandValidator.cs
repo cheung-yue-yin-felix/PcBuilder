@@ -1,6 +1,5 @@
 using FluentValidation;
 using PcBuilderBackend.Application.Catalog.CpuCoolers.Commands.BulkUpdateCpuCoolers;
-using PcBuilderBackend.Application.Catalog.CpuCoolers.Dto;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.Catalog.CpuCoolers.Validators;
@@ -56,20 +55,6 @@ public class BulkUpdateCpuCoolersCommandValidator : AbstractValidator<BulkUpdate
                 cooler.RuleFor(x => x.MaxRamHeightMm)
                     .Null().WithMessage("MaxRamHeightMm must be empty for liquid coolers");
             });
-
-            cooler.RuleFor(x => x.Sockets)
-                .NotEmpty().WithMessage("At least one socket is required")
-                .Must(BeUniqueSocketIds)
-                .WithMessage("Duplicate sockets are not allowed.");
-
-            cooler.RuleForEach(x => x.Sockets).ChildRules(socket =>
-            {
-                socket.RuleFor(x => x.SocketId)
-                    .NotEmpty().WithMessage("SocketId is required");
-            });
         });
     }
-
-    private static bool BeUniqueSocketIds(List<CpuCoolerSocketDto> sockets) =>
-        sockets.GroupBy(x => x.SocketId).All(g => g.Count() == 1);
 }

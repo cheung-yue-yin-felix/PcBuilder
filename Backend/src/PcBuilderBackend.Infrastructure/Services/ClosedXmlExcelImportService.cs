@@ -10,7 +10,12 @@ using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
+using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
+using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Dto;
+using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Enums;
 
@@ -18,6 +23,39 @@ namespace PcBuilderBackend.Infrastructure.Services;
 
 public class ClosedXmlExcelImportService : IExcelImportService
 {
+    public Task<List<ManufacturerImportRow>> ParseManufacturerImportAsync(
+        Stream stream, CancellationToken cancellationToken)
+    {
+        using var workbook = new XLWorkbook(stream);
+        return Task.FromResult(ParseManufacturers(workbook.Worksheet("Manufacturers")));
+    }
+
+    public Task<List<SocketImportRow>> ParseSocketImportAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var workbook = new XLWorkbook(stream);
+        return Task.FromResult(ParseSockets(workbook.Worksheet("Sockets")));
+    }
+
+    public Task<List<ChipsetImportRow>> ParseChipsetImportAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var workbook = new XLWorkbook(stream);
+        return Task.FromResult(ParseChipsets(workbook.Worksheet("Chipsets")));
+    }
+
+    public Task<List<CpuSeriesImportRow>> ParseCpuSeriesImportAsync(
+        Stream stream, CancellationToken cancellationToken)
+    {
+        using var workbook = new XLWorkbook(stream);
+        return Task.FromResult(ParseCpuSeries(workbook.Worksheet("CpuSeries")));
+    }
+
+    public Task<List<GpuSeriesImportRow>> ParseGpuSeriesImportAsync(
+        Stream stream, CancellationToken cancellationToken)
+    {
+        using var workbook = new XLWorkbook(stream);
+        return Task.FromResult(ParseGpuSeries(workbook.Worksheet("GpuSeries")));
+    }
+
     public Task<List<CpuImportRow>> ParseCpuImportAsync(Stream stream, CancellationToken cancellationToken)
     {
         using var workbook = new XLWorkbook(stream);
@@ -284,6 +322,90 @@ public class ClosedXmlExcelImportService : IExcelImportService
                         ? chipsetId
                         : Guid.Empty,
                     RequiresBiosUpdate = row.Cell(3).GetBoolean()
+                })
+        ];
+    }
+
+    private static List<ManufacturerImportRow> ParseManufacturers(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new ManufacturerImportRow
+                {
+                    RowNumber = row.RowNumber(),
+                    Name = row.Cell(1).GetString()
+                })
+        ];
+    }
+
+    private static List<SocketImportRow> ParseSockets(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new SocketImportRow
+                {
+                    RowNumber = row.RowNumber(),
+                    Name = row.Cell(1).GetString(),
+                    ManufacturerId = Guid.TryParse(row.Cell(2).GetString(), out var manufacturerId)
+                        ? manufacturerId
+                        : Guid.Empty
+                })
+        ];
+    }
+
+    private static List<ChipsetImportRow> ParseChipsets(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new ChipsetImportRow
+                {
+                    RowNumber = row.RowNumber(),
+                    Name = row.Cell(1).GetString(),
+                    ManufacturerId = Guid.TryParse(row.Cell(2).GetString(), out var manufacturerId)
+                        ? manufacturerId
+                        : Guid.Empty,
+                    SocketId = Guid.TryParse(row.Cell(3).GetString(), out var socketId) ? socketId : Guid.Empty
+                })
+        ];
+    }
+
+    private static List<CpuSeriesImportRow> ParseCpuSeries(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new CpuSeriesImportRow
+                {
+                    RowNumber = row.RowNumber(),
+                    Name = row.Cell(1).GetString(),
+                    ManufacturerId = Guid.TryParse(row.Cell(2).GetString(), out var manufacturerId)
+                        ? manufacturerId
+                        : Guid.Empty,
+                    SocketId = Guid.TryParse(row.Cell(3).GetString(), out var socketId) ? socketId : Guid.Empty
+                })
+        ];
+    }
+
+    private static List<GpuSeriesImportRow> ParseGpuSeries(IXLWorksheet sheet)
+    {
+        return
+        [
+            .. sheet.RowsUsed()
+                .Skip(1)
+                .Select(row => new GpuSeriesImportRow
+                {
+                    RowNumber = row.RowNumber(),
+                    Name = row.Cell(1).GetString(),
+                    ManufacturerId = Guid.TryParse(row.Cell(2).GetString(), out var manufacturerId)
+                        ? manufacturerId
+                        : Guid.Empty
                 })
         ];
     }

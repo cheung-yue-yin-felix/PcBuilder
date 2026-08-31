@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.UpdateWiredNetworkAdapter;
 
 public class UpdateWiredNetworkAdapterHandler(
-    IApplicationDbContext context,
+    IWiredNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<UpdateWiredNetworkAdapterHandler> logger)
     : IRequestHandler<UpdateWiredNetworkAdapterCommand, WiredNetworkAdapterDto?>
@@ -18,8 +19,7 @@ public class UpdateWiredNetworkAdapterHandler(
         UpdateWiredNetworkAdapterCommand request,
         CancellationToken cancellationToken)
     {
-        var entity = await context.WiredNetworkAdapters
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await adapters.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -36,7 +36,7 @@ public class UpdateWiredNetworkAdapterHandler(
             request.UsbType,
             request.PcieSlotType);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.WiredNetworkAdapter, entity.Id);
 

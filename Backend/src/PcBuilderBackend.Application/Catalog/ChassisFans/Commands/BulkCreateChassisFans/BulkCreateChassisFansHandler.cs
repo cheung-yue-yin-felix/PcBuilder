@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.BulkCreateChassisFans;
 
 public class BulkCreateChassisFansHandler(
-    IApplicationDbContext context,
+    IChassisFanRepository chassisFans,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkCreateChassisFansHandler> logger)
     : IRequestHandler<BulkCreateChassisFansCommand, List<ChassisFanDto>>
@@ -26,11 +27,11 @@ public class BulkCreateChassisFansHandler(
                      item.DiameterMm,
                      item.FansCountPerPack)))
         {
-            context.ChassisFans.Add(entity);
+            chassisFans.Add(entity);
             result.Add(mapper.Map<ChassisFanDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.ChassisFan);
         return result;
     }

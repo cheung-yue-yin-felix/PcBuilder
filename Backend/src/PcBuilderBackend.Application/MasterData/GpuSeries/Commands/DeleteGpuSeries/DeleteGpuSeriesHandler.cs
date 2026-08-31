@@ -1,20 +1,26 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.MasterData.GpuSeries.Commands.DeleteGpuSeries;
 
-public class DeleteGpuSeriesHandler(IApplicationDbContext context, ICacheService cache)
+public class DeleteGpuSeriesHandler(
+    IRepository<Domain.Entities.GpuSeries> gpuSeries, 
+    ILogger<DeleteGpuSeriesHandler> logger,
+    IUnitOfWork unitOfWork, 
+    ICacheService cache)
     : IRequestHandler<DeleteGpuSeriesCommand, bool>
 {
-    public async Task<bool> Handle(DeleteGpuSeriesCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(DeleteGpuSeriesCommand command, CancellationToken cancellationToken)
     {
-        var entity = await context.GpuSeries.FirstOrDefaultAsync(g => g.Id == request.Id && g.IsActive, cancellationToken);
-        if (entity == null) return false;
+        var entity = await gpuSeries.GetByIdAsync(command.Id, cancellationToken);
+        if (entity is null) return false;
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.Deleted(logger, EntityLog.GpuSeries, entity.Id);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.GpuSeries.Prefix, cancellationToken);
         return true;
     }

@@ -23,7 +23,7 @@ public class BulkCreateStorageDrivesCommandValidator : AbstractValidator<BulkCre
             drive.RuleFor(d => d.FormFactor).IsInEnum();
             drive.RuleFor(d => d.CapacityGb).GreaterThan(0);
 
-            drive.When(d => d.FormFactor is StorageFormFactor.Sata25 or StorageFormFactor.Sata35, () =>
+            drive.When(d => d.FormFactor is StorageFormFactor.Sata35, () =>
             {
                 drive.RuleFor(d => d.Media)
                     .Equal(StorageMedia.Hdd)
@@ -32,6 +32,21 @@ public class BulkCreateStorageDrivesCommandValidator : AbstractValidator<BulkCre
                     .NotNull()
                     .GreaterThan(0)
                     .WithMessage("RPM is required for HDD.");
+            });
+
+            drive.When(d => d.FormFactor is StorageFormFactor.Sata25 && d.Media == StorageMedia.Hdd, () =>
+            {
+                drive.RuleFor(d => d.Rpm)
+                    .NotNull()
+                    .GreaterThan(0)
+                    .WithMessage("RPM is required for HDD.");
+            });
+
+            drive.When(d => d.FormFactor is StorageFormFactor.Sata25 && d.Media == StorageMedia.Ssd, () =>
+            {
+                drive.RuleFor(d => d.Interface)
+                    .Equal(StorageInterface.Sata)
+                    .WithMessage("2.5\" SSD must use a SATA interface.");
             });
 
             drive.When(d => d.FormFactor is StorageFormFactor.M22230 or StorageFormFactor.M22242

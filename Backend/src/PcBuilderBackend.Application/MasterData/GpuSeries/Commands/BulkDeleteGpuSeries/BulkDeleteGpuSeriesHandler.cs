@@ -1,24 +1,32 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
 
 namespace PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkDeleteGpuSeries;
 
-public class BulkDeleteGpuSeriesHandler(IApplicationDbContext context, ICacheService cache)
+public class BulkDeleteGpuSeriesHandler(
+    IRepository<Domain.Entities.GpuSeries> gpuSeries,
+    ILogger<BulkDeleteGpuSeriesHandler> logger,
+    IUnitOfWork context,
+    ICacheService cache)
     : IRequestHandler<BulkDeleteGpuSeriesCommand, bool>
 {
-    public async Task<bool> Handle(BulkDeleteGpuSeriesCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(BulkDeleteGpuSeriesCommand command, CancellationToken cancellationToken)
     {
-        foreach (var id in request.Ids)
+        var ids = command.Ids.Distinct().ToList();
+        var entities = await gpuSeries.GetByIdsAsync(ids, cancellationToken);
+
+        if (entities.Count != ids.Count) return false;
+
+        foreach (var entity in entities)
         {
-            var entity = await context.GpuSeries.FirstOrDefaultAsync(g => g.Id == id && g.IsActive, cancellationToken);
-
-            if (entity is null) return false;
-
             entity.Deactivate();
         }
+
         await context.SaveChangesAsync(cancellationToken);
+        EntityLog.BulkDeleted(logger, ids.Count, EntityLog.GpuSeries);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.GpuSeries.Prefix, cancellationToken);
         return true;
     }

@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -9,7 +8,8 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkUpdatePsus;
 
 public class BulkUpdatePsusHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdatePsusHandler> logger)
     : IRequestHandler<BulkUpdatePsusCommand, List<PsuDto>?>
@@ -20,9 +20,7 @@ public class BulkUpdatePsusHandler(
 
         foreach (var item in request.Psus)
         {
-            var entity = await context.Psus
-                .Include(x => x.Cables)
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await psus.GetWithChildrenAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -43,7 +41,7 @@ public class BulkUpdatePsusHandler(
             result.Add(mapper.Map<PsuDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.Psu);
         return result;
     }

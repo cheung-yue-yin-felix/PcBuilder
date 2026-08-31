@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.UpdateStorageDrive;
 
 public class UpdateStorageDriveHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<UpdateStorageDriveHandler> logger)
     : IRequestHandler<UpdateStorageDriveCommand, StorageDriveDto?>
@@ -18,8 +19,7 @@ public class UpdateStorageDriveHandler(
         UpdateStorageDriveCommand request,
         CancellationToken cancellationToken)
     {
-        var entity = await context.StorageDrives
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await storageDrives.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -37,7 +37,7 @@ public class UpdateStorageDriveHandler(
             request.PcieGeneration,
             request.Rpm);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Updated(logger, EntityLog.StorageDrive, entity.Id);
 

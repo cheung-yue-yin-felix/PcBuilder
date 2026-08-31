@@ -1,23 +1,21 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkDeleteStorageDrives;
 
 public class BulkDeleteStorageDrivesHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     ILogger<BulkDeleteStorageDrivesHandler> logger)
     : IRequestHandler<BulkDeleteStorageDrivesCommand, bool>
 {
     public async Task<bool> Handle(BulkDeleteStorageDrivesCommand request, CancellationToken cancellationToken)
     {
         var ids = request.Ids.Distinct().ToList();
-
-        var entities = await context.StorageDrives
-            .Where(x => ids.Contains(x.Id) && x.IsActive)
-            .ToListAsync(cancellationToken);
+        var entities = await storageDrives.GetByIdsAsync(ids, cancellationToken);
 
         if (entities.Count != ids.Count)
         {
@@ -28,7 +26,7 @@ public class BulkDeleteStorageDrivesHandler(
         foreach (var entity in entities)
             entity.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkDeleted(logger, entities.Count, EntityLog.StorageDrive);
         return true;
     }

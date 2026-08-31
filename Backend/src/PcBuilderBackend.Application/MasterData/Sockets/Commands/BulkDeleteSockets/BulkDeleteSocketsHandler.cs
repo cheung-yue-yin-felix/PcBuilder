@@ -1,24 +1,29 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Commands.BulkDeleteSockets;
 
-public class BulkDeleteSocketsHandler(IApplicationDbContext context, ICacheService cache)
+public class BulkDeleteSocketsHandler(
+    IRepository<Socket> sockets,
+    ILogger<BulkDeleteSocketsHandler> logger,
+    IUnitOfWork unitOfWork,
+    ICacheService cache)
     : IRequestHandler<BulkDeleteSocketsCommand, bool>
 {
     public async Task<bool> Handle(BulkDeleteSocketsCommand request, CancellationToken cancellationToken)
     {
-        var sockets = await context.Sockets
-            .Where(s => request.SocketIds.Contains(s.Id) && s.IsActive)
-            .ToListAsync(cancellationToken);
+        var entities = await sockets.GetByIdsAsync(request.SocketIds, cancellationToken);
 
-        if (sockets.Count != request.SocketIds.Count) return false;
+        if (entities.Count != request.SocketIds.Count) return false;
 
-        foreach (var socket in sockets) socket.Deactivate();
+        foreach (var socket in entities) socket.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.BulkDeleted(logger, request.SocketIds.Count, EntityLog.Socket);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Sockets.Prefix, cancellationToken);
         return true;
     }

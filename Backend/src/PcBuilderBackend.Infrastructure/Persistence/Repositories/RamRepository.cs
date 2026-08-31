@@ -5,7 +5,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public class RamRepository(IApplicationDbContext db) : IRamRepository
+public class RamRepository(PcBuilderDbContext db) : IRamRepository
 {
     public async Task<Ram?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await db.Rams.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.CreateChipset;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.CreateCpuSeries;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.CreateGpu;
@@ -8,6 +9,7 @@ using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.CreateGpuSeries
 using PcBuilderBackend.Application.MasterData.Chipsets.Validators;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.CreateManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.DeleteManufacturer;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Queries;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Validators;
 using PcBuilderBackend.Application.MasterData.Sockets.Commands.CreateSocket;
@@ -35,23 +37,38 @@ public class MasterDataTests : IDisposable
     [Fact]
     public async Task Create_and_delete_manufacturer_use_soft_delete()
     {
-        var created = await new CreateManufacturerHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var created = await new CreateManufacturerHandler(
+                new TestRepository<Manufacturer>(_fx.Context),
+                NullLogger<CreateManufacturerHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                _fx.Cache)
             .Handle(new CreateManufacturerCommand("Intel"), CancellationToken.None);
 
         created.Name.Should().Be("Intel");
         (await _fx.Context.Manufacturers.CountAsync()).Should().Be(2);
 
-        (await new DeleteManufacturerHandler(_fx.Context, _fx.Cache)
+        (await new DeleteManufacturerHandler(
+                new TestRepository<Manufacturer>(_fx.Context),
+                NullLogger<DeleteManufacturerHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Cache)
             .Handle(new DeleteManufacturerCommand(created.Id), CancellationToken.None)).Should().BeTrue();
         (await _fx.Context.Manufacturers.AnyAsync(x => x.Id == created.Id)).Should().BeFalse();
-        (await new DeleteManufacturerHandler(_fx.Context, _fx.Cache)
+        (await new DeleteManufacturerHandler(
+                new TestRepository<Manufacturer>(_fx.Context),
+                NullLogger<DeleteManufacturerHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Cache)
             .Handle(new DeleteManufacturerCommand(Guid.NewGuid()), CancellationToken.None)).Should().BeFalse();
     }
 
     [Fact]
     public async Task Get_manufacturers_returns_active_rows()
     {
-        var list = await new GetManufacturersHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var list = await new GetManufacturersHandler(
+                new TestReadStore<Manufacturer, ManufacturerDto>(_fx.Context, _fx.Mapper),
+                _fx.Cache)
             .Handle(new GetManufacturersQuery(), CancellationToken.None);
 
         list.Should().Contain(x => x.Name == "AMD");
@@ -68,7 +85,12 @@ public class MasterDataTests : IDisposable
     [Fact]
     public async Task Create_socket_and_chipset()
     {
-        var socket = await new CreateSocketHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var socket = await new CreateSocketHandler(
+                new TestRepository<Socket>(_fx.Context),
+                NullLogger<CreateSocketHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                _fx.Cache)
             .Handle(new CreateSocketCommand(_fx.Manufacturer.Id, "LGA1700"), CancellationToken.None);
         socket.Name.Should().Be("LGA1700");
 
@@ -78,7 +100,12 @@ public class MasterDataTests : IDisposable
         (await chipsetValidator.ValidateAsync(new CreateChipsetCommand("", Guid.NewGuid(), Guid.NewGuid())))
             .IsValid.Should().BeFalse();
 
-        var chipset = await new CreateChipsetHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var chipset = await new CreateChipsetHandler(
+                new TestRepository<Chipset>(_fx.Context),
+                NullLogger<CreateChipsetHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                _fx.Cache)
             .Handle(new CreateChipsetCommand("Z790", _fx.Manufacturer.Id, socket.Id), CancellationToken.None);
         chipset.Name.Should().Be("Z790");
         (await _fx.Context.Chipsets.CountAsync(x => x.Name == "Z790")).Should().Be(1);
@@ -87,11 +114,20 @@ public class MasterDataTests : IDisposable
     [Fact]
     public async Task Create_cpu_series_gpu_series_and_gpu()
     {
-        var cpuSeries = await new CreateCpuSeriesHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var cpuSeries = await new CreateCpuSeriesHandler(
+                new TestRepository<CpuSeries>(_fx.Context),
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                _fx.Cache)
             .Handle(new CreateCpuSeriesCommand("Ryzen 9000", _fx.Manufacturer.Id, _fx.Socket.Id), CancellationToken.None);
         cpuSeries.Name.Should().Be("Ryzen 9000");
 
-        var gpuSeries = await new CreateGpuSeriesHandler(_fx.Context, _fx.Mapper, _fx.Cache)
+        var gpuSeries = await new CreateGpuSeriesHandler(
+                new TestRepository<GpuSeries>(_fx.Context),
+                NullLogger<CreateGpuSeriesHandler>.Instance,
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                _fx.Cache)
             .Handle(new CreateGpuSeriesCommand(_fx.Manufacturer.Id, "RTX 50"), CancellationToken.None);
         gpuSeries.Name.Should().Be("RTX 50");
 

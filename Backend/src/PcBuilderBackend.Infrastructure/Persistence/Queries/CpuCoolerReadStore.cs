@@ -11,7 +11,7 @@ using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class CpuCoolerReadStore(IApplicationDbContext db, IMapper mapper) : ICpuCoolerReadStore
+public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoolerReadStore
 {
     public async Task<CpuCoolerDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {

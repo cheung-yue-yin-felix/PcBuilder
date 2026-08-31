@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.BulkDeleteM
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.BulkUpdateManufacturers;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.CreateManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.DeleteManufacturer;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.ImportManufacturers;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.UpdateManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Queries;
@@ -74,6 +75,13 @@ public static class ManufacturerEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple Manufacturers")
             .WithDescription("\n    DELETE /master-data/manufacturer/bulk \n [\"00000000-0000-0000-0000-000000000000\"]");
+
+        subgroup.MapPost("/import", ImportManufacturers)
+            .Produces<List<ManufacturerDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import Manufacturers from Excel")
+            .WithDescription("\n    POST /master-data/manufacturer/import");
     }
 
     private static async Task<Ok<List<ManufacturerDto>>> GetManufacturers(
@@ -151,5 +159,14 @@ public static class ManufacturerEndpoints
     {
         var success = await sender.Send(new BulkDeleteManufacturersCommand(ids), cancellationToken);
         return success ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<ManufacturerDto>>> ImportManufacturers(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        return TypedResults.Ok(await sender.Send(new ImportManufacturersCommand(fileStream), cancellationToken));
     }
 }

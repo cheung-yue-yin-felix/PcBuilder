@@ -30,6 +30,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "m2_form_factor", new[] { "m22230", "m22242", "m22260", "m22280", "m222110" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "m2_key", new[] { "m", "b", "e", "bm" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "mb_form_factor", new[] { "mitx", "matx", "atx", "eatx" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pc_build_part_type", new[] { "storage_drive", "chassis_fan", "wired_network_adapter", "wireless_network_adapter" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pcie_generation", new[] { "gen3", "gen4", "gen5", "gen6" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pcie_orientation", new[] { "vertical", "horizontal" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "pcie_slot_lane", new[] { "x1", "x4", "x8", "x16" });
@@ -289,7 +290,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.HasIndex("ChassisId", "MbFormFactor")
                         .IsUnique();
 
-                    b.ToTable("ChassisMbFormFactor");
+                    b.ToTable("ChassisMbFormFactor", (string)null);
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.ChassisPcieSlot", b =>
@@ -359,7 +360,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.HasIndex("ChassisId", "PsuFormFactor")
                         .IsUnique();
 
-                    b.ToTable("ChassisPsuFormFactor");
+                    b.ToTable("ChassisPsuFormFactor", (string)null);
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.ChassisRadiator", b =>
@@ -815,9 +816,9 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                     b.Property<PsuCableType>("PowerConnectorType")
                         .HasColumnType("psu_cable_type");
 
-                    b.Property<decimal>("PowerConsumptionWatts")
+                    b.Property<int>("PowerConsumptionWatts")
                         .HasPrecision(7, 2)
-                        .HasColumnType("numeric(7,2)");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -1103,6 +1104,148 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("MotherboardUsbPorts");
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuild", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChassisId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CpuCoolerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CpuId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("GraphicsCardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MotherboardId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("PsuId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RamKitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChassisId");
+
+                    b.HasIndex("CpuCoolerId");
+
+                    b.HasIndex("CpuId");
+
+                    b.HasIndex("GraphicsCardId");
+
+                    b.HasIndex("MotherboardId");
+
+                    b.HasIndex("PsuId");
+
+                    b.HasIndex("RamKitId");
+
+                    b.ToTable("PcBuilds", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuildPart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<PcBuildPartType>("Type")
+                        .HasColumnType("pc_build_part_type");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId", "Type", "PartId")
+                        .IsUnique();
+
+                    b.ToTable("PcBuildParts", (string)null);
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuildUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PcBuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PcBuildId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PcBuildUsers", (string)null);
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Psu", b =>
@@ -1583,7 +1726,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("PcBuilderBackend.Domain.Entities.CpuSeries", "Series")
-                        .WithMany("Cpu")
+                        .WithMany("Cpus")
                         .HasForeignKey("SeriesId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1794,6 +1937,71 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuild", b =>
+                {
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Chassis", null)
+                        .WithMany()
+                        .HasForeignKey("ChassisId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.CpuCooler", null)
+                        .WithMany()
+                        .HasForeignKey("CpuCoolerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Cpu", null)
+                        .WithMany()
+                        .HasForeignKey("CpuId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.GraphicsCard", null)
+                        .WithMany()
+                        .HasForeignKey("GraphicsCardId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Motherboard", null)
+                        .WithMany()
+                        .HasForeignKey("MotherboardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Psu", null)
+                        .WithMany()
+                        .HasForeignKey("PsuId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PcBuilderBackend.Domain.Entities.Ram", null)
+                        .WithMany()
+                        .HasForeignKey("RamKitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuildPart", b =>
+                {
+                    b.HasOne("PcBuilderBackend.Domain.Entities.PcBuild", "PcBuild")
+                        .WithMany("Parts")
+                        .HasForeignKey("PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuildUser", b =>
+                {
+                    b.HasOne("PcBuilderBackend.Domain.Entities.PcBuild", "PcBuild")
+                        .WithOne("User")
+                        .HasForeignKey("PcBuilderBackend.Domain.Entities.PcBuildUser", "PcBuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PcBuild");
+                });
+
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Psu", b =>
                 {
                     b.HasOne("PcBuilderBackend.Domain.Entities.Manufacturer", "Manufacturer")
@@ -1910,7 +2118,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.CpuSeries", b =>
                 {
-                    b.Navigation("Cpu");
+                    b.Navigation("Cpus");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.GpuSeries", b =>
@@ -1965,6 +2173,13 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.MotherboardM2", b =>
                 {
                     b.Navigation("FormFactors");
+                });
+
+            modelBuilder.Entity("PcBuilderBackend.Domain.Entities.PcBuild", b =>
+                {
+                    b.Navigation("Parts");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PcBuilderBackend.Domain.Entities.Psu", b =>

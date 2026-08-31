@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkUpdateStorageDrives;
 
 public class BulkUpdateStorageDrivesHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateStorageDrivesHandler> logger)
     : IRequestHandler<BulkUpdateStorageDrivesCommand, List<StorageDriveDto>?>
@@ -22,8 +23,7 @@ public class BulkUpdateStorageDrivesHandler(
 
         foreach (var item in request.Drives)
         {
-            var entity = await context.StorageDrives
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await storageDrives.GetByIdAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -44,7 +44,7 @@ public class BulkUpdateStorageDrivesHandler(
             result.Add(mapper.Map<StorageDriveDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.StorageDrive);
         return result;
     }

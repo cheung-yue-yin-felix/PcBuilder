@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkCreatePsus;
 
 public class BulkCreatePsusHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkCreatePsusHandler> logger)
     : IRequestHandler<BulkCreatePsusCommand, List<PsuDto>>
@@ -35,11 +36,11 @@ public class BulkCreatePsusHandler(
                 entity.AddCable(new PsuCable(entity.Id, cable.Type, cable.CablesCount, cable.ConnectorsCount));
             }
 
-            context.Psus.Add(entity);
+            psus.Add(entity);
             result.Add(mapper.Map<PsuDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.Psu);
         return result;
     }

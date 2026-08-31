@@ -9,7 +9,7 @@ using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class ChassisReadStore(IApplicationDbContext db, IMapper mapper) : IChassisReadStore
+public class ChassisReadStore(PcBuilderDbContext db, IMapper mapper) : IChassisReadStore
 {
     public async Task <ChassisDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {

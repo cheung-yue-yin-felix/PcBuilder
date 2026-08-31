@@ -1,24 +1,31 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.GpuSeries.Commands.UpdateGpuSeries;
 
-public class UpdateGpuSeriesHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class UpdateGpuSeriesHandler(
+    IRepository<Domain.Entities.GpuSeries> gpuSeries,
+    ILogger<UpdateGpuSeriesHandler> logger,
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    ICacheService cache)
     : IRequestHandler<UpdateGpuSeriesCommand, GpuSeriesDto?>
 {
-    public async Task<GpuSeriesDto?> Handle(UpdateGpuSeriesCommand request, CancellationToken cancellationToken)
+    public async Task<GpuSeriesDto?> Handle(UpdateGpuSeriesCommand command, CancellationToken cancellationToken)
     {
-        var entity = await context.GpuSeries.FirstOrDefaultAsync(g => g.Id == request.Id && g.IsActive, cancellationToken);
+        var entity = await gpuSeries.GetByIdAsync(command.Id, cancellationToken);
         if (entity == null) return null;
 
-        entity.Rename(request.Name);
-        entity.UpdateManufacturer(request.ManufacturerId);
+        entity.Rename(command.Name);
+        entity.UpdateManufacturer(command.ManufacturerId);
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.Updated(logger, EntityLog.GpuSeries, entity.Id);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.GpuSeries.Prefix, cancellationToken);
         return mapper.Map<GpuSeriesDto>(entity);
     }

@@ -1,20 +1,37 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Chipsets.Commands.BulkDeleteChipsets;
 
-public class BulkDeleteChipsetsHandler(IApplicationDbContext context, ICacheService cache)
+public class BulkDeleteChipsetsHandler(
+    IRepository<Chipset> chipsets, 
+    IUnitOfWork unitOfWork, 
+    ILogger<BulkDeleteChipsetsHandler> logger, 
+    ICacheService cache)
     : IRequestHandler<BulkDeleteChipsetsCommand, bool>
 {
-    public async Task<bool> Handle(BulkDeleteChipsetsCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(BulkDeleteChipsetsCommand command, CancellationToken cancellationToken)
     {
-        foreach (var chipset in request.ChipsetIds.Select(chipsetId => context.Chipsets.FirstOrDefault(c => c.Id == chipsetId && c.IsActive)))
+        var ids = command.Ids.Distinct().ToList();
+        var entities = await chipsets.GetByIdsAsync(ids, cancellationToken);
+
+        if (entities.Count != ids.Count)
         {
-            if (chipset == null) return false;
-            chipset.Deactivate();
+            EntityLog.BulkAborted(logger, "delete", EntityLog.Chipset, ids.Count, entities.Count);
+            return false;
         }
-        await context.SaveChangesAsync(cancellationToken);
+
+        foreach (var entity in entities)
+        {
+            entity.Deactivate();
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.BulkDeleted(logger, ids.Count, EntityLog.Chipset);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Chipsets.Prefix, cancellationToken);
         return true;
     }

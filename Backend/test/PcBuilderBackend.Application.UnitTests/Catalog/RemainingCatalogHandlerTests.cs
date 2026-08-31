@@ -1,15 +1,19 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
+using PcBuilderBackend.Application.Catalog.Chassis;
 using PcBuilderBackend.Application.Catalog.Chassis.Commands.CreateChassis;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Catalog.Chassis.Validators;
 using PcBuilderBackend.Application.Catalog.ChassisFans.Commands.CreateChassisFan;
+using PcBuilderBackend.Application.Catalog.GraphicsCards;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Validators;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.CreateWiredNetworkAdapter;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Validators;
 using PcBuilderBackend.Application.UnitTests.Support;
+using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.UnitTests.Catalog;
@@ -42,8 +46,11 @@ public class RemainingCatalogHandlerTests : IDisposable
         (await validator.ValidateAsync(command)).IsValid.Should().BeTrue();
         (await validator.ValidateAsync(command with { GpuId = Guid.NewGuid() })).IsValid.Should().BeFalse();
 
+        var cards = Substitute.For<IGraphicsCardRepository>();
+        cards.When(x => x.Add(Arg.Any<GraphicsCard>()))
+            .Do(ci => _fx.Context.GraphicsCards.Add(ci.Arg<GraphicsCard>()));
         var dto = await new CreateGraphicsCardHandler(
-            _fx.Context, _fx.Mapper, NullLogger<CreateGraphicsCardHandler>.Instance)
+            cards, _fx.UnitOfWork, _fx.Mapper, NullLogger<CreateGraphicsCardHandler>.Instance)
             .Handle(command, CancellationToken.None);
         dto.Name.Should().Be("RTX 4070");
         (await _fx.Context.GraphicsCards.CountAsync()).Should().Be(1);
@@ -71,8 +78,11 @@ public class RemainingCatalogHandlerTests : IDisposable
         (await validator.ValidateAsync(command)).IsValid.Should().BeTrue();
         (await validator.ValidateAsync(command with { LengthMm = 0 })).IsValid.Should().BeFalse();
 
+        var chassis = Substitute.For<IChassisRepository>();
+        chassis.When(x => x.Add(Arg.Any<Chassis>()))
+            .Do(ci => _fx.Context.Chassis.Add(ci.Arg<Chassis>()));
         var dto = await new CreateChassisHandler(
-            _fx.Context, _fx.Mapper, NullLogger<CreateChassisHandler>.Instance)
+            chassis, _fx.UnitOfWork, _fx.Mapper, NullLogger<CreateChassisHandler>.Instance)
             .Handle(command, CancellationToken.None);
         dto.Name.Should().Be("4000D");
         (await _fx.Context.Chassis.CountAsync()).Should().Be(1);
@@ -82,7 +92,10 @@ public class RemainingCatalogHandlerTests : IDisposable
     public async Task Create_chassis_fan_and_wired_adapter()
     {
         var fan = await new CreateChassisFanHandler(
-            _fx.Context, _fx.Mapper, NullLogger<CreateChassisFanHandler>.Instance)
+                new TestChassisFanRepository(_fx.Context),
+                _fx.UnitOfWork,
+                _fx.Mapper,
+                NullLogger<CreateChassisFanHandler>.Instance)
             .Handle(new CreateChassisFanCommand
             {
                 Name = "LL120",

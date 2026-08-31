@@ -7,6 +7,6 @@ public class BulkDeleteGpusCommandValidator: AbstractValidator<BulkDeleteGpusCom
 {
     public BulkDeleteGpusCommandValidator()
     {
-        RuleFor(x => x.GpuIds).NotEmpty().WithMessage("GpuIds list cannot be empty.");
+        RuleFor(x => x.Ids).NotEmpty().WithMessage("Ids list cannot be empty.");
     }
 }

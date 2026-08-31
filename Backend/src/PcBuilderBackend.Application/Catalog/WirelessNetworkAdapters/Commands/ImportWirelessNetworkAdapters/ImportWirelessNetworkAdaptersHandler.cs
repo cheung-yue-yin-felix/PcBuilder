@@ -10,7 +10,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.ImportWirelessNetworkAdapters;
 
 public class ImportWirelessNetworkAdaptersHandler(
-    IApplicationDbContext context,
+    IWirelessNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
@@ -45,11 +46,11 @@ public class ImportWirelessNetworkAdaptersHandler(
                 row.UsbVersion,
                 row.UsbType);
 
-            context.WirelessNetworkAdapters.Add(entity);
+            adapters.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.WirelessNetworkAdapter);
 

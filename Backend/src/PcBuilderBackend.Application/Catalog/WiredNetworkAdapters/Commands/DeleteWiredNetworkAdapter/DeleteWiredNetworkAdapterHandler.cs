@@ -1,20 +1,20 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.DeleteWiredNetworkAdapter;
 
 public class DeleteWiredNetworkAdapterHandler(
-    IApplicationDbContext context,
+    IWiredNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     ILogger<DeleteWiredNetworkAdapterHandler> logger)
     : IRequestHandler<DeleteWiredNetworkAdapterCommand, bool>
 {
     public async Task<bool> Handle(DeleteWiredNetworkAdapterCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.WiredNetworkAdapters
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await adapters.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -23,7 +23,7 @@ public class DeleteWiredNetworkAdapterHandler(
         }
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.WiredNetworkAdapter, entity.Id);
         return true;

@@ -52,6 +52,12 @@ public class ChassisTests
         chassis.CheckStorageDriveCompatibility(nvme).Should().BeTrue();
         chassis.CheckStorageDriveCompatibility(hdd).Should().BeTrue();
         chassis.CheckStorageDriveCompatibility([hdd, hdd]).Should().BeFalse();
+
+        chassis.AddDriveBay(new ChassisDriveBay(chassis.Id, DriveBayFormFactor.Inch25, 1));
+        var sataSsd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
+            StorageFormFactor.Sata25, 1000);
+        chassis.CheckStorageDriveCompatibility(sataSsd).Should().BeTrue();
+        chassis.CheckStorageDriveCompatibility([sataSsd, sataSsd]).Should().BeFalse();
     }
 
     [Fact]

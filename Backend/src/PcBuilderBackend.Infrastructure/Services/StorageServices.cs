@@ -2,7 +2,7 @@ using Amazon.S3;
 using Microsoft.Extensions.Configuration;
 using PcBuilderBackend.Application.Common.Interfaces;
 
-namespace PcBuilderBackend.Infrastructure.Storage;
+namespace PcBuilderBackend.Infrastructure.Services;
 
 public class StorageServices : IStorageServices
 {

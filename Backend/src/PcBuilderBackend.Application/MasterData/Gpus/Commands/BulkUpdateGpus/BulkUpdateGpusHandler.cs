@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -10,7 +9,8 @@ using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 namespace PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkUpdateGpus;
 
 public class BulkUpdateGpusHandler(
-    IApplicationDbContext context,
+    IRepository<Domain.Entities.Gpu> gpus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ICacheService cache,
     ILogger<BulkUpdateGpusHandler> logger) : IRequestHandler<BulkUpdateGpusCommand, List<GpuDto>>
@@ -21,19 +21,20 @@ public class BulkUpdateGpusHandler(
 
         foreach (var gpuDto in request.Gpus)
         {
-            var gpu = await context.Gpus.FirstOrDefaultAsync(g => g.Id == gpuDto.Id && g.IsActive, cancellationToken);
+            var gpu = await gpus.GetByIdAsync(gpuDto.Id, cancellationToken);
             if (gpu is null)
             {
                 EntityLog.NotFoundOrInactive(logger, EntityLog.Gpu, gpuDto.Id);
                 return result;
             }
+
             gpu.Rename(gpuDto.Name);
             gpu.UpdateManufacturer(gpuDto.ManufacturerId);
             gpu.UpdateSeries(gpuDto.GpuSeriesId);
             result.Add(mapper.Map<GpuDto>(gpu));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Gpus.Prefix, cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.Gpu);
         return result;

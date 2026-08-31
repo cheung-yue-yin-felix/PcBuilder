@@ -2,11 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PcBuilderBackend.Application.Catalog.Chassis;
+using PcBuilderBackend.Application.Catalog.ChassisFans;
 using PcBuilderBackend.Application.Catalog.CpuCoolers;
 using PcBuilderBackend.Application.Catalog.Cpus;
 using PcBuilderBackend.Application.Catalog.GraphicsCards;
 using PcBuilderBackend.Application.Catalog.Memories;
 using PcBuilderBackend.Application.Catalog.Motherboards;
+using PcBuilderBackend.Application.Catalog.Psus;
+using PcBuilderBackend.Application.Catalog.StorageDrives;
+using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters;
+using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Options;
 using PcBuilderBackend.Infrastructure.Caching;
@@ -38,21 +43,24 @@ public static class DependencyInjection
             options.UseNpgsql(identityConnectionString, npgsql =>
                 npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "identity")));
 
-        services.AddScoped<IApplicationDbContext>(provider =>
-            provider.GetService<PcBuilderDbContext>()
-            ?? throw new InvalidOperationException());
-        
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IActiveEntityLookup, ActiveEntityLookup>();
+        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped(typeof(IReadStore<,>), typeof(EfReadStore<,>));
 
         // Read Stores
         services.AddScoped<IChassisReadStore, ChassisReadStore>();
+        services.AddScoped<IChassisFanReadStore, ChassisFanReadStore>();
         services.AddScoped<ICpuReadStore, CpuReadStore>();
         services.AddScoped<ICpuCoolerReadStore, CpuCoolerReadStore>();
         services.AddScoped<IMotherboardReadStore, MotherboardReadStore>();
         services.AddScoped<IRamReadStore, RamReadStore>();
         services.AddScoped<IGraphicsCardReadStore, GraphicsCardReadStore>();
-        
+        services.AddScoped<IPsuReadStore, PsuReadStore>();
+        services.AddScoped<IStorageDriveReadStore, StorageDriveReadStore>();
+        services.AddScoped<IWiredNetworkAdapterReadStore, WiredNetworkAdapterReadStore>();
+        services.AddScoped<IWirelessNetworkAdapterReadStore, WirelessNetworkAdapterReadStore>();
+
         // Repositories
         services.AddScoped<IChassisRepository, ChassisRepository>();
         services.AddScoped<ICpuRepository, CpuRepository>();
@@ -60,6 +68,13 @@ public static class DependencyInjection
         services.AddScoped<IMotherboardRepository, MotherboardRepository>();
         services.AddScoped<IRamRepository, RamRepository>();
         services.AddScoped<IGraphicsCardRepository, GraphicsCardRepository>();
+        services.AddScoped<IPsuRepository, PsuRepository>();
+        services.AddScoped<IChassisFanRepository, ChassisFanRepository>();
+        services.AddScoped<IStorageDriveRepository, StorageDriveRepository>();
+        services.AddScoped<IWiredNetworkAdapterRepository, WiredNetworkAdapterRepository>();
+        services.AddScoped<IWirelessNetworkAdapterRepository, WirelessNetworkAdapterRepository>();
+
+        services.AddScoped<ICatalogRepository, CatalogRepository>();
 
         services.AddScoped<IExcelImportService, ClosedXmlExcelImportService>();
 

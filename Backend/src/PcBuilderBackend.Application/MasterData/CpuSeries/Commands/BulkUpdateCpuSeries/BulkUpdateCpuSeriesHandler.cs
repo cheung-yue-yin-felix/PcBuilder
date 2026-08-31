@@ -1,22 +1,21 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.CpuSeries.Commands.BulkUpdateCpuSeries;
 
-public class BulkUpdateCpuSeriesHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class BulkUpdateCpuSeriesHandler(IRepository<Domain.Entities.CpuSeries> cpuSeries, IUnitOfWork unitOfWork, IMapper mapper, ICacheService cache)
     : IRequestHandler<BulkUpdateCpuSeriesCommand, List<CpuSeriesDto>>
 {
-    public async Task<List<CpuSeriesDto>> Handle(BulkUpdateCpuSeriesCommand request, CancellationToken cancellationToken)
+    public async Task<List<CpuSeriesDto>> Handle(BulkUpdateCpuSeriesCommand command, CancellationToken cancellationToken)
     {
         var result = new List<CpuSeriesDto>();
 
-        foreach (var cpuSeriesDto in request.CpuSeries)
+        foreach (var cpuSeriesDto in command.CpuSeries)
         {
-            var entity = await context.CpuSeries.FirstOrDefaultAsync(cs => cs.Id == cpuSeriesDto.Id && cs.IsActive, cancellationToken);
+            var entity = await cpuSeries.GetByIdAsync(cpuSeriesDto.Id, cancellationToken);
 
             if (entity is null) return result;
 
@@ -27,7 +26,7 @@ public class BulkUpdateCpuSeriesHandler(IApplicationDbContext context, IMapper m
             result.Add(mapper.Map<CpuSeriesDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.CpuSeries.Prefix, cancellationToken);
         return result;
     }

@@ -10,6 +10,8 @@ internal sealed class ChassisPsuFormFactorConfiguration : IEntityTypeConfigurati
     {
         builder.ConfigureGuidBaseEntity();
 
+        builder.ToTable("ChassisPsuFormFactor");
+
         builder.HasOne(pf => pf.Chassis)
             .WithMany(c => c.PsuFormFactors)
             .HasForeignKey(pf => pf.ChassisId)

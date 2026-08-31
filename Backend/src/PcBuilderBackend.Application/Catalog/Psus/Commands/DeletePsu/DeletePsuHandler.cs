@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
@@ -7,14 +6,14 @@ using PcBuilderBackend.Application.Common.Logging;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.DeletePsu;
 
 public class DeletePsuHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     ILogger<DeletePsuHandler> logger)
     : IRequestHandler<DeletePsuCommand, bool>
 {
     public async Task<bool> Handle(DeletePsuCommand request, CancellationToken cancellationToken)
     {
-        var entity = await context.Psus
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var entity = await psus.GetByIdAsync(request.Id, cancellationToken);
 
         if (entity is null)
         {
@@ -23,7 +22,7 @@ public class DeletePsuHandler(
         }
 
         entity.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Deleted(logger, EntityLog.Psu, entity.Id);
         return true;

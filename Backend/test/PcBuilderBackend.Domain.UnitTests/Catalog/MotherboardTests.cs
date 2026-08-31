@@ -90,13 +90,144 @@ public class MotherboardTests
         act.Should().Throw<ArgumentException>().WithParameterName("supportsSata");
     }
 
-    private static Motherboard Create() =>
-        new(ManufacturerId, "B650", SocketId, ChipsetId, 4, 128, 48, 4, 4, 2, 244, 305,
+    [Fact]
+    public void Storage_sata_count_consumes_sata_ports()
+    {
+        var board = Create(sataPorts: 2);
+        var drive = CreateHdd();
+
+        board.CheckStorageCompatibility([drive, drive]).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckStorageCompatibility([drive, drive, drive]).Reason.Should().Be(CompatibilityReason.InsufficientSataPorts);
+
+        var sataSsd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
+            StorageFormFactor.Sata25, 1000);
+        board.CheckStorageCompatibility([sataSsd, sataSsd]).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckStorageCompatibility([sataSsd, sataSsd, sataSsd]).Reason.Should().Be(CompatibilityReason.InsufficientSataPorts);
+    }
+
+    [Fact]
+    public void Storage_m2_count_consumes_slot_count()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false);
+        var nvme = CreateNvme(PcieGeneration.Gen4);
+
+        board.CheckStorageCompatibility(nvme).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckStorageCompatibility([nvme, nvme]).Reason.Should().Be(CompatibilityReason.NoMatchingM2Slot);
+    }
+
+    [Fact]
+    public void Storage_m2_sata_requires_supports_sata()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false);
+        var sataM2 = CreateSataM2();
+
+        board.CheckStorageCompatibility(sataM2).Reason.Should().Be(CompatibilityReason.SlotDoesNotSupportSata);
+    }
+
+    [Fact]
+    public void Storage_m2_sata_does_not_reduce_pcie_generation()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: true);
+        var sataM2 = new StorageDrive("SATA SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
+            StorageFormFactor.M22280, 1000, PcieGeneration.Gen5);
+
+        board.CheckStorageCompatibility(sataM2).Status.Should().Be(PartsCompatibility.Compatible);
+    }
+
+    [Fact]
+    public void Storage_m2_may_reduce_generation()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false);
+        var nvme = CreateNvme(PcieGeneration.Gen5);
+
+        var reduced = board.CheckStorageCompatibility(nvme);
+        reduced.Status.Should().Be(PartsCompatibility.CompatibleReduced);
+        reduced.Reason.Should().Be(CompatibilityReason.PcieGenerationReduced);
+    }
+
+    [Fact]
+    public void Network_pcie_count_consumes_slot_count()
+    {
+        var board = Create();
+        board.AddPcieSlot(new MotherboardPcie(board.Id, PcieSlotType.X1, PcieSlotLane.X1, PcieGeneration.Gen4, 1));
+        var nic = CreateWiredPcie(PcieSlotType.X1);
+
+        board.CheckWiredNetworkAdapterCompatibility(nic).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckWiredNetworkAdapterCompatibility([nic, nic]).Reason.Should().Be(CompatibilityReason.NotEnoughPcieSlots);
+    }
+
+    [Fact]
+    public void Network_usb_ports_are_shared_across_wired_and_wireless()
+    {
+        var board = Create();
+        board.AddUsbPort(new MotherboardUsb(board.Id, UsbVersion.Usb32Gen1, UsbType.TypeA, 1));
+        var wired = CreateWiredUsb();
+        var wireless = CreateWirelessUsb();
+
+        board.CheckWiredNetworkAdapterCompatibility(wired).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckNetworkAdapterCompatibility([wired], [wireless]).Reason.Should().Be(CompatibilityReason.NoMatchingUsbPort);
+    }
+
+    [Fact]
+    public void Network_wireless_m2_consumes_e_key_slot_count()
+    {
+        var board = Create();
+        AddM2(board, M2Key.E, PcieGeneration.Gen4, slotCount: 1, supportsSata: false, M2FormFactor.M22230);
+        var wifi = CreateWirelessM2();
+
+        board.CheckWirelessNetworkAdapterCompatibility(wifi).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckWirelessNetworkAdapterCompatibility([wifi, wifi]).Reason.Should().Be(CompatibilityReason.NoMatchingM2Slot);
+    }
+
+    private static Motherboard Create(int sataPorts = 4) =>
+        new(ManufacturerId, "B650", SocketId, ChipsetId, 4, 128, 48, sataPorts, 4, 2, 244, 305,
             DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Atx, false, false);
+
+    private static void AddM2(
+        Motherboard board,
+        M2Key key,
+        PcieGeneration generation,
+        int slotCount,
+        bool supportsSata,
+        M2FormFactor formFactor = M2FormFactor.M22280)
+    {
+        var slot = new MotherboardM2(board.Id, key, generation, slotCount, supportsSata);
+        slot.AddFormFactor(new MotherboardM2FormFactor(slot.Id, formFactor));
+        board.AddM2Slot(slot);
+    }
 
     private static Ram CreateRam(DdrGeneration ddr, RamFormFactor form, int perStick, int total, int modules) =>
         new("Kit", ManufacturerId, "Black", ddr, form, RamRank.DualRank, perStick, total, modules, 6000, 40);
 
     private static GraphicsCard CreateGpu(PcieGeneration gen) =>
-        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, gen, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, gen, false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+
+    private static StorageDrive CreateHdd() =>
+        new("HDD", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata, StorageFormFactor.Sata35, 4000, rpm: 7200);
+
+    private static StorageDrive CreateNvme(PcieGeneration generation) =>
+        new("990 PRO", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme, StorageFormFactor.M22280, 2000,
+            generation);
+
+    private static StorageDrive CreateSataM2() =>
+        new("SATA SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata, StorageFormFactor.M22280, 1000,
+            PcieGeneration.Gen3);
+
+    private static WiredNetworkAdapter CreateWiredPcie(PcieSlotType slotType) =>
+        new("I225-V", ManufacturerId, WiredHostInterface.Pcie, 2500, pcieSlotType: slotType);
+
+    private static WiredNetworkAdapter CreateWiredUsb() =>
+        new("USB NIC", ManufacturerId, WiredHostInterface.Usb, 1000, UsbVersion.Usb32Gen1, UsbType.TypeA);
+
+    private static WirelessNetworkAdapter CreateWirelessUsb() =>
+        new("USB WiFi", ManufacturerId, WifiStandard.Wifi6, WirelessHostInterface.Usb, 1200, null, null, null,
+            usbVersion: UsbVersion.Usb32Gen1, usbType: UsbType.TypeA);
+
+    private static WirelessNetworkAdapter CreateWirelessM2() =>
+        new("AX210", ManufacturerId, WifiStandard.Wifi6E, WirelessHostInterface.M2, 2400, null, null,
+            BluetoothVersion.V5Point2, m2Key: M2Key.E, m2FormFactor: M2FormFactor.M22230);
 }

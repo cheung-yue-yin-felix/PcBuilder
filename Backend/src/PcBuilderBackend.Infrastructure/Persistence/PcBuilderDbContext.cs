@@ -1,12 +1,11 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Domain.Entities;
-using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Infrastructure.Persistence;
 
 public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
-    : DbContext(options), IApplicationDbContext
+    : DbContext(options)
 {
     public DbSet<Cpu> Cpus { get; set; } = null!;
     public DbSet<Manufacturer> Manufacturers { get; set; } = null!;
@@ -40,6 +39,9 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
     public DbSet<CpuCoolerSocket> CpuCoolerSockets { get; set; } = null!;
     public DbSet<CpuRamCompat> CpuRamCompats { get; set; } = null!;
     public DbSet<CpuSupportChipset> CpuSupportChipsets { get; set; } = null!;
+    public DbSet<PcBuild> PcBuilds { get; set; } = null!;
+    public DbSet<PcBuildUser> PcBuildUsers { get; set; } = null!;
+    public DbSet<PcBuildPart> PcBuildParts { get; set; } = null!;
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

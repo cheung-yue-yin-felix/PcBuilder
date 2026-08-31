@@ -8,19 +8,28 @@ namespace PcBuilderBackend.Application.Common.Logging;
 /// </summary>
 internal static partial class EntityLog
 {
+    // Loggable entity names for catalog entities
     public const string Cpu = "CPU";
-    public const string Gpu = "GPU";
     public const string GraphicsCard = "Graphics Card";
     public const string Psu = "PSU";
     public const string Motherboard = "Motherboard";
     public const string Chassis = "Chassis";
     public const string ChassisFan = "Chassis Fan";
-    public const string CpuRamCompat = "CPU RAM compatibility";
+    public const string Ram = "RAM";
     public const string CpuCooler = "CPU Cooler";
     public const string StorageDrive = "Storage Drive";
     public const string WiredNetworkAdapter = "Wired Network Adapter";
     public const string WirelessNetworkAdapter = "Wireless Network Adapter";
 
+    // Loggable entity names for master data
+    public const string Chipset = "Chipset";
+    public const string CpuSeries = "CPU Series";
+    public const string GpuSeries = "GPU Series";
+    public const string Gpu = "GPU";
+    public const string Manufacturer = "Manufacturer";
+    public const string Socket = "Socket";
+
+    // Logger Message for entity operations
     [LoggerMessage(
         EventId = 1001,
         Level = LogLevel.Information,
@@ -86,6 +95,8 @@ internal static partial class EntityLog
         Message = "Imported {Count} {EntityName} successfully.")]
     public static partial void Imported(ILogger logger, int count, string entityName);
 
+    
+    // Logger Message for bulk update of child collections
     [LoggerMessage(
         EventId = 1011,
         Level = LogLevel.Information,

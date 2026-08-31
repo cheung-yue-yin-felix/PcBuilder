@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.BulkUpdateWirelessNetworkAdapters;
 
 public class BulkUpdateWirelessNetworkAdaptersHandler(
-    IApplicationDbContext context,
+    IWirelessNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateWirelessNetworkAdaptersHandler> logger)
     : IRequestHandler<BulkUpdateWirelessNetworkAdaptersCommand, List<WirelessNetworkAdapterDto>?>
@@ -22,8 +23,7 @@ public class BulkUpdateWirelessNetworkAdaptersHandler(
 
         foreach (var item in request.Adapters)
         {
-            var entity = await context.WirelessNetworkAdapters
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await adapters.GetByIdAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -49,7 +49,7 @@ public class BulkUpdateWirelessNetworkAdaptersHandler(
             result.Add(mapper.Map<WirelessNetworkAdapterDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.WirelessNetworkAdapter);
         return result;
     }

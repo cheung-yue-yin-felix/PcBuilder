@@ -1,13 +1,12 @@
-using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Chipsets.Queries;
 
-public class GetChipsetByIdHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class GetChipsetByIdHandler(IReadStore<Chipset, ChipsetDto> store, ICacheService cache)
     : IRequestHandler<GetChipsetByIdQuery, ChipsetDto?>
 {
     public async Task<ChipsetDto?> Handle(GetChipsetByIdQuery request, CancellationToken cancellationToken)
@@ -17,16 +16,12 @@ public class GetChipsetByIdHandler(IApplicationDbContext context, IMapper mapper
         if (cached is not null)
             return cached;
 
-        var chipset = await context.Chipsets.AsNoTracking()
-            .Include(c => c.Manufacturer)
-            .Include(c => c.Socket)
-            .FirstOrDefaultAsync(c => c.Id == request.Id && c.IsActive, cancellationToken);
+        var chipset = await store.GetByIdAsync(request.Id, cancellationToken);
 
         if (chipset is null)
             return null;
 
-        var dto = mapper.Map<ChipsetDto>(chipset);
-        await cache.SetAsync(key, dto, MasterDataCacheKeys.DefaultTtl, cancellationToken);
-        return dto;
+        await cache.SetAsync(key, chipset, MasterDataCacheKeys.DefaultTtl, cancellationToken);
+        return chipset;
     }
 }

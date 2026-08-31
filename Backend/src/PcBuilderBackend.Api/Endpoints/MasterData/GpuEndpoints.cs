@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Extensions;
 using PcBuilderBackend.Api.Filters;
-using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkCreateGpus;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkDeleteGpus;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.BulkUpdateGpus;
@@ -25,10 +24,10 @@ public static class GpuEndpoints
             .WithDescription("Browse, Read, Edit, Add and Delete GPU chips (reference data)");
 
         subgroup.MapGet("/", GetGpus)
-            .Produces<PagedResult<GpuDto>>()
+            .Produces<List<GpuDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Browse GPUs")
-            .WithDescription("\n    GET /master-data/gpu?manufacturerId={manufacturerId}&gpuSeriesId={gpuSeriesId}&name={name}");
+            .WithDescription("\n    GET /master-data/gpu");
 
         subgroup.MapGet("/{id:guid}", GetGpuById)
             .Produces<GpuDto>()
@@ -85,17 +84,11 @@ public static class GpuEndpoints
             .WithDescription("\n    POST /master-data/gpu/import");
     }
 
-    private static async Task<Ok<PagedResult<GpuDto>>> GetGpus(
-        [FromQuery] Guid? manufacturerId,
-        [FromQuery] Guid? gpuSeriesId,
-        [FromQuery] string? name,
+    private static async Task<Ok<List<GpuDto>>> GetGpus(
         [FromServices] ISender sender,
-        CancellationToken cancellationToken,
-        [FromQuery(Name = "pageIndex")] int pageIndex = 0,
-        [FromQuery(Name = "pageSize")] int pageSize = 10)
+        CancellationToken cancellationToken)
     {
-        var query = new GetGpusQuery(pageIndex, pageSize, name, manufacturerId, gpuSeriesId);
-        return TypedResults.Ok(await sender.Send(query, cancellationToken));
+        return TypedResults.Ok(await sender.Send(new GetGpusQuery(), cancellationToken));
     }
 
     private static async Task<Results<Ok<GpuDto>, NotFound>> GetGpuById(

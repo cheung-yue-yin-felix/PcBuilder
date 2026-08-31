@@ -1,30 +1,44 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Manufacturers.Commands.BulkUpdateManufacturers;
 
-public class BulkUpdateManufacturersHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class BulkUpdateManufacturersHandler(
+    IRepository<Manufacturer> manufacturers,
+    ILogger<BulkUpdateManufacturersHandler> logger,
+    IUnitOfWork unitOfWork,
+    IMapper mapper,
+    ICacheService cache)
     : IRequestHandler<BulkUpdateManufacturersCommand, List<ManufacturerDto>?>
 {
     public async Task<List<ManufacturerDto>?> Handle(BulkUpdateManufacturersCommand request, CancellationToken cancellationToken)
     {
         var result = new List<ManufacturerDto>();
 
-        foreach (var manufacturer in request.Manufacturers)
+        var ids = request.Manufacturers.Select(dto => dto.Id).ToList();
+        var entities = await manufacturers.GetByIdsAsync(ids, cancellationToken);
+
+        if (entities.Count != ids.Count)
         {
-            var entity = await context.Manufacturers.FirstOrDefaultAsync(m => m.Id == manufacturer.Id && m.IsActive, cancellationToken);
+            EntityLog.BulkAborted(logger, "Update", EntityLog.Manufacturer, ids.Count, entities.Count);
+            return null;
+        }
 
-            if (entity == null) return null;
-
-            entity.Rename(manufacturer.Name);
+        foreach (var entity in entities)
+        {
+            var dto = request.Manufacturers.First(dto => dto.Id == entity.Id);
+            entity.Rename(dto.Name);
             result.Add(mapper.Map<ManufacturerDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        EntityLog.BulkUpdated(logger, result.Count, EntityLog.Manufacturer);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.Manufacturers.Prefix, cancellationToken);
         return result;
     }

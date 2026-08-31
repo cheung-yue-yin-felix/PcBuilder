@@ -1,94 +1,101 @@
+using PcBuilderBackend.Domain.Enums;
+
 namespace PcBuilderBackend.Domain.Entities;
 
-public class UserBuild : BaseEntity
+public class PcBuild : BaseEntity
 {
-    public Guid? UserId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
-    public bool IsPublic { get; private set; }
     public Guid ChassisId { get; private set; }
     public Guid MotherboardId { get; private set; }
     public Guid CpuId { get; private set; }
     public Guid? CpuCoolerId { get; private set; }
     public Guid RamKitId { get; private set; }
     public Guid? GraphicsCardId { get; private set; }
+    public Guid PsuId { get; private set; }
 
-    private readonly List<UserBuildPart> _storageDevices = [];
-    public IReadOnlyCollection<UserBuildPart> StorageDevices => _storageDevices;
+    public PcBuildUser? User { get; private set; }
 
-    private readonly List<UserBuildPart> _chassisFans = [];
-    public IReadOnlyCollection<UserBuildPart> ChassisFans => _chassisFans;
+    private readonly List<PcBuildPart> _parts = [];
 
-    private readonly List<UserBuildPart> _wiredNetworkAdapters = [];
-    public IReadOnlyCollection<UserBuildPart> WiredNetworkAdapters => _wiredNetworkAdapters;
+    public IReadOnlyCollection<PcBuildPart> Parts => _parts;
 
-    private readonly List<UserBuildPart> _wirelessNetworkAdapters = [];
-    public IReadOnlyCollection<UserBuildPart> WirelessNetworkAdapters => _wirelessNetworkAdapters;
+    public IReadOnlyCollection<PcBuildPart> StorageDevices =>
+        _parts.FindAll(part => part.Type == PcBuildPartType.StorageDrive);
 
-    protected UserBuild()
+    public IReadOnlyCollection<PcBuildPart> ChassisFans =>
+        _parts.FindAll(part => part.Type == PcBuildPartType.ChassisFan);
+
+    public IReadOnlyCollection<PcBuildPart> WiredNetworkAdapters =>
+        _parts.FindAll(part => part.Type == PcBuildPartType.WiredNetworkAdapter);
+
+    public IReadOnlyCollection<PcBuildPart> WirelessNetworkAdapters =>
+        _parts.FindAll(part => part.Type == PcBuildPartType.WirelessNetworkAdapter);
+
+    protected PcBuild()
     {
     }
 
-    public UserBuild(
-        Guid? userId,
+    public PcBuild(
         string name,
         string? description,
-        bool isPublic,
         Guid chassisId,
         Guid motherboardId,
         Guid cpuId,
         Guid? cpuCoolerId,
         Guid ramKitId,
-        Guid? graphicsCardId)
+        Guid? graphicsCardId,
+        Guid psuId)
     {
-        UserId = OptionalId(userId);
-        IsPublic = isPublic;
         SetName(name);
         SetDescription(description);
-        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId);
+        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId, psuId);
     }
 
     public void Update(
         string name,
         string? description,
-        bool isPublic,
         Guid chassisId,
         Guid motherboardId,
         Guid cpuId,
         Guid? cpuCoolerId,
         Guid ramKitId,
-        Guid? graphicsCardId)
+        Guid? graphicsCardId,
+        Guid psuId)
     {
-        IsPublic = isPublic;
         SetName(name);
         SetDescription(description);
-        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId);
+        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId, psuId);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
     public void AddStorageDevice(Guid storageDeviceId, int quantity = 1)
-        => AddPart(_storageDevices, storageDeviceId, quantity, nameof(storageDeviceId));
+        => AddPart(PcBuildPartType.StorageDrive, storageDeviceId, quantity, nameof(storageDeviceId));
 
     public void RemoveStorageDevice(Guid storageDeviceId, int quantity = 1)
-        => RemovePart(_storageDevices, storageDeviceId, quantity, nameof(storageDeviceId));
+        => RemovePart(PcBuildPartType.StorageDrive, storageDeviceId, quantity, nameof(storageDeviceId));
 
     public void AddChassisFan(Guid chassisFanId, int quantity = 1)
-        => AddPart(_chassisFans, chassisFanId, quantity, nameof(chassisFanId));
+        => AddPart(PcBuildPartType.ChassisFan, chassisFanId, quantity, nameof(chassisFanId));
 
     public void RemoveChassisFan(Guid chassisFanId, int quantity = 1)
-        => RemovePart(_chassisFans, chassisFanId, quantity, nameof(chassisFanId));
+        => RemovePart(PcBuildPartType.ChassisFan, chassisFanId, quantity, nameof(chassisFanId));
 
     public void AddWiredNetworkAdapter(Guid wiredNetworkAdapterId, int quantity = 1)
-        => AddPart(_wiredNetworkAdapters, wiredNetworkAdapterId, quantity, nameof(wiredNetworkAdapterId));
+        => AddPart(PcBuildPartType.WiredNetworkAdapter, wiredNetworkAdapterId, quantity,
+            nameof(wiredNetworkAdapterId));
 
     public void RemoveWiredNetworkAdapter(Guid wiredNetworkAdapterId, int quantity = 1)
-        => RemovePart(_wiredNetworkAdapters, wiredNetworkAdapterId, quantity, nameof(wiredNetworkAdapterId));
+        => RemovePart(PcBuildPartType.WiredNetworkAdapter, wiredNetworkAdapterId, quantity,
+            nameof(wiredNetworkAdapterId));
 
     public void AddWirelessNetworkAdapter(Guid wirelessNetworkAdapterId, int quantity = 1)
-        => AddPart(_wirelessNetworkAdapters, wirelessNetworkAdapterId, quantity, nameof(wirelessNetworkAdapterId));
+        => AddPart(PcBuildPartType.WirelessNetworkAdapter, wirelessNetworkAdapterId, quantity,
+            nameof(wirelessNetworkAdapterId));
 
     public void RemoveWirelessNetworkAdapter(Guid wirelessNetworkAdapterId, int quantity = 1)
-        => RemovePart(_wirelessNetworkAdapters, wirelessNetworkAdapterId, quantity, nameof(wirelessNetworkAdapterId));
+        => RemovePart(PcBuildPartType.WirelessNetworkAdapter, wirelessNetworkAdapterId, quantity,
+            nameof(wirelessNetworkAdapterId));
 
     private void SetName(string name)
     {
@@ -116,7 +123,8 @@ public class UserBuild : BaseEntity
         Guid cpuId,
         Guid? cpuCoolerId,
         Guid ramKitId,
-        Guid? graphicsCardId)
+        Guid? graphicsCardId,
+        Guid psuId)
     {
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID is required.", nameof(chassisId));
@@ -130,46 +138,50 @@ public class UserBuild : BaseEntity
         if (ramKitId == Guid.Empty)
             throw new ArgumentException("RAM Kit ID is required.", nameof(ramKitId));
 
+        if (psuId == Guid.Empty)
+            throw new ArgumentException("PSU ID is required.", nameof(psuId));
+
         ChassisId = chassisId;
         MotherboardId = motherboardId;
         CpuId = cpuId;
         RamKitId = ramKitId;
         CpuCoolerId = OptionalId(cpuCoolerId);
         GraphicsCardId = OptionalId(graphicsCardId);
+        PsuId = psuId;
     }
 
     private static Guid? OptionalId(Guid? id)
         => id is null || id == Guid.Empty ? null : id;
 
-    private static void AddPart(ICollection<UserBuildPart> parts, Guid partId, int quantity, string paramName)
+    private void AddPart(PcBuildPartType type, Guid partId, int quantity, string paramName)
     {
         if (partId == Guid.Empty)
             throw new ArgumentException("Part ID is required.", paramName);
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
 
-        var existing = parts.FirstOrDefault(p => p.PartId == partId);
+        var existing = _parts.FirstOrDefault(part => part.Type == type && part.PartId == partId);
         if (existing is null)
-            parts.Add(new UserBuildPart(partId, quantity));
+            _parts.Add(new PcBuildPart(Id, type, partId, quantity));
         else
             existing.Increase(quantity);
     }
 
-    private static void RemovePart(ICollection<UserBuildPart> parts, Guid partId, int quantity, string paramName)
+    private void RemovePart(PcBuildPartType type, Guid partId, int quantity, string paramName)
     {
         if (partId == Guid.Empty)
             throw new ArgumentException("Part ID is required.", paramName);
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);
 
-        var existing = parts.FirstOrDefault(p => p.PartId == partId)
+        var existing = _parts.FirstOrDefault(part => part.Type == type && part.PartId == partId)
             ?? throw new ArgumentException("Part does not exist.", paramName);
 
         if (quantity > existing.Quantity)
             throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity exceeds what is in the build.");
 
         if (quantity == existing.Quantity)
-            parts.Remove(existing);
+            _parts.Remove(existing);
         else
             existing.Decrease(quantity);
     }

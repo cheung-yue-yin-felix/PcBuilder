@@ -1,13 +1,12 @@
-using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Manufacturers.Queries;
 
-public class GetManufacturerByIdHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class GetManufacturerByIdHandler(IReadStore<Manufacturer, ManufacturerDto> store, ICacheService cache)
     : IRequestHandler<GetManufacturerByIdQuery, ManufacturerDto?>
 {
     public async Task<ManufacturerDto?> Handle(GetManufacturerByIdQuery request, CancellationToken cancellationToken)
@@ -17,13 +16,11 @@ public class GetManufacturerByIdHandler(IApplicationDbContext context, IMapper m
         if (cached is not null)
             return cached;
 
-        var entity = await context.Manufacturers.AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == request.Id && m.IsActive, cancellationToken);
+        var dto = await store.GetByIdAsync(request.Id, cancellationToken);
 
-        if (entity is null)
+        if (dto is null)
             return null;
-
-        var dto = mapper.Map<ManufacturerDto>(entity);
+        
         await cache.SetAsync(key, dto, MasterDataCacheKeys.DefaultTtl, cancellationToken);
         return dto;
     }

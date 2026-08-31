@@ -26,6 +26,20 @@ public class StorageAndCoolerTests
     }
 
     [Fact]
+    public void Storage_2_5_ssd_is_sata_without_rpm_or_pcie()
+    {
+        var ok = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
+            StorageFormFactor.Sata25, 1000);
+        ok.IsM2.Should().BeFalse();
+        ok.Rpm.Should().BeNull();
+        ok.PcieGeneration.Should().BeNull();
+
+        var nvme = () => new StorageDrive("Bad", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,
+            StorageFormFactor.Sata25, 1000);
+        nvme.Should().Throw<ArgumentException>().WithParameterName("storageInterface");
+    }
+
+    [Fact]
     public void Storage_ssd_requires_pcie_generation_and_exposes_m2_key()
     {
         var nvme = new StorageDrive("990 PRO", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,

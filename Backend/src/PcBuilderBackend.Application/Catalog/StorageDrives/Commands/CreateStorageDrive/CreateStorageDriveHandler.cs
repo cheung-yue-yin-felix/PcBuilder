@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.CreateStorageDrive;
 
 public class CreateStorageDriveHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateStorageDriveHandler> logger)
     : IRequestHandler<CreateStorageDriveCommand, StorageDriveDto>
@@ -28,8 +29,8 @@ public class CreateStorageDriveHandler(
             request.PcieGeneration,
             request.Rpm);
 
-        context.StorageDrives.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        storageDrives.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.StorageDrive, entity.Id);
 

@@ -2,4 +2,4 @@
 
 namespace PcBuilderBackend.Application.MasterData.Manufacturers.Commands.BulkDeleteManufacturers;
 
-public record BulkDeleteManufacturersCommand(List<Guid> ManufacturerIds): IRequest<bool>;
+public record BulkDeleteManufacturersCommand(List<Guid> Ids): IRequest<bool>;

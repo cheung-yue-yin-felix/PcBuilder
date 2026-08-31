@@ -1,13 +1,14 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.BulkDeleteWirelessNetworkAdapters;
 
 public class BulkDeleteWirelessNetworkAdaptersHandler(
-    IApplicationDbContext context,
+    IWirelessNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     ILogger<BulkDeleteWirelessNetworkAdaptersHandler> logger)
     : IRequestHandler<BulkDeleteWirelessNetworkAdaptersCommand, bool>
 {
@@ -16,10 +17,7 @@ public class BulkDeleteWirelessNetworkAdaptersHandler(
         CancellationToken cancellationToken)
     {
         var ids = request.Ids.Distinct().ToList();
-
-        var entities = await context.WirelessNetworkAdapters
-            .Where(x => ids.Contains(x.Id) && x.IsActive)
-            .ToListAsync(cancellationToken);
+        var entities = await adapters.GetByIdsAsync(ids, cancellationToken);
 
         if (entities.Count != ids.Count)
         {
@@ -30,7 +28,7 @@ public class BulkDeleteWirelessNetworkAdaptersHandler(
         foreach (var entity in entities)
             entity.Deactivate();
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkDeleted(logger, entities.Count, EntityLog.WirelessNetworkAdapter);
         return true;
     }

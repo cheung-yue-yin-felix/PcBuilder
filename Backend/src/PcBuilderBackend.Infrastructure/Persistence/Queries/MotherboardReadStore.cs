@@ -9,7 +9,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class MotherboardReadStore(IApplicationDbContext context, IMapper mapper) : IMotherboardReadStore
+public class MotherboardReadStore(PcBuilderDbContext context, IMapper mapper) : IMotherboardReadStore
 {
     public async Task<MotherboardDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {

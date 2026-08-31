@@ -1,15 +1,16 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.BulkUpdateWiredNetworkAdapters;
 
 public class BulkUpdateWiredNetworkAdaptersHandler(
-    IApplicationDbContext context,
+    IWiredNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdateWiredNetworkAdaptersHandler> logger)
     : IRequestHandler<BulkUpdateWiredNetworkAdaptersCommand, List<WiredNetworkAdapterDto>?>
@@ -22,8 +23,7 @@ public class BulkUpdateWiredNetworkAdaptersHandler(
 
         foreach (var item in request.Adapters)
         {
-            var entity = await context.WiredNetworkAdapters
-                .FirstOrDefaultAsync(x => x.Id == item.Id && x.IsActive, cancellationToken);
+            var entity = await adapters.GetByIdAsync(item.Id, cancellationToken);
 
             if (entity is null)
             {
@@ -43,7 +43,7 @@ public class BulkUpdateWiredNetworkAdaptersHandler(
             result.Add(mapper.Map<WiredNetworkAdapterDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkUpdated(logger, result.Count, EntityLog.WiredNetworkAdapter);
         return result;
     }

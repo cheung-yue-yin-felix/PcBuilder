@@ -1,6 +1,5 @@
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
@@ -11,7 +10,8 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkUpdatePsuCables;
 
 public class BulkUpdatePsuCablesHandler(
-    IApplicationDbContext context,
+    IPsuRepository psus,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkUpdatePsuCablesHandler> logger)
     : IRequestHandler<BulkUpdatePsuCablesCommand, List<PsuCableDto>?>
@@ -20,9 +20,7 @@ public class BulkUpdatePsuCablesHandler(
         BulkUpdatePsuCablesCommand request,
         CancellationToken cancellationToken)
     {
-        var psu = await context.Psus
-            .Include(x => x.Cables)
-            .FirstOrDefaultAsync(x => x.Id == request.PsuId && x.IsActive, cancellationToken);
+        var psu = await psus.GetWithChildrenAsync(request.PsuId, cancellationToken);
 
         if (psu is null)
         {
@@ -54,10 +52,10 @@ public class BulkUpdatePsuCablesHandler(
         foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains(x.Type)))
         {
             psu.RemoveCable(existing);
-            context.PsuCables.Remove(existing);
+            psus.DeleteCable(existing);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.PsuCablesUpdated(logger, psu.Id);
 

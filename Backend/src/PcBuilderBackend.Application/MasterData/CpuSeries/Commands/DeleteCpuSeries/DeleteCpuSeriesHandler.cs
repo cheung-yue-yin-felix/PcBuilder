@@ -1,19 +1,18 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Application.MasterData.CpuSeries.Commands.DeleteCpuSeries;
 
-public class DeleteCpuSeriesHandler(IApplicationDbContext context, ICacheService cache)
+public class DeleteCpuSeriesHandler(IRepository<Domain.Entities.CpuSeries> cpuSeries, IUnitOfWork unitOfWork, ICacheService cache)
     : IRequestHandler<DeleteCpuSeriesCommand, bool>
 {
-    public async Task<bool> Handle(DeleteCpuSeriesCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(DeleteCpuSeriesCommand command, CancellationToken cancellationToken)
     {
-        var cpuSeries = await context.CpuSeries.FirstOrDefaultAsync(x => x.Id == request.CpuSeriesId && x.IsActive, cancellationToken);
-        if (cpuSeries is null) return false;
-        cpuSeries.Deactivate();
-        await context.SaveChangesAsync(cancellationToken);
+        var entity = await cpuSeries.GetByIdAsync(command.CpuSeriesId, cancellationToken);
+        if (entity is null) return false;
+        entity.Deactivate();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         await cache.RemoveByPrefixAsync(MasterDataCacheKeys.CpuSeries.Prefix, cancellationToken);
         return true;
     }

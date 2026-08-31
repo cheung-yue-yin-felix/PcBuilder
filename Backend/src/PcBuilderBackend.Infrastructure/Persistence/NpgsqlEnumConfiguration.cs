@@ -36,6 +36,7 @@ internal static class NpgsqlEnumConfiguration
         options.MapEnum<RamRank>("ram_rank");
         options.MapEnum<UsbVersion>("usb_version");
         options.MapEnum<UsbType>("usb_type");
+        options.MapEnum<PcBuildPartType>("pc_build_part_type");
     }
 
     public static void ConfigurePostgresEnums(this ModelBuilder modelBuilder)
@@ -68,5 +69,6 @@ internal static class NpgsqlEnumConfiguration
         modelBuilder.HasPostgresEnum<RamRank>(name: "ram_rank");
         modelBuilder.HasPostgresEnum<UsbVersion>(name: "usb_version");
         modelBuilder.HasPostgresEnum<UsbType>(name: "usb_type");
+        modelBuilder.HasPostgresEnum<PcBuildPartType>(name: "pc_build_part_type");
     }
 }

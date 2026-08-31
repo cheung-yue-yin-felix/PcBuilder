@@ -1,9 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using Microsoft.EntityFrameworkCore;
-using PcBuilderBackend.Application.Common.Dto;
 
 namespace PcBuilderBackend.Application.Common.Extensions;
 
@@ -39,27 +35,6 @@ public static class QueryableExtensions
         Expression<Func<T, bool>> predicate)
     {
         return condition ? source.Where(predicate) : source;
-    }
-
-    public static async Task<PagedResult<T>> ToPagedResultAsync<T>(
-        this IQueryable<T> query,
-        int pageIndex,
-        int pageSize,
-        CancellationToken cancellationToken = default)
-    {
-        var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
-            .Skip(pageIndex * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<T>
-        {
-            PageIndex = pageIndex,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            Items = items
-        };
     }
 
     public static IQueryable<T> ApplySorting<T>(
@@ -127,29 +102,6 @@ public static class QueryableExtensions
         }
 
         return ordered ?? source;
-    }
-
-    public static async Task<PagedResult<TDestination>> ToPagedResultAsync<TSource, TDestination>(
-        this IQueryable<TSource> query,
-        int pageIndex,
-        int pageSize,
-        IConfigurationProvider configuration,
-        CancellationToken cancellationToken = default)
-    {
-        var totalCount = await query.CountAsync(cancellationToken);
-        var items = await query
-            .Skip(pageIndex * pageSize)
-            .Take(pageSize)
-            .ProjectTo<TDestination>(configuration)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<TDestination>
-        {
-            PageIndex = pageIndex,
-            PageSize = pageSize,
-            TotalCount = totalCount,
-            Items = items
-        };
     }
 
     private static Func<T, object?> CompileKeySelector<T>(string propertyName)

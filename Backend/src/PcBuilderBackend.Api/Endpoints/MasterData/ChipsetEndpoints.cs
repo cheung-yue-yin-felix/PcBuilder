@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.MasterData.Chipsets.Commands.BulkDeleteChipse
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.BulkUpdateChipsets;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.CreateChipset;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.DeleteChipset;
+using PcBuilderBackend.Application.MasterData.Chipsets.Commands.ImportChipsets;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.UpdateChipset;
 using PcBuilderBackend.Application.MasterData.Chipsets.Queries;
 using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
@@ -74,6 +75,13 @@ public static class ChipsetEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple Chipsets")
             .WithDescription("\n    DELETE /master-data/chipset/bulk");
+
+        subgroup.MapPost("/import", ImportChipsets)
+            .Produces<List<ChipsetDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import Chipsets from Excel")
+            .WithDescription("\n    POST /master-data/chipset/import");
     }
 
     private static async Task<Ok<List<ChipsetDto>>> GetChipsets(
@@ -148,5 +156,14 @@ public static class ChipsetEndpoints
     {
         var success = await sender.Send(command, cancellationToken);
         return success ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<ChipsetDto>>> ImportChipsets(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        return TypedResults.Ok(await sender.Send(new ImportChipsetsCommand(fileStream), cancellationToken));
     }
 }

@@ -1,13 +1,12 @@
-using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Common.Caching;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.MasterData.Sockets.Dto;
+using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Queries;
 
-public class GetSocketByIdHandler(IApplicationDbContext context, IMapper mapper, ICacheService cache)
+public class GetSocketByIdHandler(IReadStore<Socket, SocketDto> store, ICacheService cache)
     : IRequestHandler<GetSocketByIdQuery, SocketDto?>
 {
     public async Task<SocketDto?> Handle(GetSocketByIdQuery request, CancellationToken cancellationToken)
@@ -17,13 +16,11 @@ public class GetSocketByIdHandler(IApplicationDbContext context, IMapper mapper,
         if (cached is not null)
             return cached;
 
-        var socket = await context.Sockets.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == request.Id && x.IsActive, cancellationToken);
+        var dto = await store.GetByIdAsync(request.Id, cancellationToken);
 
-        if (socket is null)
+        if (dto is null)
             return null;
 
-        var dto = mapper.Map<SocketDto>(socket);
         await cache.SetAsync(key, dto, MasterDataCacheKeys.DefaultTtl, cancellationToken);
         return dto;
     }

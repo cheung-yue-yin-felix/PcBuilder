@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.CreateWiredNetworkAdapter;
 
 public class CreateWiredNetworkAdapterHandler(
-    IApplicationDbContext context,
+    IWiredNetworkAdapterRepository adapters,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<CreateWiredNetworkAdapterHandler> logger)
     : IRequestHandler<CreateWiredNetworkAdapterCommand, WiredNetworkAdapterDto>
@@ -27,8 +28,8 @@ public class CreateWiredNetworkAdapterHandler(
             request.UsbType,
             request.PcieSlotType);
 
-        context.WiredNetworkAdapters.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        adapters.Add(entity);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Created(logger, EntityLog.WiredNetworkAdapter, entity.Id);
 

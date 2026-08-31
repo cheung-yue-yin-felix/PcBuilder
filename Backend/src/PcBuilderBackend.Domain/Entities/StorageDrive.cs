@@ -54,18 +54,13 @@ public class StorageDrive : ProductEntity
     
     private void SetSpecs(StorageMedia storageMedia, StorageInterface storageInterface, StorageFormFactor factor, int capacityGb, PcieGeneration? pcieGeneration = null, int? rpm = null)
     {
-        var ssdForms = new[]
+        var m2Forms = new[]
         {
             StorageFormFactor.M22230, StorageFormFactor.M22242, StorageFormFactor.M22260, StorageFormFactor.M22280,
             StorageFormFactor.M222110
         };
 
-        var hddForms = new[]
-        {
-            StorageFormFactor.Sata25, StorageFormFactor.Sata35
-        };
-
-        if (hddForms.Contains(factor))
+        if (factor == StorageFormFactor.Sata35)
         {
             if (storageMedia != StorageMedia.Hdd)
                 throw new ArgumentException("Storage media must be HDD for the selected form factor.", nameof(storageMedia));
@@ -75,7 +70,24 @@ public class StorageDrive : ProductEntity
 
             SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
         }
-        else if (ssdForms.Contains(factor))
+        else if (factor == StorageFormFactor.Sata25)
+        {
+            switch (storageMedia)
+            {
+                case StorageMedia.Hdd:
+                    if (!rpm.HasValue)
+                        throw new ArgumentException("RPM is required for HDD.", nameof(rpm));
+
+                    SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
+                    break;
+                case StorageMedia.Ssd:
+                    SetSataSsdSpecs(storageMedia, storageInterface, factor, capacityGb);
+                    break;
+                default:
+                    throw new ArgumentException("Storage media is invalid.", nameof(storageMedia));
+            }
+        }
+        else if (m2Forms.Contains(factor))
         {
             if (storageMedia != StorageMedia.Ssd)
                 throw new ArgumentException("Storage media must be SSD for the selected form factor.", nameof(storageMedia));
@@ -111,6 +123,31 @@ public class StorageDrive : ProductEntity
         FormFactor = factor;
         CapacityGb = capacityGb;
         Rpm = rpm;
+        PcieGeneration = null;
+    }
+
+    private void SetSataSsdSpecs(
+        StorageMedia storageMedia,
+        StorageInterface storageInterface,
+        StorageFormFactor factor,
+        int capacityGb)
+    {
+        if (storageInterface != StorageInterface.Sata)
+            throw new ArgumentException("2.5\" SSD must use a SATA interface.", nameof(storageInterface));
+
+        if (!Enum.IsDefined(storageMedia))
+            throw new ArgumentException("Storage Media is invalid.");
+
+        if (!Enum.IsDefined(factor))
+            throw new ArgumentException("Storage Form Factor is invalid.");
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacityGb);
+
+        Interface = storageInterface;
+        Media = storageMedia;
+        FormFactor = factor;
+        CapacityGb = capacityGb;
+        Rpm = null;
         PcieGeneration = null;
     }
 

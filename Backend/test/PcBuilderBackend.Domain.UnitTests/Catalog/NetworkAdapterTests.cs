@@ -63,11 +63,11 @@ public class NetworkAdapterTests
     public void Graphics_card_rejects_empty_gpu_and_zero_memory()
     {
         var card = new GraphicsCard("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4,
-            240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+            false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
         card.VideoMemoryGb.Should().Be(12);
 
         var emptyGpu = () => new GraphicsCard("GPU", ManufacturerId, Guid.Empty, 12, 2, PcieGeneration.Gen4,
-            240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+            false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
         emptyGpu.Should().Throw<ArgumentException>();
     }
 

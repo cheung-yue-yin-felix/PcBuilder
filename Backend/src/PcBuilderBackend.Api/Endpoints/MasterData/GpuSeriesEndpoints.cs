@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkDeleteGpuSe
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.BulkUpdateGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.CreateGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.DeleteGpuSeries;
+using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.ImportGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.UpdateGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Queries;
@@ -66,6 +67,13 @@ public static class GpuSeriesEndpoints
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Delete multiple GPU Series");
+
+        subgroup.MapPost("/import", ImportGpuSeries)
+            .Produces<List<GpuSeriesDto>>()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .Accepts<IFormFile>("multipart/form-data")
+            .WithSummary("Import GPU Series from Excel")
+            .WithDescription("\n    POST /master-data/gpu-series/import");
     }
     
     private static async Task<Ok<List<GpuSeriesDto>>> GetGpuSeries(
@@ -142,5 +150,14 @@ public static class GpuSeriesEndpoints
     {
         var result = await sender.Send(command, cancellationToken);
         return result ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    private static async Task<Ok<List<GpuSeriesDto>>> ImportGpuSeries(
+        IFormFile file,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await using var fileStream = file.OpenReadStream();
+        return TypedResults.Ok(await sender.Send(new ImportGpuSeriesCommand(fileStream), cancellationToken));
     }
 }

@@ -10,6 +10,8 @@ internal sealed class ChassisMbFormFactorConfiguration : IEntityTypeConfiguratio
     {
         builder.ConfigureGuidBaseEntity();
 
+        builder.ToTable("ChassisMbFormFactor");
+
         builder.HasOne(mf => mf.Chassis)
             .WithMany(c => c.MbFormFactors)
             .HasForeignKey(mf => mf.ChassisId)

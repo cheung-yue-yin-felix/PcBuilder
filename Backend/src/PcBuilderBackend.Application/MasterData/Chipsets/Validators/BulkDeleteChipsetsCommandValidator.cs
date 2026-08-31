@@ -7,6 +7,6 @@ public class BulkDeleteChipsetsCommandValidator: AbstractValidator<BulkDeleteChi
 {
     public BulkDeleteChipsetsCommandValidator()
     {
-        RuleFor(x => x.ChipsetIds).NotEmpty().WithMessage("ChipsetIds list cannot be empty.");
+        RuleFor(x => x.Ids).NotEmpty().WithMessage("Ids list cannot be empty.");
     }
 }

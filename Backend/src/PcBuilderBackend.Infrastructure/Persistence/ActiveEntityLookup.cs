@@ -3,7 +3,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Infrastructure.Persistence;
 
-public sealed class ActiveEntityLookup(IApplicationDbContext db) : IActiveEntityLookup
+public sealed class ActiveEntityLookup(PcBuilderDbContext db) : IActiveEntityLookup
 {
     public Task<bool> ManufacturerExistsAsync(Guid id, CancellationToken cancellationToken) =>
         db.Manufacturers.AnyAsync(x => x.Id == id, cancellationToken);

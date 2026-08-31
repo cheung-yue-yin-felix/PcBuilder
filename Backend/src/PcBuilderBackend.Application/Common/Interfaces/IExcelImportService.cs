@@ -9,12 +9,22 @@ using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
+using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
+using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Dto;
+using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 
 namespace PcBuilderBackend.Application.Common.Interfaces;
 
 public interface IExcelImportService
 {
+    Task<List<ManufacturerImportRow>> ParseManufacturerImportAsync(Stream stream, CancellationToken cancellationToken);
+    Task<List<SocketImportRow>> ParseSocketImportAsync(Stream stream, CancellationToken cancellationToken);
+    Task<List<ChipsetImportRow>> ParseChipsetImportAsync(Stream stream, CancellationToken cancellationToken);
+    Task<List<CpuSeriesImportRow>> ParseCpuSeriesImportAsync(Stream stream, CancellationToken cancellationToken);
+    Task<List<GpuSeriesImportRow>> ParseGpuSeriesImportAsync(Stream stream, CancellationToken cancellationToken);
     Task<List<CpuImportRow>> ParseCpuImportAsync(Stream stream, CancellationToken cancellationToken);
     Task<List<GpuImportRow>> ParseGpuImportAsync(Stream stream, CancellationToken cancellationToken);
     Task<List<RamImportRow>> ParseRamImportAsync(Stream stream, CancellationToken cancellationToken);

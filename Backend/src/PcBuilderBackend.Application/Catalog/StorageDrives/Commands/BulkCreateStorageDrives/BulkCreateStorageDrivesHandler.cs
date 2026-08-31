@@ -9,7 +9,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkCreateStorageDrives;
 
 public class BulkCreateStorageDrivesHandler(
-    IApplicationDbContext context,
+    IStorageDriveRepository storageDrives,
+    IUnitOfWork unitOfWork,
     IMapper mapper,
     ILogger<BulkCreateStorageDrivesHandler> logger)
     : IRequestHandler<BulkCreateStorageDrivesCommand, List<StorageDriveDto>>
@@ -30,11 +31,11 @@ public class BulkCreateStorageDrivesHandler(
                      item.PcieGeneration,
                      item.Rpm)))
         {
-            context.StorageDrives.Add(entity);
+            storageDrives.Add(entity);
             result.Add(mapper.Map<StorageDriveDto>(entity));
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.BulkCreated(logger, result.Count, EntityLog.StorageDrive);
         return result;
     }

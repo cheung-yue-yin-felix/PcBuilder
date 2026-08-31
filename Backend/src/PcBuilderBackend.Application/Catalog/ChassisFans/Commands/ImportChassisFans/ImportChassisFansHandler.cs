@@ -10,7 +10,8 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.ImportChassisFans;
 
 public class ImportChassisFansHandler(
-    IApplicationDbContext context,
+    IChassisFanRepository chassisFans,
+    IUnitOfWork unitOfWork,
     IActiveEntityLookup lookup,
     IExcelImportService excel,
     IMapper mapper,
@@ -36,11 +37,11 @@ public class ImportChassisFansHandler(
                 row.DiameterMm,
                 row.FansCountPerPack);
 
-            context.ChassisFans.Add(entity);
+            chassisFans.Add(entity);
             result.Add(entity);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         EntityLog.Imported(logger, result.Count, EntityLog.ChassisFan);
 

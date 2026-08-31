@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Catalog.Chassis;
-using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public class ChassisRepository(IApplicationDbContext db) : IChassisRepository
+public class ChassisRepository(PcBuilderDbContext db) : IChassisRepository
 {
     public Task<Chassis?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.Chassis.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

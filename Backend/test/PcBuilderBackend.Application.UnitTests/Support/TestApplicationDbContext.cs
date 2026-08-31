@@ -1,12 +1,11 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.UnitTests.Support;
 
 public sealed class TestApplicationDbContext(DbContextOptions<TestApplicationDbContext> options)
-    : DbContext(options), IApplicationDbContext
+    : DbContext(options)
 {
     public DbSet<Manufacturer> Manufacturers { get; set; } = null!;
     public DbSet<Chipset> Chipsets { get; set; } = null!;
@@ -23,11 +22,17 @@ public sealed class TestApplicationDbContext(DbContextOptions<TestApplicationDbC
     public DbSet<ChassisFan> ChassisFans { get; set; } = null!;
     public DbSet<ChassisPcieSlot> ChassisPcieSlots { get; set; } = null!;
     public DbSet<ChassisRadiator> ChassisRadiators { get; set; } = null!;
+    public DbSet<ChassisMbFormFactor> ChassisMbFormFactors { get; set; } = null!;
+    public DbSet<ChassisPsuFormFactor> ChassisPsuFormFactors { get; set; } = null!;
     public DbSet<CpuRamCompat> CpuRamCompats { get; set; } = null!;
     public DbSet<CpuSupportChipset> CpuSupportChipsets { get; set; } = null!;
     public DbSet<CpuCooler> CpuCoolers { get; set; } = null!;
     public DbSet<CpuCoolerSocket> CpuCoolerSockets { get; set; } = null!;
     public DbSet<Motherboard> Motherboards { get; set; } = null!;
+    public DbSet<MotherboardPcie> MotherboardPcieSlots { get; set; } = null!;
+    public DbSet<MotherboardM2> MotherboardM2Slots { get; set; } = null!;
+    public DbSet<MotherboardUsb> MotherboardUsbPorts { get; set; } = null!;
+    public DbSet<MotherboardM2FormFactor> MotherboardM2FormFactors { get; set; } = null!;
     public DbSet<GraphicsCard> GraphicsCards { get; set; } = null!;
     public DbSet<Psu> Psus { get; set; } = null!;
     public DbSet<PsuCable> PsuCables { get; set; } = null!;

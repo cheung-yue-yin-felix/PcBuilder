@@ -42,7 +42,7 @@ internal sealed class CpuConfiguration : IEntityTypeConfiguration<Cpu>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(cpu => cpu.Series)
-            .WithMany(series => series.Cpu)
+            .WithMany(series => series.Cpus)
             .HasForeignKey(cpu => cpu.SeriesId)
             .OnDelete(DeleteBehavior.Restrict);
 

@@ -5,7 +5,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Repositories;
 
-public class GraphicsCardRepository(IApplicationDbContext db) : IGraphicsCardRepository
+public class GraphicsCardRepository(PcBuilderDbContext db) : IGraphicsCardRepository
 {
     public async Task<GraphicsCard?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         await db.GraphicsCards.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
