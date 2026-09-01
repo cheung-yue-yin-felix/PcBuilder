@@ -1,6 +1,6 @@
 namespace PcBuilderBackend.Application.Common.Interfaces;
 
-public interface IStorageServices
+public interface IStorageService
 {
     Task<string> UploadAsync(Stream fileStream, string fileName, string contentType);
 }

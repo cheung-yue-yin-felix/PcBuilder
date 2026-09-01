@@ -11,7 +11,7 @@ public class CpuCoolerProfile : Profile
         CreateMap<CpuCoolerSocket, CpuCoolerSocketDto>()
             .ForMember(
                 dest => dest.SocketName,
-                opt => opt.MapFrom(src => src.Socket != null ? src.Socket.Name : string.Empty));
+                opt => opt.MapFrom(src => src.Socket.Name));
 
         CreateMap<CpuCooler, CpuCoolerListItemDto>()
             .ForMember(dest => dest.ManufacturerName, opt => opt.MapFrom(src => src.Manufacturer.Name));

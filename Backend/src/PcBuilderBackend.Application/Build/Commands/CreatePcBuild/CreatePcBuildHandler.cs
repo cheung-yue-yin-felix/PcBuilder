@@ -1,0 +1,105 @@
+using AutoMapper;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using PcBuilderBackend.Application.Build.Dto;
+using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.Enums;
+
+namespace PcBuilderBackend.Application.Build.Commands.CreatePcBuild;
+
+public class CreatePcBuildHandler(
+    IPcBuildRepository pcBuilds,
+    ICompatibilityChecker compatibilityChecker,
+    ILogger<CreatePcBuildHandler> logger,
+    ICurrentUser currentUser,
+    IUnitOfWork unitOfWork,
+    IMapper mapper) : IRequestHandler<CreatePcBuildCommand, PcBuildDto?>
+{
+    public async Task<PcBuildDto?> Handle(CreatePcBuildCommand command, CancellationToken cancellationToken)
+    {
+        var compatibilityResults = await compatibilityChecker.CheckCompatibilityAsync(
+            command.ChassisId,
+            command.MotherboardId,
+            command.CpuId,
+            command.CpuCoolerId,
+            command.RamKitId,
+            command.GraphicsCardId,
+            command.PsuId,
+            command.ChassisFans,
+            command.StorageDevices,
+            command.WiredNetworkAdapters,
+            command.WirelessNetworkAdapters
+        );
+        
+        if (compatibilityResults.Any(r => r.Result.Status == PartsCompatibility.Incompatible))
+        {
+            EntityLog.CompatibilityCheckFailedOnCreation(logger);
+            return null;
+        }
+        
+        var pcBuild = new PcBuild(
+            command.Name,
+            command.Description,
+            command.ChassisId,
+            command.MotherboardId,
+            command.CpuId,
+            command.CpuCoolerId,
+            command.RamKitId,
+            command.GraphicsCardId,
+            command.PsuId
+        );
+
+        foreach (var chassisFan in command.ChassisFans)
+        {
+            pcBuild.AddChassisFan(chassisFan.PartId, chassisFan.Quantity);
+        }
+
+        foreach (var storageDevice in command.StorageDevices)
+        {
+            pcBuild.AddStorageDevice(storageDevice.PartId, storageDevice.Quantity);
+        }
+
+        foreach (var wiredNetworkAdapter in command.WiredNetworkAdapters)
+        {
+            pcBuild.AddWiredNetworkAdapter(wiredNetworkAdapter.PartId, wiredNetworkAdapter.Quantity);
+        }
+
+        foreach (var wirelessNetworkAdapter in command.WirelessNetworkAdapters)
+        {
+            pcBuild.AddWirelessNetworkAdapter(wirelessNetworkAdapter.PartId, wirelessNetworkAdapter.Quantity);
+        }
+
+        pcBuilds.Add(pcBuild);
+
+        if (!currentUser.IsInRole("Member") || !currentUser.UserId.HasValue)
+        {
+            EntityLog.Created(logger, EntityLog.PcBuild, pcBuild.Id);
+            LogPcBuildPartsCreation(pcBuild);
+            return mapper.Map<PcBuildDto>(pcBuild);
+        }    
+
+        var pcBuildUser = new PcBuildUser(pcBuild.Id, currentUser.UserId.Value, true);
+
+        pcBuilds.AddUser(pcBuildUser);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        EntityLog.Created(logger, EntityLog.PcBuild, pcBuild.Id);
+        LogPcBuildPartsCreation(pcBuild);
+        EntityLog.Created(logger, EntityLog.PcBuildUser, pcBuildUser.Id);
+
+        return mapper.Map<PcBuildDto>(pcBuild);
+    }
+
+    private void LogPcBuildPartsCreation(PcBuild pcBuild)
+    {
+        foreach (var part in pcBuild.ChassisFans
+                     .Concat(pcBuild.StorageDevices)
+                     .Concat(pcBuild.WiredNetworkAdapters)
+                     .Concat(pcBuild.WirelessNetworkAdapters))
+        {
+            EntityLog.Created(logger, EntityLog.PcBuildPart, part.Id);
+        }
+    }
+}

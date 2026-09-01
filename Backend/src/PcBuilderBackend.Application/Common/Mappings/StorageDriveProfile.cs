@@ -10,7 +10,7 @@ public class StorageDriveProfile : Profile
     public StorageDriveProfile()
     {
         CreateMap<StorageDrive, StorageDriveDto>()
-            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer != null ? s.Manufacturer.Name : string.Empty))
+            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer.Name))
             .ForMember(d => d.IsM2, o => o.MapFrom(s =>
                 s.FormFactor == StorageFormFactor.M22230
                 || s.FormFactor == StorageFormFactor.M22242

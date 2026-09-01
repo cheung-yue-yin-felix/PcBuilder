@@ -9,6 +9,6 @@ public class ChassisFanProfile : Profile
     public ChassisFanProfile()
     {
         CreateMap<ChassisFan, ChassisFanDto>()
-            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer != null ? s.Manufacturer.Name : string.Empty));
+            .ForMember(d => d.ManufacturerName, o => o.MapFrom(s => s.Manufacturer.Name));
     }
 }

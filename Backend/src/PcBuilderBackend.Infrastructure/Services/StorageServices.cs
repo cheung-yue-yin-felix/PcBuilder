@@ -4,12 +4,12 @@ using PcBuilderBackend.Application.Common.Interfaces;
 
 namespace PcBuilderBackend.Infrastructure.Services;
 
-public class StorageServices : IStorageServices
+public class StorageService : IStorageService
 {
     private readonly string _bucketName;
     private readonly IAmazonS3 _s3Client;
 
-    public StorageServices(IConfiguration configuration)
+    public StorageService(IConfiguration configuration)
     {
         _bucketName = configuration["S3:BucketName"] ?? "";
         var accessKey = configuration["S3:AccessKey"] ?? "";

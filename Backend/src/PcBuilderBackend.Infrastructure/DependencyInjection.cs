@@ -12,6 +12,7 @@ using PcBuilderBackend.Application.Catalog.Psus;
 using PcBuilderBackend.Application.Catalog.StorageDrives;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters;
+using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Options;
 using PcBuilderBackend.Infrastructure.Caching;
@@ -75,9 +76,13 @@ public static class DependencyInjection
         services.AddScoped<IWirelessNetworkAdapterRepository, WirelessNetworkAdapterRepository>();
 
         services.AddScoped<ICatalogRepository, CatalogRepository>();
+        services.AddScoped<IPcBuildRepository, PcBuildRepository>();
+        services.AddScoped<IPcBuildReadStore, PcBuildReadStore>();
 
         services.AddScoped<IExcelImportService, ClosedXmlExcelImportService>();
 
+        services.AddScoped<IStorageService, StorageService>();
+        
         AddIdentity(services);
         AddJwt(services, configuration);
         AddRedisCache(services, configuration);

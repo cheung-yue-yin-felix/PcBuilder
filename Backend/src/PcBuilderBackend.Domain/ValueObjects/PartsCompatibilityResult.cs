@@ -6,16 +6,10 @@ namespace PcBuilderBackend.Domain.ValueObjects;
 /// Compatibility outcome. Values (rated/executing) exist only for
 /// <see cref="PartsCompatibility.CompatibleReduced"/>; all other statuses are valueless.
 /// </summary>
-public abstract class PartsCompatibilityResult
+public abstract class PartsCompatibilityResult(PartsCompatibility status, CompatibilityReason reason)
 {
-    protected PartsCompatibilityResult(PartsCompatibility status, CompatibilityReason reason)
-    {
-        Status = status;
-        Reason = reason;
-    }
-
-    public PartsCompatibility Status { get; }
-    public CompatibilityReason Reason { get; }
+    public PartsCompatibility Status { get; } = status;
+    public CompatibilityReason Reason { get; } = reason;
 
     public static PartsCompatibilityResult Compatible()
     {

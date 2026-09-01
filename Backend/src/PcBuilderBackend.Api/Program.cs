@@ -1,5 +1,6 @@
 using InfisicalConfiguration;
 using PcBuilderBackend.Api.Endpoints.Auth;
+using PcBuilderBackend.Api.Endpoints.Build;
 using PcBuilderBackend.Api.Endpoints.Catalog;
 using PcBuilderBackend.Api.Endpoints.MasterData;
 using PcBuilderBackend.Api.ExceptionHandling;
@@ -64,6 +65,7 @@ app.UseAuthorization();
 app.MapCatalogEndpoints();
 app.MapMasterDataEndpoints();
 app.MapAuthEndpoints();
+app.MapPcBuildEndpoints();
 app.MapSpaFallback();
 
 await app.SeedIdentityAsync();

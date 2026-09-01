@@ -1,0 +1,22 @@
+using PcBuilderBackend.Application.Build.Dto;
+using MediatR;
+
+namespace PcBuilderBackend.Application.Build.Commands.UpdatePcBuild;
+
+public record UpdatePcBuildCommand(
+    Guid Id,
+    string Name,
+    string? Description,
+    bool IsPublic,
+    Guid ChassisId,
+    Guid MotherboardId,
+    Guid CpuId,
+    Guid? CpuCoolerId,
+    Guid RamKitId,
+    Guid? GraphicsCardId,
+    Guid PsuId,
+    List<PcBuildPartDto> ChassisFans,
+    List<PcBuildPartDto> StorageDevices,
+    List<PcBuildPartDto> WiredNetworkAdapters,
+    List<PcBuildPartDto> WirelessNetworkAdapters
+) : IRequest<PcBuildDto?>;

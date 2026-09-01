@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Common.Behaviors;
 
 namespace PcBuilderBackend.Application;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+        services.AddScoped<ICompatibilityChecker, CompatibilityChecker>();
 
         // Register MediatR handlers and pipeline behaviors from this assembly
         services.AddMediatR(cfg =>

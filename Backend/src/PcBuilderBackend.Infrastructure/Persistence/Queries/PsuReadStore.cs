@@ -131,7 +131,7 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
         if (graphicsCard is not null)
         {
             psus = psus.Where(x =>
-                x.CheckGraphisCardCompatibility(graphicsCard).Status != PartsCompatibility.Incompatible);
+                x.CheckGraphicsCardCompatibility(graphicsCard).Status != PartsCompatibility.Incompatible);
         }
 
         if (cpu is not null)

@@ -23,5 +23,7 @@ public enum CompatibilityReason
     SlotDoesNotSupportSata,
     InsufficientSataPorts,
     NoMatchingUsbPort,
-    UsbVersionReduced
+    UsbVersionReduced,
+    PartSizeExceedsLimits,
+    CpuCoolerRequired
 }

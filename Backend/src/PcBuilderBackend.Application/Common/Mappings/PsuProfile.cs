@@ -13,7 +13,7 @@ public class PsuProfile : Profile
         CreateMap<Psu, PsuListItemDto>()
             .ForMember(
                 d => d.ManufacturerName,
-                o => o.MapFrom(s => s.Manufacturer == null ? string.Empty : s.Manufacturer.Name));
+                o => o.MapFrom(s => s.Manufacturer.Name));
 
         CreateMap<Psu, PsuDto>()
             .IncludeBase<Psu, PsuListItemDto>()

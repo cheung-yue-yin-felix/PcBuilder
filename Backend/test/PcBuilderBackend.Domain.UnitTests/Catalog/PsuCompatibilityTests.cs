@@ -90,12 +90,12 @@ public class PsuCompatibilityTests
         var psu = CreatePsu();
         var gpu = CreateGpu(200, connector, powerConnectorCount: 2);
 
-        psu.CheckGraphisCardCompatibility(gpu).Status.Should().Be(PartsCompatibility.Incompatible);
-        psu.CheckGraphisCardCompatibility(gpu).Reason.Should().Be(CompatibilityReason.InsufficientPciePowerCables);
+        psu.CheckGraphicsCardCompatibility(gpu).Status.Should().Be(PartsCompatibility.Incompatible);
+        psu.CheckGraphicsCardCompatibility(gpu).Reason.Should().Be(CompatibilityReason.InsufficientPciePowerCables);
 
         psu.AddCable(new PsuCable(psu.Id, connector, 2, 1));
 
-        psu.CheckGraphisCardCompatibility(gpu).Status.Should().Be(PartsCompatibility.Compatible);
+        psu.CheckGraphicsCardCompatibility(gpu).Status.Should().Be(PartsCompatibility.Compatible);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class PsuCompatibilityTests
         var psu = CreatePsu();
         var gpu = CreateGpu(200, PsuCableType.Sata, 1);
 
-        var act = () => psu.CheckGraphisCardCompatibility(gpu);
+        var act = () => psu.CheckGraphicsCardCompatibility(gpu);
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }

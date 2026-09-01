@@ -80,7 +80,7 @@ public class Psu : ProductEntity
         return cpuCables < motherboard.EpsConnectors ? PartsCompatibilityResult.Incompatible(CompatibilityReason.InsufficientCpuPowerCables) : PartsCompatibilityResult.Compatible();
     }
 
-    public PartsCompatibilityResult CheckGraphisCardCompatibility(GraphicsCard gpu)
+    public PartsCompatibilityResult CheckGraphicsCardCompatibility(GraphicsCard gpu)
     {
         var pcie8PinCables = _cables
             .Where(x => x.Type == PsuCableType.Pcie6Plus2Pin)
