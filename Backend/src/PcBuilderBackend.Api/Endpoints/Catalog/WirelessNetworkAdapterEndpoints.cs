@@ -87,6 +87,7 @@ public static class WirelessNetworkAdapterEndpoints
             .Produces<List<WirelessNetworkAdapterDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import wireless network adapters from Excel")
             .WithDescription("\n    POST /catalog/wireless-network-adapter/import");
     }

@@ -80,6 +80,7 @@ public static class ChipsetEndpoints
             .Produces<List<ChipsetDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import Chipsets from Excel")
             .WithDescription("\n    POST /master-data/chipset/import");
     }

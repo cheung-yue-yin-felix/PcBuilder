@@ -121,6 +121,39 @@ public class ClosedXmlExcelImportServiceCatalogTests
     }
 
     [Fact]
+    public async Task Parse_skips_empty_cpu_and_child_rows()
+    {
+        await using var stream = Workbook(wb =>
+        {
+            var cpus = wb.Worksheets.Add("CPUs");
+            Write(cpus, 1, ["Name", "ManufacturerId", "SocketId", "SeriesId", "MaxMemoryGb", "IGP", "Cooler", "TDP", "Watts"]);
+            Write(cpus, 2, ["7800X3D", _id.ToString(), _id.ToString(), _id.ToString(), 128, true, false, 120, 120]);
+            Write(cpus, 3, ["", "", "", "", "", "", "", "", ""]);
+            Write(cpus, 4, ["9950X", _id.ToString(), _id.ToString(), _id.ToString(), 192, true, false, 170, 170]);
+
+            var ram = wb.Worksheets.Add("CpuRamCompats");
+            Write(ram, 1, ["Parent", "Ddr", "Modules", "Rank", "Speed"]);
+            Write(ram, 2, [2, "Ddr5", 2, "DualRank", 6000]);
+            Write(ram, 3, ["", "", "", "", ""]);
+            Write(ram, 4, [4, "Ddr5", 2, "DualRank", 5600]);
+
+            var chip = wb.Worksheets.Add("CpuSupportChipsets");
+            Write(chip, 1, ["Parent", "ChipsetId", "Bios"]);
+            Write(chip, 2, ["", "", ""]);
+            Write(chip, 3, [2, _id.ToString(), false]);
+        });
+
+        var rows = await _sut.ParseCpuImportAsync(stream, CancellationToken.None);
+        rows.Should().HaveCount(2);
+        rows[0].Name.Should().Be("7800X3D");
+        rows[0].RamCompats.Should().ContainSingle();
+        rows[0].SupportChipsets.Should().ContainSingle();
+        rows[1].Name.Should().Be("9950X");
+        rows[1].RamCompats.Should().ContainSingle(c => c.MaxSpeedMts == 5600);
+        rows[1].SupportChipsets.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Missing_required_sheet_throws()
     {
         await using var stream = Workbook(wb => wb.Worksheets.Add("Other"));

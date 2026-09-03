@@ -98,6 +98,7 @@ public static class CpuEndpoints
             .Produces<List<CpuDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import CPUs from Excel")
             .WithDescription("\n    POST /catalog/cpu/import");
 

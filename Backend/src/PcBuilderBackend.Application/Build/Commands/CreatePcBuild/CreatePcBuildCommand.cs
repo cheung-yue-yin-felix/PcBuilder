@@ -1,5 +1,3 @@
-
-
 using MediatR;
 using PcBuilderBackend.Application.Build.Dto;
 
@@ -18,5 +16,4 @@ public record CreatePcBuildCommand(
     List<PcBuildPartDto> ChassisFans,
     List<PcBuildPartDto> StorageDevices,
     List<PcBuildPartDto> WiredNetworkAdapters,
-    List<PcBuildPartDto> WirelessNetworkAdapters
-): IRequest<PcBuildDto?>;
+    List<PcBuildPartDto> WirelessNetworkAdapters) : IRequest<PcBuildDto>;

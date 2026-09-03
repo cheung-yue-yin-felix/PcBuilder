@@ -72,6 +72,7 @@ public static class GpuSeriesEndpoints
             .Produces<List<GpuSeriesDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import GPU Series from Excel")
             .WithDescription("\n    POST /master-data/gpu-series/import");
     }

@@ -4,7 +4,6 @@ using PcBuilderBackend.Application.Catalog.Memories;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.Common.Extensions;
-using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 

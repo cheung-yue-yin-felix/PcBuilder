@@ -1,5 +1,4 @@
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.Catalog.Psus;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;

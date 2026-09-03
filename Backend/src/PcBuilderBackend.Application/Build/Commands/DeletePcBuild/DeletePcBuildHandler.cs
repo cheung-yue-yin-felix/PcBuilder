@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 
@@ -21,30 +22,18 @@ public class DeletePcBuildHandler(
             return false;
         }
 
-        if (pcBuild.User is null || !currentUser.UserId.HasValue || pcBuild.User.UserId != currentUser.UserId.Value)
+        if (pcBuild.User is null || currentUser.UserId is not { } userId || pcBuild.User.UserId != userId)
         {
             EntityLog.NotAuthorized(logger, EntityLog.PcBuild, command.Id);
-            return false;
+            throw new UnauthorizedAccessException();
         }
 
         pcBuild.Deactivate();
+        pcBuild.User.Deactivate();
 
-        var deleteUserLog = false;
-        var userId = Guid.Empty;
-
-        if (pcBuild.User is not null)
-        {
-            pcBuild.User.Deactivate();
-            deleteUserLog = true;
-            userId = pcBuild.User.Id;
-        }
-    
         await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.Deleted(logger, EntityLog.PcBuild, pcBuild.Id);
-
-        if (deleteUserLog)
-            EntityLog.Deleted(logger, EntityLog.PcBuildUser, userId);
-
+        EntityLog.Deleted(logger, EntityLog.PcBuildUser, pcBuild.User.Id);
         return true;
     }
 }

@@ -1,3 +1,4 @@
+using PcBuilderBackend.Domain.Enums;
 using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Build;

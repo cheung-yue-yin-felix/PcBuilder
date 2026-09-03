@@ -86,6 +86,7 @@ public static class MemoryEndpoints
         
         subgroup.MapPost("/import", ImportMemories)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .Produces<List<RamDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Import RAMs from Excel")

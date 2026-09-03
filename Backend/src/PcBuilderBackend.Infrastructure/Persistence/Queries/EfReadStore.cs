@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
@@ -17,10 +18,17 @@ public sealed class EfReadStore<TEntity, TDto>(PcBuilderDbContext db, IMapper ma
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync(cancellationToken);
 
-    public Task<List<TDto>> ListAsync(CancellationToken cancellationToken) =>
-        db.Set<TEntity>()
+    public Task<List<TDto>> ListAsync(CancellationToken cancellationToken)
+    {
+        var parameter = Expression.Parameter(typeof(TEntity), "x");
+        var keySelector = Expression.Lambda<Func<TEntity, string>>(
+            Expression.Property(parameter, "Name"),
+            parameter);
+
+        return db.Set<TEntity>()
             .AsNoTracking()
-            .OrderBy(x => EF.Property<string>(x, "Name"))
+            .OrderBy(keySelector)
             .ProjectTo<TDto>(mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken);
+    }
 }

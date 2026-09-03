@@ -72,6 +72,7 @@ public static class SocketEndpoints
             .Produces<List<SocketDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import Sockets from Excel")
             .WithDescription("\n    POST /master-data/socket/import");
     }

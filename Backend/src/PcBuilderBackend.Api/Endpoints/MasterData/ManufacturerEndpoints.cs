@@ -80,6 +80,7 @@ public static class ManufacturerEndpoints
             .Produces<List<ManufacturerDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import Manufacturers from Excel")
             .WithDescription("\n    POST /master-data/manufacturer/import");
     }

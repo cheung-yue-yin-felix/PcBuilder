@@ -5,7 +5,6 @@ using PcBuilderBackend.Application.Catalog.GraphicsCards;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.Common.Extensions;
-using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 

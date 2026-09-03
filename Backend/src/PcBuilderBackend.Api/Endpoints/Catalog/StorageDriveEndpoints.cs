@@ -88,6 +88,7 @@ public static class StorageDriveEndpoints
             .Produces<List<StorageDriveDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import storage drives from Excel")
             .WithDescription("\n    POST /catalog/storage-drive/import");
     }

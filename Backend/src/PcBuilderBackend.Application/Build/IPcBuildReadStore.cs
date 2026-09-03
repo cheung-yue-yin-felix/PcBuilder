@@ -5,6 +5,7 @@ namespace PcBuilderBackend.Application.Build;
 
 public interface IPcBuildReadStore
 {
-    Task<PcBuildDto?> GetByIdAsync(Guid id);
-    Task<PagedResult<PcBuildListItemDto>> ListAsync(PagedRequest request, CancellationToken cancellationToken);
+    Task<PcBuildDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<PagedResult<PcBuildListItemDto>> ListPublicAsync(PagedRequest request, CancellationToken cancellationToken);
+    Task<PagedResult<PcBuildListItemDto>> ListByUserAsync(PagedRequest request, CancellationToken cancellationToken);
 }

@@ -88,6 +88,7 @@ public static class GraphicsCardEndpoints
             .Produces<List<GraphicsCardDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import graphics cards from Excel")
             .WithDescription("\n    POST /catalog/graphics-card/import");
     }

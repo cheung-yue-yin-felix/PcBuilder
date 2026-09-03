@@ -12,20 +12,18 @@ public class PcBuildRepository(PcBuilderDbContext context) : IPcBuildRepository
     public async Task<PcBuild?> GetWithChildrenAsync(Guid id) =>
         await context.PcBuilds
             .Include(p => p.User)
-            .Include(p => p.ChassisFans)
-            .Include(p => p.StorageDevices)
-            .Include(p => p.WiredNetworkAdapters)
-            .Include(p => p.WirelessNetworkAdapters)
+            .Include(p => p.Parts)
             .FirstOrDefaultAsync(p => p.Id == id);
 
     public async Task<List<PcBuild>> GetByIdsAsync(List<Guid> ids) =>
-        await context.PcBuilds.Where(p => ids.Contains(p.Id)).ToListAsync();
+        await context.PcBuilds
+            .Include(p => p.User)
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
 
     public void Add(PcBuild pcBuild) => context.PcBuilds.Add(pcBuild);
 
     public void AddUser(PcBuildUser pcBuildUser) => context.PcBuildUsers.Add(pcBuildUser);
-
-    public void DeleteUser(PcBuildUser pcBuildUser) => context.PcBuildUsers.Remove(pcBuildUser);
 
     public void DeletePart(PcBuildPart pcBuildPart) => context.PcBuildParts.Remove(pcBuildPart);
 }

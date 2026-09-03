@@ -76,6 +76,33 @@ public class ClosedXmlExcelImportServicePsuTests
     }
 
     [Fact]
+    public async Task Parse_skips_empty_rows_in_parent_and_child_sheets()
+    {
+        await using var stream = CreateWorkbook(
+            psuRows:
+            [
+                ["RM850x", _manufacturerId.ToString(), 850, "FullModular", "Atx", 160, 150, 86],
+                ["", "", "", "", "", "", "", ""],
+                ["SF750", _manufacturerId.ToString(), 750, "FullModular", "Sfx", 100, 125, 63.5]
+            ],
+            cableRows:
+            [
+                [2, "Motherboard24Pin", 1, 1],
+                ["", "", "", ""],
+                [2, "Sata", 4, 4],
+                [4, "Cpu4Plus4Pin", 1, 1]
+            ]);
+
+        var rows = await _sut.ParsePsuImportAsync(stream, CancellationToken.None);
+
+        rows.Should().HaveCount(2);
+        rows[0].Name.Should().Be("RM850x");
+        rows[0].Cables.Should().HaveCount(2);
+        rows[1].Name.Should().Be("SF750");
+        rows[1].Cables.Should().ContainSingle(c => c.Type == PsuCableType.Cpu4Plus4Pin);
+    }
+
+    [Fact]
     public async Task Parse_returns_empty_list_for_header_only_sheet()
     {
         await using var stream = CreateWorkbook(psuRows: [], cableRows: null);

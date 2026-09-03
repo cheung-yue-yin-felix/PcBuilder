@@ -31,7 +31,7 @@ public class ImportChipsetsHandler(
 
         var result = new List<Chipset>();
 
-        foreach (var row in rows)
+        foreach (var row in rows.Where(r => !string.IsNullOrWhiteSpace(r.Name) && r.ManufacturerId != Guid.Empty && r.SocketId != Guid.Empty))
         {
             var entity = new Chipset(row.Name, row.ManufacturerId, row.SocketId);
             chipsets.Add(entity);

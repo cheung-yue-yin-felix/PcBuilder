@@ -67,6 +67,7 @@ public static class MotherboardEndpoints
             .Produces<List<MotherboardDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import Motherboards from Excel")
             .WithDescription("\n    POST /catalog/motherboard/import");
 

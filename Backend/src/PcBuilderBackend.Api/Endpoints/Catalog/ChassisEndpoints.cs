@@ -92,6 +92,7 @@ public static class ChassisEndpoints
             .Produces<List<ChassisDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import Chassis from Excel")
             .WithDescription("\n    POST /catalog/chassis/import");
 

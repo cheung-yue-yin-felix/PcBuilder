@@ -5,7 +5,6 @@ using PcBuilderBackend.Application.Catalog.CpuCoolers;
 using PcBuilderBackend.Application.Catalog.CpuCoolers.Dto;
 using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.Common.Extensions;
-using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 

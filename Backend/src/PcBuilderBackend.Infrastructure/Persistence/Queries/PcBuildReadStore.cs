@@ -5,27 +5,48 @@ using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Build.Dto;
 using PcBuilderBackend.Application.Common.Dto;
 using PcBuilderBackend.Application.Common.Extensions;
+using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
-public class PcBuildReadStore(PcBuilderDbContext context, IMapper mapper) : IPcBuildReadStore
+public class PcBuildReadStore(PcBuilderDbContext context, ICurrentUser user, IMapper mapper) : IPcBuildReadStore
 {
-    public Task<PcBuildDto?> GetByIdAsync(Guid id) =>
+    public Task<PcBuildDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         context.PcBuilds
-            .Where(p => p.Id == id)
+            .AsNoTracking()
+            .Where(p => p.Id == id && p.IsActive)
             .ProjectTo<PcBuildDto>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync();
-    
-    public Task<PagedResult<PcBuildListItemDto>> ListAsync(
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public Task<PagedResult<PcBuildListItemDto>> ListPublicAsync(
         PagedRequest request,
         CancellationToken cancellationToken) =>
         context.PcBuilds
             .AsNoTracking()
+            .Where(p => p.IsActive && p.User != null && p.User.IsPublic)
             .ApplySorting(request.SortFields, request.SortDirection)
             .ToPagedResultAsync<PcBuild, PcBuildListItemDto>(
                 request.PageIndex,
                 request.PageSize,
                 mapper.ConfigurationProvider,
                 cancellationToken);
+
+    public Task<PagedResult<PcBuildListItemDto>> ListByUserAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (user.UserId is not { } userId)
+            return Task.FromResult(PagedResult<PcBuildListItemDto>.Empty(request));
+
+        return context.PcBuilds
+            .AsNoTracking()
+            .Where(p => p.IsActive && p.User != null && p.User.UserId == userId)
+            .ApplySorting(request.SortFields, request.SortDirection)
+            .ToPagedResultAsync<PcBuild, PcBuildListItemDto>(
+                request.PageIndex,
+                request.PageSize,
+                mapper.ConfigurationProvider,
+                cancellationToken);
+    }
 }

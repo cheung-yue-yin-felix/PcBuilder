@@ -272,8 +272,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -296,8 +295,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuRamCompactImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -313,8 +311,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuSupportChipsetImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -330,8 +327,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ManufacturerImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -344,8 +340,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new SocketImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -361,8 +356,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChipsetImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -379,8 +373,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuSeriesImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -397,8 +390,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new GpuSeriesImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -414,8 +406,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new GpuImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -432,8 +423,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new RamImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -458,8 +448,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new MotherboardImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -490,8 +479,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new MotherboardPcieImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -507,8 +495,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new MotherboardM2ImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -527,8 +514,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new MotherboardUsbImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -556,8 +542,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -581,8 +566,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisDriveBayImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -596,8 +580,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisFanMountImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -612,8 +595,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisFanMountOptionImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -627,8 +609,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisPcieSlotImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -643,8 +624,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisRadiatorImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -659,8 +639,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisMbFormFactorImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -673,8 +652,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisPsuFormFactorImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -687,8 +665,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuCoolerImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -709,8 +686,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new CpuCoolerSocketImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -725,8 +701,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new GraphicsCardImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -752,8 +727,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new ChassisFanImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -771,8 +745,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new PsuImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -794,8 +767,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new PsuCableImportRow
                 {
                     ParentRowNumber = (int)row.Cell(1).GetDouble(),
@@ -810,8 +782,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new StorageDriveImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -833,8 +804,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new WiredNetworkAdapterImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -855,8 +825,7 @@ public class ClosedXmlExcelImportService : IExcelImportService
     {
         return
         [
-            .. sheet.RowsUsed()
-                .Skip(1)
+            .. UsedDataRows(sheet)
                 .Select(row => new WirelessNetworkAdapterImportRow
                 {
                     RowNumber = row.RowNumber(),
@@ -877,6 +846,19 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     UsbType = ParseOptionalEnum<UsbType>(row.Cell(13))
                 })
         ];
+    }
+
+    private static IEnumerable<IXLRow> UsedDataRows(IXLWorksheet sheet)
+    {
+        return sheet.RowsUsed(XLCellsUsedOptions.Contents)
+            .Skip(1)
+            .Where(row => !IsEmptyRow(row));
+    }
+
+    private static bool IsEmptyRow(IXLRow row)
+    {
+        return row.CellsUsed(XLCellsUsedOptions.Contents)
+            .All(cell => string.IsNullOrWhiteSpace(cell.GetString()));
     }
 
     private static decimal? ParseOptionalDecimal(IXLCell cell)

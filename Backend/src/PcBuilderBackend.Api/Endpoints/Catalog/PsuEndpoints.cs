@@ -88,6 +88,7 @@ public static class PsuEndpoints
             .Produces<List<PsuDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import power supplies from Excel")
             .WithDescription("\n    POST /catalog/psu/import");
 

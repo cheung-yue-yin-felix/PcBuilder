@@ -87,6 +87,7 @@ public static class ChassisFanEndpoints
             .Produces<List<ChassisFanDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import chassis fans from Excel")
             .WithDescription("\n    POST /catalog/chassis-fan/import");
     }

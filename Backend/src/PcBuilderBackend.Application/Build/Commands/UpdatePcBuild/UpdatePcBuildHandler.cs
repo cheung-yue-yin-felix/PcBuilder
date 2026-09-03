@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Build.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
@@ -9,9 +10,9 @@ using PcBuilderBackend.Domain.Enums;
 namespace PcBuilderBackend.Application.Build.Commands.UpdatePcBuild;
 
 public class UpdatePcBuildHandler(
-    IPcBuildRepository pcBuilds, 
-    IUnitOfWork unitOfWork, 
-    ICompatibilityChecker checker, 
+    IPcBuildRepository pcBuilds,
+    IUnitOfWork unitOfWork,
+    ICompatibilityChecker checker,
     ILogger<UpdatePcBuildHandler> logger,
     ICurrentUser currentUser,
     IMapper mapper) : IRequestHandler<UpdatePcBuildCommand, PcBuildDto?>
@@ -26,10 +27,10 @@ public class UpdatePcBuildHandler(
             return null;
         }
 
-        if (pcBuild.User is null || !currentUser.UserId.HasValue || pcBuild.User.UserId != currentUser.UserId.Value)
+        if (pcBuild.User is null || currentUser.UserId is not { } userId || pcBuild.User.UserId != userId)
         {
             EntityLog.NotAuthorized(logger, EntityLog.PcBuild, command.Id);
-            return null;
+            throw new UnauthorizedAccessException();
         }
 
         var compatibilityResults = await checker.CheckCompatibilityAsync(
@@ -43,13 +44,12 @@ public class UpdatePcBuildHandler(
             command.ChassisFans,
             command.StorageDevices,
             command.WiredNetworkAdapters,
-            command.WirelessNetworkAdapters
-        );
+            command.WirelessNetworkAdapters);
 
         if (compatibilityResults.Any(r => r.Result.Status == PartsCompatibility.Incompatible))
         {
             EntityLog.CompatibilityCheckFailed(logger, pcBuild.Id);
-            return null;
+            throw new ArgumentException("Build is incompatible.");
         }
 
         pcBuild.Update(
@@ -61,52 +61,44 @@ public class UpdatePcBuildHandler(
             command.CpuCoolerId,
             command.RamKitId,
             command.GraphicsCardId,
-            command.PsuId
-        );
+            command.PsuId);
 
-        foreach (var chassisFan in pcBuild.ChassisFans)
+        pcBuild.User.Update(pcBuild.Id, userId, command.IsPublic);
+
+        foreach (var part in pcBuild.Parts.ToList())
         {
-            pcBuild.RemoveChassisFan(chassisFan.PartId);
-            pcBuilds.DeletePart(chassisFan);
+            switch (part.Type)
+            {
+                case PcBuildPartType.ChassisFan:
+                    pcBuild.RemoveChassisFan(part.PartId, part.Quantity);
+                    break;
+                case PcBuildPartType.StorageDrive:
+                    pcBuild.RemoveStorageDevice(part.PartId, part.Quantity);
+                    break;
+                case PcBuildPartType.WiredNetworkAdapter:
+                    pcBuild.RemoveWiredNetworkAdapter(part.PartId, part.Quantity);
+                    break;
+                case PcBuildPartType.WirelessNetworkAdapter:
+                    pcBuild.RemoveWirelessNetworkAdapter(part.PartId, part.Quantity);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(part.Type), part.Type, null);
+            }
+
+            pcBuilds.DeletePart(part);
         }
 
-        foreach (var chassisFan in command.ChassisFans)
-        {
+        foreach (var chassisFan in command.ChassisFans ?? [])
             pcBuild.AddChassisFan(chassisFan.PartId, chassisFan.Quantity);
-        }
 
-        foreach (var storageDevice in pcBuild.StorageDevices)
-        {
-            pcBuild.RemoveStorageDevice(storageDevice.PartId, storageDevice.Quantity);
-            pcBuilds.DeletePart(storageDevice);
-        }
-
-        foreach (var storageDevice in command.StorageDevices)
-        {
+        foreach (var storageDevice in command.StorageDevices ?? [])
             pcBuild.AddStorageDevice(storageDevice.PartId, storageDevice.Quantity);
-        }
 
-        foreach (var wiredNetworkAdapter in pcBuild.WiredNetworkAdapters)
-        {
-            pcBuild.RemoveWiredNetworkAdapter(wiredNetworkAdapter.PartId, wiredNetworkAdapter.Quantity);
-            pcBuilds.DeletePart(wiredNetworkAdapter);
-        }
-
-        foreach (var wiredNetworkAdapter in command.WiredNetworkAdapters)
-        {
+        foreach (var wiredNetworkAdapter in command.WiredNetworkAdapters ?? [])
             pcBuild.AddWiredNetworkAdapter(wiredNetworkAdapter.PartId, wiredNetworkAdapter.Quantity);
-        }
 
-        foreach (var wirelessNetworkAdapter in pcBuild.WirelessNetworkAdapters)
-        {
-            pcBuild.RemoveWirelessNetworkAdapter(wirelessNetworkAdapter.PartId, wirelessNetworkAdapter.Quantity);
-            pcBuilds.DeletePart(wirelessNetworkAdapter);
-        }
-
-        foreach (var wirelessNetworkAdapter in command.WirelessNetworkAdapters)
-        {
+        foreach (var wirelessNetworkAdapter in command.WirelessNetworkAdapters ?? [])
             pcBuild.AddWirelessNetworkAdapter(wirelessNetworkAdapter.PartId, wirelessNetworkAdapter.Quantity);
-        }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         EntityLog.Updated(logger, EntityLog.PcBuild, pcBuild.Id);

@@ -91,6 +91,7 @@ public static class CpuCoolerEndpoints
             .Produces<List<CpuCoolerDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import CPU coolers from Excel")
             .WithDescription("\n    POST /catalog/cpu-cooler/import");
 

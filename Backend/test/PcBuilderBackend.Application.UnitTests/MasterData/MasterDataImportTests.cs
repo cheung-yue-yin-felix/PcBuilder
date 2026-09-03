@@ -7,6 +7,8 @@ using PcBuilderBackend.Application.MasterData.Chipsets.Commands.ImportChipsets;
 using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.ImportCpuSeries;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Gpus.Commands.ImportGpu;
+using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.ImportGpuSeries;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.ImportManufacturers;
@@ -138,6 +140,30 @@ public class MasterDataImportTests : IDisposable
                 NullLogger<ImportGpuSeriesHandler>.Instance)
             .Handle(new ImportGpuSeriesCommand(Stream.Null), CancellationToken.None))
             .Should().ContainSingle(x => x.Name == "RTX 50");
+
+        _excel.ParseGpuImportAsync(Arg.Any<Stream>(), Arg.Any<CancellationToken>())
+            .Returns(
+            [
+                new GpuImportRow
+                {
+                    Name = "RTX 5070",
+                    ManufacturerId = _fx.Manufacturer.Id,
+                    SeriesId = _fx.GpuSeries.Id
+                }
+            ]);
+        var importedGpus = await new ImportGpusHandler(
+                new TestRepository<Gpu>(_fx.Context),
+                _fx.UnitOfWork,
+                _fx.Lookup,
+                _excel,
+                _fx.Mapper,
+                _fx.Cache,
+                NullLogger<ImportGpusHandler>.Instance)
+            .Handle(new ImportGpusCommand(Stream.Null), CancellationToken.None);
+        importedGpus.Should().ContainSingle(x =>
+            x.Name == "RTX 5070"
+            && x.GpuSeriesId == _fx.GpuSeries.Id
+            && x.ManufacturerId == _fx.Manufacturer.Id);
     }
 
     [Fact]

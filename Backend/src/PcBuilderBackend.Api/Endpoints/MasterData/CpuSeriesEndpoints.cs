@@ -72,6 +72,7 @@ public static class CpuSeriesEndpoints
             .Produces<List<CpuSeriesDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import CPU Series from Excel")
             .WithDescription("\n    POST /master-data/cpu-series/import");
     }

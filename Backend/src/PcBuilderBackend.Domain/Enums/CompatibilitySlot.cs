@@ -1,4 +1,4 @@
-namespace PcBuilderBackend.Application.Build;
+namespace PcBuilderBackend.Domain.Enums;
 
 public enum CompatibilitySlot
 {

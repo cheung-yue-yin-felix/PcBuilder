@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.CreateChipset;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.CreateCpuSeries;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.CreateGpu;
+using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Validators;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.CreateGpuSeries;
 using PcBuilderBackend.Application.MasterData.Chipsets.Validators;
@@ -140,5 +141,18 @@ public class MasterDataTests : IDisposable
         _fx.Context.Gpus.Add(new Gpu("RTX 5070", _fx.Manufacturer.Id, gpuSeries.Id));
         await _fx.Context.SaveChangesAsync();
         (await _fx.Context.Gpus.AnyAsync(x => x.Name == "RTX 5070")).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Map_gpu_to_dto_uses_series_id()
+    {
+        var dto = _fx.Mapper.Map<GpuDto>(_fx.Gpu);
+
+        dto.Id.Should().Be(_fx.Gpu.Id);
+        dto.Name.Should().Be("RTX 4070");
+        dto.ManufacturerId.Should().Be(_fx.Manufacturer.Id);
+        dto.ManufacturerName.Should().Be("AMD");
+        dto.GpuSeriesId.Should().Be(_fx.GpuSeries.Id);
+        dto.GpuSeriesName.Should().Be("GeForce RTX 40");
     }
 }

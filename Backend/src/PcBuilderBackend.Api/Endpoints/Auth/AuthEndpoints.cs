@@ -52,10 +52,13 @@ public static class AuthEndpoints
 
         group.MapPost("/logout", Logout)
             .AllowAnonymous()
+            .Accepts<RefreshTokenRequest>("application/json")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
-            .WithSummary("Revoke refresh token")
-            .WithDescription("\n    POST /api/auth/logout");
+            .WithName("Logout")
+            .WithSummary("Logout")
+            .WithDescription(
+                "Revokes the refresh token (JSON body or cookie) and clears the refresh cookie.\n    POST /api/auth/logout");
 
         group.MapGet("/me", Me)
             .RequireAuthorization()

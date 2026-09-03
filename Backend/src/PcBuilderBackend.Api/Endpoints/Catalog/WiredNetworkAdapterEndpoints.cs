@@ -87,6 +87,7 @@ public static class WiredNetworkAdapterEndpoints
             .Produces<List<WiredNetworkAdapterDto>>()
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .Accepts<IFormFile>("multipart/form-data")
+            .DisableAntiforgery()
             .WithSummary("Import wired network adapters from Excel")
             .WithDescription("\n    POST /catalog/wired-network-adapter/import");
     }

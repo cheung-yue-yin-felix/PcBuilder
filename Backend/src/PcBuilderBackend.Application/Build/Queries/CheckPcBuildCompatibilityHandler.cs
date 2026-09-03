@@ -1,4 +1,5 @@
 using MediatR;
+using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Build.Dto;
 
 namespace PcBuilderBackend.Application.Build.Queries;

@@ -59,6 +59,36 @@ public class ClosedXmlExcelImportServiceMasterDataTests
     }
 
     [Fact]
+    public async Task Parse_skips_empty_and_whitespace_rows()
+    {
+        await using var manufacturers = Workbook(wb =>
+        {
+            var sheet = wb.Worksheets.Add("Manufacturers");
+            Write(sheet, 1, ["Name"]);
+            Write(sheet, 2, ["Intel"]);
+            Write(sheet, 3, [""]);
+            Write(sheet, 4, ["   "]);
+            Write(sheet, 5, ["AMD"]);
+            sheet.Cell(6, 1).Style.Fill.BackgroundColor = XLColor.White;
+        });
+
+        var manufacturerRows = await _sut.ParseManufacturerImportAsync(manufacturers, CancellationToken.None);
+        manufacturerRows.Select(x => x.Name).Should().Equal("Intel", "AMD");
+
+        await using var chipsets = Workbook(wb =>
+        {
+            var sheet = wb.Worksheets.Add("Chipsets");
+            Write(sheet, 1, ["Name", "ManufacturerId", "SocketId"]);
+            Write(sheet, 2, ["B650", _id.ToString(), _id.ToString()]);
+            Write(sheet, 3, ["", "", ""]);
+            Write(sheet, 4, ["X870", _id.ToString(), _id.ToString()]);
+        });
+
+        var chipsetRows = await _sut.ParseChipsetImportAsync(chipsets, CancellationToken.None);
+        chipsetRows.Select(x => x.Name).Should().Equal("B650", "X870");
+    }
+
+    [Fact]
     public async Task Invalid_guid_becomes_empty_and_missing_sheet_throws()
     {
         await using var sockets = Workbook(wb =>
