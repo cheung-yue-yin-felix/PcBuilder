@@ -58,7 +58,7 @@ public class Motherboard : ProductEntity
 
     public void AddM2Slot(MotherboardM2 m2Slot)
     {
-        if (_m2Slots.Any(x => x.Key == m2Slot.Key && x.PcieGeneration == m2Slot.PcieGeneration))
+        if (_m2Slots.Any(x => x.IsSameSlotGroup(m2Slot)))
             throw new ArgumentException("M.2 slot already exists.");
 
         _m2Slots.Add(m2Slot);
@@ -66,7 +66,7 @@ public class Motherboard : ProductEntity
 
     public void RemoveM2Slot(MotherboardM2 m2Slot)
     {
-        if (_m2Slots.All(x => x.Key != m2Slot.Key || x.PcieGeneration != m2Slot.PcieGeneration))
+        if (_m2Slots.All(x => !x.IsSameSlotGroup(m2Slot)))
             throw new ArgumentException("M.2 slot does not exist.");
 
         _m2Slots.Remove(m2Slot);

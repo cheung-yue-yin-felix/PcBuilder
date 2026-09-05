@@ -31,6 +31,20 @@ public class PcBuildModelTests
                     .SequenceEqual(new[] { "PcBuildId", "Type", "PartId" }));
     }
 
+    [Fact]
+    public void Motherboard_m2_slots_are_not_unique_on_key_and_generation()
+    {
+        using var db = CreateContext();
+
+        var m2 = db.Model.FindEntityType(typeof(MotherboardM2))!;
+        m2.GetIndexes()
+            .Should()
+            .NotContain(index => index.IsUnique);
+        m2.GetIndexes()
+            .Should()
+            .Contain(index => index.Properties.Select(p => p.Name).SequenceEqual(new[] { "MotherboardId" }));
+    }
+
     private static PcBuilderDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<PcBuilderDbContext>()

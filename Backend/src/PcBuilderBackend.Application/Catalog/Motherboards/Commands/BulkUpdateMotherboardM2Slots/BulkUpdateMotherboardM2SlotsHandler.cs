@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboardM2Slots;
 
@@ -28,12 +29,13 @@ public class BulkUpdateMotherboardM2SlotsHandler(
             return null;
         }
 
-        var existingByKey = motherboard.M2Slots.ToDictionary(x => (x.Key, x.PcieGeneration));
-        var touchedKeys = new HashSet<(M2Key Key, PcieGeneration Generation)>();
+        var existingByKey = motherboard.M2Slots.ToDictionary(x => x.GroupKey());
+        var touchedKeys = new HashSet<MotherboardM2GroupKey>();
 
         foreach (var slot in request.M2Slots)
         {
-            var identity = (slot.Key, slot.PcieGeneration);
+            var identity = MotherboardM2GroupKey.From(
+                slot.Key, slot.PcieGeneration, slot.SupportsSata, slot.FormFactors);
             touchedKeys.Add(identity);
 
             if (existingByKey.TryGetValue(identity, out var existing))
@@ -55,7 +57,7 @@ public class BulkUpdateMotherboardM2SlotsHandler(
             }
         }
 
-        foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains((x.Key, x.PcieGeneration))))
+        foreach (var existing in existingByKey.Values.Where(x => !touchedKeys.Contains(x.GroupKey())))
         {
             motherboard.RemoveM2Slot(existing);
             motherboards.DeleteM2Slot(existing);

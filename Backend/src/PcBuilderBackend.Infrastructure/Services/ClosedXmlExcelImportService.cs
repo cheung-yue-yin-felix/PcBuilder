@@ -18,6 +18,7 @@ using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Infrastructure.Services;
 
@@ -116,6 +117,9 @@ public class ClosedXmlExcelImportService : IExcelImportService
             if (motherboardByRow.TryGetValue(slot.ParentRowNumber, out var motherboard))
                 motherboard.M2Slots.Add(slot);
         }
+
+        foreach (var motherboard in motherboards)
+            CollapseIdenticalM2Slots(motherboard);
 
         foreach (var port in usbPorts)
         {
@@ -508,6 +512,37 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     SupportsSata = !row.Cell(6).IsEmpty() && row.Cell(6).GetBoolean()
                 })
         ];
+    }
+
+    private static void CollapseIdenticalM2Slots(MotherboardImportRow motherboard)
+    {
+        if (motherboard.M2Slots.Count < 2)
+            return;
+
+        var collapsed = motherboard.M2Slots
+            .GroupBy(slot => MotherboardM2GroupKey.From(
+                slot.Key, slot.PcieGeneration, slot.SupportsSata, slot.FormFactors))
+            .Select(group =>
+            {
+                var first = group.First();
+                var slotCount = group.Sum(slot => slot.SlotCount);
+                if (group.Count() == 1)
+                    return first;
+
+                return new MotherboardM2ImportRow
+                {
+                    ParentRowNumber = first.ParentRowNumber,
+                    Key = first.Key,
+                    PcieGeneration = first.PcieGeneration,
+                    SlotCount = slotCount,
+                    SupportsSata = first.SupportsSata,
+                    FormFactors = [.. first.FormFactors.Distinct()]
+                };
+            })
+            .ToList();
+
+        motherboard.M2Slots.Clear();
+        motherboard.M2Slots.AddRange(collapsed);
     }
 
     private static List<MotherboardUsbImportRow> ParseMotherboardUsbPorts(IXLWorksheet sheet)

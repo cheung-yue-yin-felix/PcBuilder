@@ -3,6 +3,7 @@ using PcBuilderBackend.Application.Catalog.Motherboards.Commands.CreateMotherboa
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Validators;
 
@@ -91,10 +92,10 @@ public class CreateMotherboardCommandValidator : AbstractValidator<CreateMotherb
         
         RuleFor(x => x.M2Slots)
             .Must(slots => slots
-                .Select(s => (s.Key, s.PcieGeneration))
+                .Select(s => MotherboardM2GroupKey.From(s.Key, s.PcieGeneration, s.SupportsSata, s.FormFactors))
                 .Distinct()
                 .Count() == slots.Count)
-            .WithMessage("Duplicate M.2 slots (same key and PCIe generation) are not allowed.")
+            .WithMessage("Duplicate M.2 slots (same key, PCIe generation, SATA support, and form factors) are not allowed.")
             .When(x => x.M2Slots.Count > 0);
 
         RuleForEach(x => x.M2Slots).ChildRules(slot =>

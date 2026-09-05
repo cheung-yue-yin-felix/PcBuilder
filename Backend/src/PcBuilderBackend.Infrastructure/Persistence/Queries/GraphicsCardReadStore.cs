@@ -18,10 +18,11 @@ public class GraphicsCardReadStore(PcBuilderDbContext db, IMapper mapper) : IGra
             .Include(x => x.Gpu)
             .ThenInclude(x => x.Series)
             .Where(x => x.Id == id && x.IsActive)
-        .ProjectTo<GraphicsCardDto>(mapper.ConfigurationProvider)
-        .FirstOrDefaultAsync(cancellationToken);
-    
-    public async Task<PagedResult<GraphicsCardListItemDto>> ListAsync(PagedRequest request, CancellationToken cancellationToken) =>
+            .ProjectTo<GraphicsCardDto>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<PagedResult<GraphicsCardListItemDto>> ListAsync(PagedRequest request,
+        CancellationToken cancellationToken) =>
         await db.GraphicsCards
             .AsNoTracking()
             .Include(x => x.Gpu)
@@ -47,6 +48,7 @@ public class GraphicsCardReadStore(PcBuilderDbContext db, IMapper mapper) : IGra
             .WhereIf(filter.VideoMemoryGb.HasValue, x => x.VideoMemoryGb == filter.VideoMemoryGb)
             .WhereIf(filter.PcieGeneration.HasValue, x => x.PcieGeneration == filter.PcieGeneration)
             .WhereIf(filter.PcieSlotsUsed.HasValue, x => x.PcieSlotsUsed == filter.PcieSlotsUsed)
+            .WhereIf(filter.IsLowProfile.HasValue, x => x.IsLowProfile == filter.IsLowProfile)
             .WhereIf(filter.LengthMm is not null,
                 x => x.LengthMm >= filter.LengthMm!.Min && x.LengthMm <= filter.LengthMm!.Max)
             .WhereIf(filter.WidthMm is not null,

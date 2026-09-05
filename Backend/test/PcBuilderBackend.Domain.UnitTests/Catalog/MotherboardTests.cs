@@ -23,7 +23,7 @@ public class MotherboardTests
         board.AddUsbPort(usb);
 
         var dupPcie = () => board.AddPcieSlot(new MotherboardPcie(board.Id, PcieSlotType.X16, PcieSlotLane.X16, PcieGeneration.Gen4, 2));
-        var dupM2 = () => board.AddM2Slot(new MotherboardM2(board.Id, M2Key.M, PcieGeneration.Gen4, 2, false));
+        var dupM2 = () => board.AddM2Slot(new MotherboardM2(board.Id, M2Key.M, PcieGeneration.Gen4, 2, true));
         var dupUsb = () => board.AddUsbPort(new MotherboardUsb(board.Id, UsbVersion.Usb32Gen2, UsbType.TypeA, 2));
 
         dupPcie.Should().Throw<ArgumentException>();
@@ -103,6 +103,34 @@ public class MotherboardTests
             StorageFormFactor.Sata25, 1000);
         board.CheckStorageCompatibility([sataSsd, sataSsd]).Status.Should().Be(PartsCompatibility.Compatible);
         board.CheckStorageCompatibility([sataSsd, sataSsd, sataSsd]).Reason.Should().Be(CompatibilityReason.InsufficientSataPorts);
+    }
+
+    [Fact]
+    public void M2_slots_of_same_key_and_generation_can_differ_by_sata_or_form_factor()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false, M2FormFactor.M22280);
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: true, M2FormFactor.M22280);
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false, M2FormFactor.M222110);
+
+        board.M2Slots.Should().HaveCount(3);
+
+        var duplicateNvme2280 = () =>
+            AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 2, supportsSata: false, M2FormFactor.M22280);
+        duplicateNvme2280.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Storage_m2_sata_and_nvme_only_slots_of_same_generation_are_distinct()
+    {
+        var board = Create();
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: false);
+        AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: true);
+        var nvme = CreateNvme(PcieGeneration.Gen4);
+        var sataM2 = CreateSataM2();
+
+        board.CheckStorageCompatibility([nvme, sataM2]).Status.Should().Be(PartsCompatibility.Compatible);
+        board.CheckStorageCompatibility([sataM2, sataM2]).Reason.Should().Be(CompatibilityReason.NoMatchingM2Slot);
     }
 
     [Fact]

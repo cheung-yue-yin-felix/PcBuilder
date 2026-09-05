@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -40,6 +41,15 @@ public class MotherboardM2 : BaseEntity
             throw new ArgumentException("M.2 form factor does not exist.");
 
         _formFactors.Remove(formFactor);
+    }
+
+    public MotherboardM2GroupKey GroupKey() =>
+        MotherboardM2GroupKey.From(Key, PcieGeneration, SupportsSata, FormFactors.Select(x => x.FormFactor));
+
+    public bool IsSameSlotGroup(MotherboardM2 other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        return GroupKey() == other.GroupKey();
     }
 
     private void SetSpecs(Guid motherboardId, M2Key key, PcieGeneration pcieGeneration, int slotCount, bool supportsSata)

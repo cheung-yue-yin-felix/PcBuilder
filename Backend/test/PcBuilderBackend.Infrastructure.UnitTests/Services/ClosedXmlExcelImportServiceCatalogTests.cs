@@ -121,6 +121,42 @@ public class ClosedXmlExcelImportServiceCatalogTests
     }
 
     [Fact]
+    public async Task Parse_motherboard_collapses_identical_m2_slots_and_keeps_distinct_groups()
+    {
+        await using var stream = Workbook(wb =>
+        {
+            var boards = wb.Worksheets.Add("Motherboards");
+            Write(boards, 1, ["Name", "Mfg", "Sock", "Chip", "Ram", "Max", "Dimm", "Sata", "Fan", "Eps", "W", "H", "Ddr", "RamFF", "FF", "Wifi", "Bt"]);
+            Write(boards, 2, ["B650", _id.ToString(), _id.ToString(), _id.ToString(), 4, 128, 48, 4, 4, 2, 244, 305, "Ddr5", "UDimm", "Atx", true, false]);
+
+            var pcie = wb.Worksheets.Add("MotherboardPcieSlots");
+            Write(pcie, 1, ["Parent", "Type", "Lanes", "Gen", "Count"]);
+            Write(pcie, 2, [2, "X16", "X16", "Gen4", 1]);
+
+            var m2 = wb.Worksheets.Add("MotherboardM2Slots");
+            Write(m2, 1, ["Parent", "Gen", "Count", "FF", "Key", "Sata"]);
+            Write(m2, 2, [2, "Gen4", 1, "M22280,M22260,M22242", "M", false]);
+            Write(m2, 3, [2, "Gen4", 1, "M22280", "M", true]);
+            Write(m2, 4, [2, "Gen4", 1, "M22280", "M", false]);
+            Write(m2, 5, [2, "Gen4", 1, "M22280", "M", false]);
+
+            var usb = wb.Worksheets.Add("MotherboardUsbPorts");
+            Write(usb, 1, ["Parent", "Ver", "Type", "Count"]);
+            Write(usb, 2, [2, "Usb32Gen2", "TypeA", 4]);
+        });
+
+        var rows = await _sut.ParseMotherboardImportAsync(stream, CancellationToken.None);
+        var slots = rows.Should().ContainSingle().Subject.M2Slots;
+        slots.Should().HaveCount(3);
+        slots.Should().ContainSingle(s =>
+            s.SupportsSata && s.SlotCount == 1 && s.FormFactors.Single() == M2FormFactor.M22280);
+        slots.Should().ContainSingle(s =>
+            !s.SupportsSata && s.SlotCount == 2 && s.FormFactors.Single() == M2FormFactor.M22280);
+        slots.Should().ContainSingle(s =>
+            !s.SupportsSata && s.SlotCount == 1 && s.FormFactors.Count == 3);
+    }
+
+    [Fact]
     public async Task Parse_skips_empty_cpu_and_child_rows()
     {
         await using var stream = Workbook(wb =>
