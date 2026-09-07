@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkCreateCpus;
 
@@ -24,13 +25,16 @@ public class BulkCreateCpusHandler(
             var entity = new Cpu(
                 cpuDto.Name,
                 cpuDto.ManufacturerId,
-                cpuDto.SocketId,
-                cpuDto.SeriesId,
-                cpuDto.MaxMemoryGb,
-                cpuDto.IntegratedGraphics,
-                cpuDto.IncludedStockCooler,
-                cpuDto.ThermalDesignPower,
-                cpuDto.PowerConsumptionWatts);
+                new CpuSpecs
+                {
+                    SocketId = cpuDto.SocketId,
+                    SeriesId = cpuDto.SeriesId,
+                    MaxMemoryGb = cpuDto.MaxMemoryGb,
+                    IntegratedGraphics = cpuDto.IntegratedGraphics,
+                    IncludedStockCooler = cpuDto.IncludedStockCooler,
+                    ThermalDesignPower = cpuDto.ThermalDesignPower,
+                    PowerConsumptionWatts = cpuDto.PowerConsumptionWatts
+                });
 
             foreach (var compat in cpuDto.RamCompats)
             {

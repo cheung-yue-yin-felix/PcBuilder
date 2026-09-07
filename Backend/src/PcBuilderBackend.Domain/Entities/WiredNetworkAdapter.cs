@@ -46,33 +46,51 @@ public class WiredNetworkAdapter : ProductEntity
     {
         if (!Enum.IsDefined(hostInterface))
             throw new ArgumentOutOfRangeException(nameof(hostInterface));
-        
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxSpeedMbps);
 
-        switch (hostInterface)
-        {
-            case WiredHostInterface.Usb:
-                if (usbVersion is null || !Enum.IsDefined(usbVersion.Value))
-                    throw new ArgumentException("USB version is required for USB wired adapters.");
-                if (usbType is null || !Enum.IsDefined(usbType.Value))
-                    throw new ArgumentException("USB type is required for USB wired adapters.");
-                if (pcieSlotType.HasValue)
-                    throw new ArgumentException("PCIe slot type is not valid for USB wired adapters.");
-                break;
-            case WiredHostInterface.Pcie:
-                if (pcieSlotType is null || !Enum.IsDefined(pcieSlotType.Value))
-                    throw new ArgumentException("PCIe slot type is required for PCIe wired adapters.");
-                if (usbVersion.HasValue || usbType.HasValue)
-                    throw new ArgumentException("USB fields are not valid for PCIe wired adapters.");
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(hostInterface));
-        }
-        
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxSpeedMbps);
+        ValidateHostInterface(hostInterface, usbVersion, usbType, pcieSlotType);
+
         HostInterface = hostInterface;
         MaxSpeedMbps = maxSpeedMbps;
         UsbVersion = usbVersion;
         UsbType = usbType;
         PcieSlotType = pcieSlotType;
+    }
+
+    private static void ValidateHostInterface(
+        WiredHostInterface hostInterface,
+        UsbVersion? usbVersion,
+        UsbType? usbType,
+        PcieSlotType? pcieSlotType)
+    {
+        switch (hostInterface)
+        {
+            case WiredHostInterface.Usb:
+                ValidateUsbInterface(usbVersion, usbType, pcieSlotType);
+                return;
+            case WiredHostInterface.Pcie:
+                ValidatePcieInterface(usbVersion, usbType, pcieSlotType);
+                return;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(hostInterface));
+        }
+    }
+
+    private static void ValidateUsbInterface(UsbVersion? usbVersion, UsbType? usbType, PcieSlotType? pcieSlotType)
+    {
+        if (usbVersion is null || !Enum.IsDefined(usbVersion.Value))
+            throw new ArgumentException("USB version is required for USB wired adapters.");
+        if (usbType is null || !Enum.IsDefined(usbType.Value))
+            throw new ArgumentException("USB type is required for USB wired adapters.");
+        if (pcieSlotType.HasValue)
+            throw new ArgumentException("PCIe slot type is not valid for USB wired adapters.");
+    }
+
+    private static void ValidatePcieInterface(UsbVersion? usbVersion, UsbType? usbType, PcieSlotType? pcieSlotType)
+    {
+        if (pcieSlotType is null || !Enum.IsDefined(pcieSlotType.Value))
+            throw new ArgumentException("PCIe slot type is required for PCIe wired adapters.");
+        if (usbVersion.HasValue || usbType.HasValue)
+            throw new ArgumentException("USB fields are not valid for PCIe wired adapters.");
     }
 }

@@ -4,6 +4,7 @@ using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.ImportMemories;
 
@@ -24,15 +25,18 @@ public class ImportMemoriesHandler(IRamRepository memories, IUnitOfWork unitOfWo
             var entity = new Ram(
                 row.Name,
                 row.ManufacturerId,
-                row.Color,
-                row.DdrGeneration,
-                row.RamFormFactor,
-                row.RamRank,
-                row.MemorySizePerStickGb,
-                row.TotalMemorySizeGb,
-                row.ModulesCount,
-                row.MaxMemorySpeedMts,
-                row.HeightMm);
+                new RamSpecs
+                {
+                    Color = row.Color,
+                    DdrGeneration = row.DdrGeneration,
+                    RamFormFactor = row.RamFormFactor,
+                    RamRank = row.RamRank,
+                    MemorySizePerStickGb = row.MemorySizePerStickGb,
+                    TotalMemorySizeGb = row.TotalMemorySizeGb,
+                    ModulesCount = row.ModulesCount,
+                    MaxMemorySpeedMts = row.MaxMemorySpeedMts,
+                    HeightMm = row.HeightMm
+                });
 
             memories.Add(entity);
             result.Add(entity);

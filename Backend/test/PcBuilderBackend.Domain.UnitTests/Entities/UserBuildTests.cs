@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Entities;
 
@@ -20,13 +21,16 @@ public class UserBuildTests
         var build = new PcBuild(
             "  Gaming Rig  ",
             "  fast  ",
-            chassisId,
-            motherboardId,
-            cpuId,
-            coolerId,
-            ramKitId,
-            gpuId,
-            psuId);
+            new PcBuildComponents
+            {
+                ChassisId = chassisId,
+                MotherboardId = motherboardId,
+                CpuId = cpuId,
+                CpuCoolerId = coolerId,
+                RamKitId = ramKitId,
+                GraphicsCardId = gpuId,
+                PsuId = psuId
+            });
 
         build.Name.Should().Be("Gaming Rig");
         build.Description.Should().Be("fast");
@@ -67,11 +71,11 @@ public class UserBuildTests
         var emptyRam = () => CreateBuild(ramKitId: Guid.Empty);
         var emptyPsu = () => CreateBuild(psuId: Guid.Empty);
 
-        emptyChassis.Should().Throw<ArgumentException>().WithParameterName("chassisId");
-        emptyMotherboard.Should().Throw<ArgumentException>().WithParameterName("motherboardId");
-        emptyCpu.Should().Throw<ArgumentException>().WithParameterName("cpuId");
-        emptyRam.Should().Throw<ArgumentException>().WithParameterName("ramKitId");
-        emptyPsu.Should().Throw<ArgumentException>().WithParameterName("psuId");
+        emptyChassis.Should().Throw<ArgumentException>().WithParameterName("components");
+        emptyMotherboard.Should().Throw<ArgumentException>().WithParameterName("components");
+        emptyCpu.Should().Throw<ArgumentException>().WithParameterName("components");
+        emptyRam.Should().Throw<ArgumentException>().WithParameterName("components");
+        emptyPsu.Should().Throw<ArgumentException>().WithParameterName("components");
     }
 
     [Fact]
@@ -84,7 +88,16 @@ public class UserBuildTests
         var ramKitId = Guid.NewGuid();
 
         var psuId = Guid.NewGuid();
-        build.Update("New", "desc", chassisId, motherboardId, cpuId, null, ramKitId, null, psuId);
+        build.Update("New", "desc", new PcBuildComponents
+        {
+            ChassisId = chassisId,
+            MotherboardId = motherboardId,
+            CpuId = cpuId,
+            CpuCoolerId = null,
+            RamKitId = ramKitId,
+            GraphicsCardId = null,
+            PsuId = psuId
+        });
 
         build.Name.Should().Be("New");
         build.Description.Should().Be("desc");
@@ -168,12 +181,15 @@ public class UserBuildTests
         return new PcBuild(
             name,
             description,
-            chassisId ?? Guid.NewGuid(),
-            motherboardId ?? Guid.NewGuid(),
-            cpuId ?? Guid.NewGuid(),
-            cpuCoolerId,
-            ramKitId ?? Guid.NewGuid(),
-            graphicsCardId,
-            psuId ?? Guid.NewGuid());
+            new PcBuildComponents
+            {
+                ChassisId = chassisId ?? Guid.NewGuid(),
+                MotherboardId = motherboardId ?? Guid.NewGuid(),
+                CpuId = cpuId ?? Guid.NewGuid(),
+                CpuCoolerId = cpuCoolerId,
+                RamKitId = ramKitId ?? Guid.NewGuid(),
+                GraphicsCardId = graphicsCardId,
+                PsuId = psuId ?? Guid.NewGuid()
+            });
     }
 }

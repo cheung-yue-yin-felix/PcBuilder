@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkCreatePsus;
 
@@ -24,12 +25,15 @@ public class BulkCreatePsusHandler(
             var entity = new Psu(
                 item.Name,
                 item.ManufacturerId,
-                item.Wattage,
-                item.Modularity,
-                item.FormFactor,
-                item.LengthMm,
-                item.WidthMm,
-                item.HeightMm);
+                new PsuSpecs
+                {
+                    Wattage = item.Wattage,
+                    Modularity = item.Modularity,
+                    FormFactor = item.FormFactor,
+                    LengthMm = item.LengthMm,
+                    WidthMm = item.WidthMm,
+                    HeightMm = item.HeightMm
+                });
 
             foreach (var cable in item.Cables)
             {

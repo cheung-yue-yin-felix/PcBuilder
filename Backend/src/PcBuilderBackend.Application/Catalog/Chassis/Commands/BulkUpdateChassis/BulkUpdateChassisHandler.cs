@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.BulkUpdateChassis;
 
@@ -32,15 +33,17 @@ public class BulkUpdateChassisHandler(
 
             entity.Rename(item.Name);
             entity.UpdateManufacturer(item.ManufacturerId);
-            entity.UpdateSpecs(
-                item.LengthMm,
-                item.WidthMm,
-                item.HeightMm,
-                item.MotherboardMaxWidthMm,
-                item.MotherboardMaxHeightMm,
-                item.MaxCpuCoolerHeightMm,
-                item.MaxGraphicsCardLengthMm,
-                item.MaxPsuLengthMm);
+            entity.UpdateSpecs(new ChassisSpecs
+            {
+                LengthMm = item.LengthMm,
+                WidthMm = item.WidthMm,
+                HeightMm = item.HeightMm,
+                MotherboardMaxWidthMm = item.MotherboardMaxWidthMm,
+                MotherboardMaxHeightMm = item.MotherboardMaxHeightMm,
+                MaxCpuCoolerHeightMm = item.MaxCpuCoolerHeightMm,
+                MaxGraphicsCardLengthMm = item.MaxGraphicsCardLengthMm,
+                MaxPsuLengthMm = item.MaxPsuLengthMm
+            });
 
             result.Add(mapper.Map<ChassisDto>(entity));
         }

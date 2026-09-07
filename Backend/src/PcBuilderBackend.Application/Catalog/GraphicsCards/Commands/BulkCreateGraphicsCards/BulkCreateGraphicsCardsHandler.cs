@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkCreateGraphicsCards;
 
@@ -24,17 +25,20 @@ public class BulkCreateGraphicsCardsHandler(
         foreach (var entity in request.Cards.Select(item => new GraphicsCard(
                      item.Name,
                      item.ManufacturerId,
-                     item.GpuId,
-                     item.VideoMemoryGb,
-                     item.PcieSlotsUsed,
-                     item.PcieGeneration,
-                     item.IsLowProfile,
-                     item.LengthMm,
-                     item.WidthMm,
-                     item.HeightMm,
-                     item.PowerConsumptionWatts,
-                     item.PowerConnectorType,
-                     item.PowerConnectorCount)))
+                     new GraphicsCardSpecs
+                     {
+                         GpuId = item.GpuId,
+                         VideoMemoryGb = item.VideoMemoryGb,
+                         PcieSlotsUsed = item.PcieSlotsUsed,
+                         PcieGeneration = item.PcieGeneration,
+                         IsLowProfile = item.IsLowProfile,
+                         LengthMm = item.LengthMm,
+                         WidthMm = item.WidthMm,
+                         HeightMm = item.HeightMm,
+                         PowerConsumptionWatts = item.PowerConsumptionWatts,
+                         PowerConnectorType = item.PowerConnectorType,
+                         PowerConnectorCount = item.PowerConnectorCount
+                     })))
         {
             graphicsCards.Add(entity);
             result.Add(mapper.Map<GraphicsCardDto>(entity));

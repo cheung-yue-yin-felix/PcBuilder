@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 
@@ -20,13 +21,16 @@ public class CreateCpuHandler(
         var entity = new Cpu(
             request.Name,
             request.ManufacturerId,
-            request.SocketId,
-            request.SeriesId,
-            request.MaxMemoryGb,
-            request.IntegratedGraphics,
-            request.IncludedStockCooler,
-            request.ThermalDesignPower,
-            request.PowerConsumptionWatts);
+            new CpuSpecs
+            {
+                SocketId = request.SocketId,
+                SeriesId = request.SeriesId,
+                MaxMemoryGb = request.MaxMemoryGb,
+                IntegratedGraphics = request.IntegratedGraphics,
+                IncludedStockCooler = request.IncludedStockCooler,
+                ThermalDesignPower = request.ThermalDesignPower,
+                PowerConsumptionWatts = request.PowerConsumptionWatts
+            });
 
         foreach (var compat in request.RamCompats)
         {

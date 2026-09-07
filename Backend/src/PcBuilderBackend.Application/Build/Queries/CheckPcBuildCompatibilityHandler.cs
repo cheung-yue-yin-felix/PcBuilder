@@ -12,17 +12,20 @@ public class CheckPcBuildCompatibilityHandler(ICompatibilityChecker checker)
         CancellationToken cancellationToken)
     {
         var checks = await checker.CheckCompatibilityAsync(
-            query.ChassisId,
-            query.MotherboardId,
-            query.CpuId,
-            query.CpuCoolerId,
-            query.RamKitId,
-            query.GraphicsCardId,
-            query.PsuId,
-            query.ChassisFans,
-            query.StorageDevices,
-            query.WiredNetworkAdapters,
-            query.WirelessNetworkAdapters);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = query.ChassisId,
+                MotherboardId = query.MotherboardId,
+                CpuId = query.CpuId,
+                CpuCoolerId = query.CpuCoolerId,
+                RamKitId = query.RamKitId,
+                GraphicsCardId = query.GraphicsCardId,
+                PsuId = query.PsuId,
+                ChassisFans = query.ChassisFans,
+                StorageDevices = query.StorageDevices,
+                WiredNetworkAdapters = query.WiredNetworkAdapters,
+                WirelessNetworkAdapters = query.WirelessNetworkAdapters
+            });
 
         return CompatibilityCheckDto.From(checks);
     }

@@ -8,23 +8,23 @@ public static class QueryableExtensions
     public static IOrderedQueryable<T> OrderBy<T>(this IQueryable<T> source, string propertyName)
         => ApplyOrder(source, propertyName, "OrderBy");
 
-    public static IOrderedQueryable<T> OrderByDescending<T>(this IQueryable<T> source, string propertyName)
-        => ApplyOrder(source, propertyName, "OrderByDescending");
-
-    public static IOrderedQueryable<T> ThenBy<T>(this IOrderedQueryable<T> source, string propertyName)
-        => ApplyOrder(source, propertyName, "ThenBy");
-
-    public static IOrderedQueryable<T> ThenByDescending<T>(this IOrderedQueryable<T> source, string propertyName)
-        => ApplyOrder(source, propertyName, "ThenByDescending");
-    
     public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, string propertyName)
         => Enumerable.OrderBy(source, CompileKeySelector<T>(propertyName));
+
+    public static IOrderedQueryable<T> OrderByDescending<T>(this IQueryable<T> source, string propertyName)
+        => ApplyOrder(source, propertyName, "OrderByDescending");
 
     public static IOrderedEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, string propertyName)
         => Enumerable.OrderByDescending(source, CompileKeySelector<T>(propertyName));
 
+    public static IOrderedQueryable<T> ThenBy<T>(this IOrderedQueryable<T> source, string propertyName)
+        => ApplyOrder(source, propertyName, "ThenBy");
+
     public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source, string propertyName)
         => Enumerable.ThenBy(source, CompileKeySelector<T>(propertyName));
+
+    public static IOrderedQueryable<T> ThenByDescending<T>(this IOrderedQueryable<T> source, string propertyName)
+        => ApplyOrder(source, propertyName, "ThenByDescending");
 
     public static IOrderedEnumerable<T> ThenByDescending<T>(this IOrderedEnumerable<T> source, string propertyName)
         => Enumerable.ThenByDescending(source, CompileKeySelector<T>(propertyName));
@@ -35,6 +35,23 @@ public static class QueryableExtensions
         Expression<Func<T, bool>> predicate)
     {
         return condition ? source.Where(predicate) : source;
+    }
+
+    public static IQueryable<T> WhereIf<T, TValue>(
+        this IQueryable<T> source,
+        TValue? value,
+        Func<TValue, Expression<Func<T, bool>>> predicateFactory)
+        where TValue : class
+    {
+        return value is null ? source : source.Where(predicateFactory(value));
+    }
+
+    public static IQueryable<T> WhereIfHasText<T>(
+        this IQueryable<T> source,
+        string? value,
+        Func<string, Expression<Func<T, bool>>> predicateFactory)
+    {
+        return string.IsNullOrWhiteSpace(value) ? source : source.Where(predicateFactory(value));
     }
 
     public static IQueryable<T> ApplySorting<T>(

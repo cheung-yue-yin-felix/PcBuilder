@@ -5,7 +5,7 @@ namespace PcBuilderBackend.Domain.Entities;
 public class PcBuildPart : BaseEntity
 {
     public Guid PcBuildId { get; private set; }
-    public PcBuild? PcBuild { get; private set; }
+    public PcBuild? PcBuild { get; }
     public PcBuildPartType Type { get; private set; }
     public Guid PartId { get; private set; }
     public int Quantity { get; private set; }

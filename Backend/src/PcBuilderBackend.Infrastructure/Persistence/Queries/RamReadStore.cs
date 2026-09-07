@@ -38,9 +38,9 @@ public class RamReadStore(PcBuilderDbContext db, IMapper mapper) : IRamReadStore
         var filter = request.Filter;
 
         var queryable = db.Rams.AsNoTracking()
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Color), x => x.Color.Contains(filter.Color!))
+            .WhereIfHasText(filter.Color, color => x => x.Color.Contains(color))
             .WhereIf(filter.DdrGeneration.HasValue, x => x.DdrGeneration == filter.DdrGeneration)
             .WhereIf(filter.RamFormFactor.HasValue, x => x.RamFormFactor == filter.RamFormFactor)
             .WhereIf(filter.RamRank.HasValue, x => x.RamRank == filter.RamRank)
@@ -51,8 +51,7 @@ public class RamReadStore(PcBuilderDbContext db, IMapper mapper) : IRamReadStore
             .WhereIf(filter.ModulesCount.HasValue, x => x.ModulesCount == filter.ModulesCount)
             .WhereIf(filter.MaxMemorySpeedMts.HasValue,
                 x => x.MaxMemorySpeedMts == filter.MaxMemorySpeedMts)
-            .WhereIf(filter.HeightMm is not null,
-                x => x.HeightMm >= filter.HeightMm!.Min && x.HeightMm <= filter.HeightMm!.Max);
+            .WhereIf(filter.HeightMm, range => x => x.HeightMm >= range.Min && x.HeightMm <= range.Max);
 
         if (!filter.CpuId.HasValue && !filter.MotherboardId.HasValue)
         {

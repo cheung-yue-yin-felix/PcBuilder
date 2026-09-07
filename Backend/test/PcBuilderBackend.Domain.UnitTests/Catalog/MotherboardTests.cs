@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -53,7 +54,16 @@ public class MotherboardTests
     public void Cpu_compatibility_uses_socket_and_chipset_support()
     {
         var board = Create();
-        var cpu = new Cpu("7800X3D", ManufacturerId, SocketId, Guid.NewGuid(), 128, false, false, 120, 120);
+        var cpu = new Cpu("7800X3D", ManufacturerId, new CpuSpecs
+        {
+            SocketId = SocketId,
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
 
         board.CheckCpuCompatibility(cpu).Reason.Should().Be(CompatibilityReason.ChipsetNotSupported);
 
@@ -64,7 +74,16 @@ public class MotherboardTests
         cpu.AddSupportedChipset(new CpuSupportChipset(cpu.Id, ChipsetId));
         board.CheckCpuCompatibility(cpu).Status.Should().Be(PartsCompatibility.Compatible);
 
-        var wrongSocket = new Cpu("i9", ManufacturerId, Guid.NewGuid(), Guid.NewGuid(), 128, false, false, 125, 125);
+        var wrongSocket = new Cpu("i9", ManufacturerId, new CpuSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 125,
+            PowerConsumptionWatts = 125
+        });
         board.CheckCpuCompatibility(wrongSocket).Reason.Should().Be(CompatibilityReason.SocketMismatch);
     }
 
@@ -99,8 +118,13 @@ public class MotherboardTests
         board.CheckStorageCompatibility([drive, drive]).Status.Should().Be(PartsCompatibility.Compatible);
         board.CheckStorageCompatibility([drive, drive, drive]).Reason.Should().Be(CompatibilityReason.InsufficientSataPorts);
 
-        var sataSsd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata25, 1000);
+        var sataSsd = new StorageDrive("MX500", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         board.CheckStorageCompatibility([sataSsd, sataSsd]).Status.Should().Be(PartsCompatibility.Compatible);
         board.CheckStorageCompatibility([sataSsd, sataSsd, sataSsd]).Reason.Should().Be(CompatibilityReason.InsufficientSataPorts);
     }
@@ -159,8 +183,14 @@ public class MotherboardTests
     {
         var board = Create();
         AddM2(board, M2Key.M, PcieGeneration.Gen4, slotCount: 1, supportsSata: true);
-        var sataM2 = new StorageDrive("SATA SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.M22280, 1000, PcieGeneration.Gen5);
+        var sataM2 = new StorageDrive("SATA SSD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 1000,
+            PcieGeneration = PcieGeneration.Gen5
+        });
 
         board.CheckStorageCompatibility(sataM2).Status.Should().Be(PartsCompatibility.Compatible);
     }
@@ -212,8 +242,24 @@ public class MotherboardTests
     }
 
     private static Motherboard Create(int sataPorts = 4) =>
-        new(ManufacturerId, "B650", SocketId, ChipsetId, 4, 128, 48, sataPorts, 4, 2, 244, 305,
-            DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Atx, false, false);
+        new(ManufacturerId, "B650", new MotherboardSpecs
+        {
+            SocketId = SocketId,
+            ChipsetId = ChipsetId,
+            RamSlots = 4,
+            MaxMemoryGb = 128,
+            MaxDimmSizeGb = 48,
+            SataPorts = sataPorts,
+            FanConnectors = 4,
+            EpsConnectors = 2,
+            WidthMm = 244,
+            HeightMm = 305,
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            MbFormFactor = MbFormFactor.Atx,
+            WifiEnabled = false,
+            BluetoothEnabled = false
+        });
 
     private static void AddM2(
         Motherboard board,
@@ -229,21 +275,64 @@ public class MotherboardTests
     }
 
     private static Ram CreateRam(DdrGeneration ddr, RamFormFactor form, int perStick, int total, int modules) =>
-        new("Kit", ManufacturerId, "Black", ddr, form, RamRank.DualRank, perStick, total, modules, 6000, 40);
+        new("Kit", ManufacturerId, new RamSpecs
+        {
+            Color = "Black",
+            DdrGeneration = ddr,
+            RamFormFactor = form,
+            RamRank = RamRank.DualRank,
+            MemorySizePerStickGb = perStick,
+            TotalMemorySizeGb = total,
+            ModulesCount = modules,
+            MaxMemorySpeedMts = 6000,
+            HeightMm = 40
+        });
 
     private static GraphicsCard CreateGpu(PcieGeneration gen) =>
-        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, gen, false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+        new("RTX 4070", ManufacturerId, new GraphicsCardSpecs
+        {
+            GpuId = Guid.NewGuid(),
+            VideoMemoryGb = 12,
+            PcieSlotsUsed = 2,
+            PcieGeneration = gen,
+            IsLowProfile = false,
+            LengthMm = 240,
+            WidthMm = 120,
+            HeightMm = 50,
+            PowerConsumptionWatts = 200,
+            PowerConnectorType = PsuCableType.Pcie6Plus2Pin,
+            PowerConnectorCount = 2
+        });
 
     private static StorageDrive CreateHdd() =>
-        new("HDD", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata, StorageFormFactor.Sata35, 4000, rpm: 7200);
+        new("HDD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Hdd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 4000,
+            Rpm = 7200
+        });
 
     private static StorageDrive CreateNvme(PcieGeneration generation) =>
-        new("990 PRO", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme, StorageFormFactor.M22280, 2000,
-            generation);
+        new("990 PRO", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 2000,
+            PcieGeneration = generation
+        });
 
     private static StorageDrive CreateSataM2() =>
-        new("SATA SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata, StorageFormFactor.M22280, 1000,
-            PcieGeneration.Gen3);
+        new("SATA SSD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 1000,
+            PcieGeneration = PcieGeneration.Gen3
+        });
 
     private static WiredNetworkAdapter CreateWiredPcie(PcieSlotType slotType) =>
         new("I225-V", ManufacturerId, WiredHostInterface.Pcie, 2500, pcieSlotType: slotType);
@@ -252,10 +341,28 @@ public class MotherboardTests
         new("USB NIC", ManufacturerId, WiredHostInterface.Usb, 1000, UsbVersion.Usb32Gen1, UsbType.TypeA);
 
     private static WirelessNetworkAdapter CreateWirelessUsb() =>
-        new("USB WiFi", ManufacturerId, WifiStandard.Wifi6, WirelessHostInterface.Usb, 1200, null, null, null,
-            usbVersion: UsbVersion.Usb32Gen1, usbType: UsbType.TypeA);
+        new("USB WiFi", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6,
+            HostInterface = WirelessHostInterface.Usb,
+            MaxSpeedMbps = 1200,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = null,
+            UsbVersion = UsbVersion.Usb32Gen1,
+            UsbType = UsbType.TypeA
+        });
 
     private static WirelessNetworkAdapter CreateWirelessM2() =>
-        new("AX210", ManufacturerId, WifiStandard.Wifi6E, WirelessHostInterface.M2, 2400, null, null,
-            BluetoothVersion.V5Point2, m2Key: M2Key.E, m2FormFactor: M2FormFactor.M22230);
+        new("AX210", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6E,
+            HostInterface = WirelessHostInterface.M2,
+            MaxSpeedMbps = 2400,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = BluetoothVersion.V5Point2,
+            M2Key = M2Key.E,
+            M2FormFactor = M2FormFactor.M22230
+        });
 }

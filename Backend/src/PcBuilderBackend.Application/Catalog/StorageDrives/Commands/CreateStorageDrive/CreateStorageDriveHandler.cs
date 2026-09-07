@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.CreateStorageDrive;
 
@@ -22,12 +23,15 @@ public class CreateStorageDriveHandler(
         var entity = new StorageDrive(
             request.Name,
             request.ManufacturerId,
-            request.Media,
-            request.Interface,
-            request.FormFactor,
-            request.CapacityGb,
-            request.PcieGeneration,
-            request.Rpm);
+            new StorageDriveSpecs
+            {
+                Media = request.Media,
+                Interface = request.Interface,
+                FormFactor = request.FormFactor,
+                CapacityGb = request.CapacityGb,
+                PcieGeneration = request.PcieGeneration,
+                Rpm = request.Rpm
+            });
 
         storageDrives.Add(entity);
         await unitOfWork.SaveChangesAsync(cancellationToken);

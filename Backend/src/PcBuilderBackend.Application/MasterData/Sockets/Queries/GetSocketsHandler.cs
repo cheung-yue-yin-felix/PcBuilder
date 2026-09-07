@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Queries;
 
-public class GetSocketsHandler(IReadStore<Socket, SocketDto> store, ICacheService cache)
+public class GetSocketsHandler(IReadStore<SocketDto> store, ICacheService cache)
     : IRequestHandler<GetSocketsQuery, List<SocketDto>>
 {
     public Task<List<SocketDto>> Handle(GetSocketsQuery request, CancellationToken cancellationToken)

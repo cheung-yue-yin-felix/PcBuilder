@@ -8,6 +8,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Build.Commands.CreatePcBuild;
 
@@ -25,17 +26,20 @@ public class CreatePcBuildHandler(
             throw new UnauthorizedAccessException();
 
         var compatibilityResults = await compatibilityChecker.CheckCompatibilityAsync(
-            command.ChassisId,
-            command.MotherboardId,
-            command.CpuId,
-            command.CpuCoolerId,
-            command.RamKitId,
-            command.GraphicsCardId,
-            command.PsuId,
-            command.ChassisFans,
-            command.StorageDevices,
-            command.WiredNetworkAdapters,
-            command.WirelessNetworkAdapters);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = command.ChassisId,
+                MotherboardId = command.MotherboardId,
+                CpuId = command.CpuId,
+                CpuCoolerId = command.CpuCoolerId,
+                RamKitId = command.RamKitId,
+                GraphicsCardId = command.GraphicsCardId,
+                PsuId = command.PsuId,
+                ChassisFans = command.ChassisFans,
+                StorageDevices = command.StorageDevices,
+                WiredNetworkAdapters = command.WiredNetworkAdapters,
+                WirelessNetworkAdapters = command.WirelessNetworkAdapters
+            });
 
         if (compatibilityResults.Any(r => r.Result.Status == PartsCompatibility.Incompatible))
         {
@@ -46,13 +50,16 @@ public class CreatePcBuildHandler(
         var pcBuild = new PcBuild(
             command.Name,
             command.Description,
-            command.ChassisId,
-            command.MotherboardId,
-            command.CpuId,
-            command.CpuCoolerId,
-            command.RamKitId,
-            command.GraphicsCardId,
-            command.PsuId);
+            new PcBuildComponents
+            {
+                ChassisId = command.ChassisId,
+                MotherboardId = command.MotherboardId,
+                CpuId = command.CpuId,
+                CpuCoolerId = command.CpuCoolerId,
+                RamKitId = command.RamKitId,
+                GraphicsCardId = command.GraphicsCardId,
+                PsuId = command.PsuId
+            });
 
         foreach (var chassisFan in command.ChassisFans ?? [])
             pcBuild.AddChassisFan(chassisFan.PartId, chassisFan.Quantity);

@@ -22,18 +22,16 @@ public class Psu : ProductEntity
     
     protected Psu() {}
 
-    public Psu(string name, Guid manufacturerId, int wattage, PsuModularity modularity, PsuFormFactor formFactor,
-        decimal lengthMm, decimal widthMm, decimal heightMm)
+    public Psu(string name, Guid manufacturerId, PsuSpecs specs)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(wattage, modularity, formFactor, lengthMm, widthMm, heightMm);
+        SetSpecs(specs);
     }
 
-    public void UpdateSpecs(int wattage, PsuModularity modularity, PsuFormFactor formFactor, decimal lengthMm,
-        decimal widthMm, decimal heightMm)
+    public void UpdateSpecs(PsuSpecs specs)
     {
-        SetSpecs(wattage, modularity, formFactor, lengthMm, widthMm, heightMm);
+        SetSpecs(specs);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -105,7 +103,7 @@ public class Psu : ProductEntity
             PsuCableType.Pcie12VHighPower => pcie12VHighPowerCables < gpu.PowerConnectorCount
                 ? PartsCompatibilityResult.Incompatible(CompatibilityReason.InsufficientPciePowerCables)
                 : PartsCompatibilityResult.Compatible(),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(gpu), gpu.PowerConnectorType, $"Unsupported power connector '{gpu.PowerConnectorType}'.")
         };
     }
 
@@ -128,26 +126,25 @@ public class Psu : ProductEntity
             : PartsCompatibilityResult.Compatible();
     }
 
-    private void SetSpecs(int wattage, PsuModularity modularity, PsuFormFactor formFactor, decimal lengthMm,
-        decimal widthMm, decimal heightMm)
+    private void SetSpecs(PsuSpecs specs)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(wattage);
-        
-        if (!Enum.IsDefined(modularity))
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.Wattage);
+
+        if (!Enum.IsDefined(specs.Modularity))
             throw new ArgumentException("Modularity is invalid  ");
 
-        if (!Enum.IsDefined(formFactor))
+        if (!Enum.IsDefined(specs.FormFactor))
             throw new ArgumentException("Form factor is invalid");
-        
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(lengthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(widthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(heightMm);
-        
-        Wattage = wattage;
-        Modularity = modularity;
-        FormFactor = formFactor;
-        LengthMm = lengthMm;
-        WidthMm = widthMm;
-        HeightMm = heightMm;
+
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.LengthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.WidthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.HeightMm);
+
+        Wattage = specs.Wattage;
+        Modularity = specs.Modularity;
+        FormFactor = specs.FormFactor;
+        LengthMm = specs.LengthMm;
+        WidthMm = specs.WidthMm;
+        HeightMm = specs.HeightMm;
     }
 }

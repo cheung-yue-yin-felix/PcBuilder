@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -21,98 +22,61 @@ public class GraphicsCard : ProductEntity
     {
     }
 
-    public GraphicsCard(
-        string name,
-        Guid manufacturerId,
-        Guid gpuId,
-        int videoMemoryGb,
-        int pcieSlotsUsed,
-        PcieGeneration pcieGeneration,
-        bool isLowProfile,
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        int powerConsumptionWatts,
-        PsuCableType powerConnectorType,
-        int powerConnectorCount)
+    public GraphicsCard(string name, Guid manufacturerId, GraphicsCardSpecs specs)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, isLowProfile, lengthMm, widthMm, heightMm,
-            powerConsumptionWatts, powerConnectorType, powerConnectorCount);
+        SetSpecs(specs);
     }
 
-    public void UpdateSpecs(
-        Guid gpuId,
-        int videoMemoryGb,
-        int pcieSlotsUsed,
-        PcieGeneration pcieGeneration,
-        bool isLowProfile,
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        int powerConsumptionWatts,
-        PsuCableType powerConnectorType,
-        int powerConnectorCount)
+    public void UpdateSpecs(GraphicsCardSpecs specs)
     {
-        SetSpecs(gpuId, videoMemoryGb, pcieSlotsUsed, pcieGeneration, isLowProfile, lengthMm, widthMm, heightMm,
-            powerConsumptionWatts, powerConnectorType, powerConnectorCount);
+        SetSpecs(specs);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    private void SetSpecs(
-        Guid gpuId,
-        int videoMemoryGb,
-        int pcieSlotsUsed,
-        PcieGeneration pcieGeneration,
-        bool isLowProfile,
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        int powerConsumptionWatts,
-        PsuCableType powerConnectorType,
-        int powerConnectorCount)
+    private void SetSpecs(GraphicsCardSpecs specs)
     {
-        if (gpuId == Guid.Empty)
+        if (specs.GpuId == Guid.Empty)
             throw new ArgumentException("Gpu id can't be empty");
 
-        if (videoMemoryGb <= 0)
+        if (specs.VideoMemoryGb <= 0)
             throw new ArgumentException("Video memory GB must be greater than zero");
 
-        if (pcieSlotsUsed <= 0)
+        if (specs.PcieSlotsUsed <= 0)
             throw new ArgumentException("PcieSlotsUsed must be greater than zero");
 
-        if (!Enum.IsDefined(pcieGeneration))
+        if (!Enum.IsDefined(specs.PcieGeneration))
             throw new ArgumentException("PcieGeneration must be a valid value");
 
-        if (lengthMm <= 0)
+        if (specs.LengthMm <= 0)
             throw new ArgumentException("Length mm must be greater than zero");
 
-        if (widthMm <= 0)
+        if (specs.WidthMm <= 0)
             throw new ArgumentException("Width mm must be greater than zero");
 
-        if (heightMm <= 0)
+        if (specs.HeightMm <= 0)
             throw new ArgumentException("Height mm must be greater than zero");
 
-        if (powerConsumptionWatts <= 0)
+        if (specs.PowerConsumptionWatts <= 0)
             throw new ArgumentException("PowerConsumptionWatts must be greater than zero");
 
-        if (!Enum.IsDefined(powerConnectorType))
+        if (!Enum.IsDefined(specs.PowerConnectorType))
             throw new ArgumentException("PowerConnectorType must be a valid value");
 
-        if (powerConnectorCount <= 0)
+        if (specs.PowerConnectorCount <= 0)
             throw new ArgumentException("PowerConnectorCount must be greater than zero");
 
-        GpuId = gpuId;
-        VideoMemoryGb = videoMemoryGb;
-        PcieSlotsUsed = pcieSlotsUsed;
-        PcieGeneration = pcieGeneration;
-        LengthMm = lengthMm;
-        WidthMm = widthMm;
-        HeightMm = heightMm;
-        IsLowProfile = isLowProfile;
-        PowerConsumptionWatts = powerConsumptionWatts;
-        PowerConnectorType = powerConnectorType;
-        PowerConnectorCount = powerConnectorCount;
+        GpuId = specs.GpuId;
+        VideoMemoryGb = specs.VideoMemoryGb;
+        PcieSlotsUsed = specs.PcieSlotsUsed;
+        PcieGeneration = specs.PcieGeneration;
+        LengthMm = specs.LengthMm;
+        WidthMm = specs.WidthMm;
+        HeightMm = specs.HeightMm;
+        IsLowProfile = specs.IsLowProfile;
+        PowerConsumptionWatts = specs.PowerConsumptionWatts;
+        PowerConnectorType = specs.PowerConnectorType;
+        PowerConnectorCount = specs.PowerConnectorCount;
     }
 }

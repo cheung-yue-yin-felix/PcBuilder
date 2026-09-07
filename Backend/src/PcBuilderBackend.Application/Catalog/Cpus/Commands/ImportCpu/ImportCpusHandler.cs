@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.ImportCpu;
 
@@ -36,13 +37,16 @@ public class ImportCpusHandler(
             var entity = new Cpu(
                 cpu.Name,
                 cpu.ManufacturerId,
-                cpu.SocketId,
-                cpu.SeriesId,
-                cpu.MaxMemoryGb,
-                cpu.IntegratedGraphics,
-                cpu.IncludedStockCooler,
-                cpu.ThermalDesignPower,
-                cpu.PowerConsumptionWatts);
+                new CpuSpecs
+                {
+                    SocketId = cpu.SocketId,
+                    SeriesId = cpu.SeriesId,
+                    MaxMemoryGb = cpu.MaxMemoryGb,
+                    IntegratedGraphics = cpu.IntegratedGraphics,
+                    IncludedStockCooler = cpu.IncludedStockCooler,
+                    ThermalDesignPower = cpu.ThermalDesignPower,
+                    PowerConsumptionWatts = cpu.PowerConsumptionWatts
+                });
 
             foreach (var compat in cpu.RamCompats)
             {

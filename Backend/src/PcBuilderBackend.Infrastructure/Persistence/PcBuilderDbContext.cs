@@ -1,4 +1,4 @@
-using System.Reflection;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Domain.Entities;
 
@@ -73,22 +73,18 @@ public class PcBuilderDbContext(DbContextOptions<PcBuilderDbContext> options)
     {
         modelBuilder.ConfigurePostgresEnums();
 
-        // Apply a global query filter for IsActive on all BaseEntity-derived types
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        foreach (var clrType in modelBuilder.Model.GetEntityTypes()
+                     .Select(entityType => entityType.ClrType)
+                     .Where(clrType => typeof(BaseEntity).IsAssignableFrom(clrType)))
         {
-            var clrType = entityType.ClrType;
-            if (!typeof(BaseEntity).IsAssignableFrom(clrType)) continue;
-            var method = typeof(PcBuilderDbContext).GetMethod(nameof(SetIsActiveQueryFilter), BindingFlags.NonPublic | BindingFlags.Static);
-            var generic = method!.MakeGenericMethod(clrType);
-            generic.Invoke(null, [modelBuilder]);
+            var parameter = Expression.Parameter(clrType, "e");
+            var body = Expression.Equal(
+                Expression.Property(parameter, nameof(BaseEntity.IsActive)),
+                Expression.Constant(true));
+            modelBuilder.Entity(clrType).HasQueryFilter(Expression.Lambda(body, parameter));
         }
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PcBuilderDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
-    }
-
-    private static void SetIsActiveQueryFilter<TEntity>(ModelBuilder builder) where TEntity : BaseEntity
-    {
-        builder.Entity<TEntity>().HasQueryFilter(e => e.IsActive);
     }
 }

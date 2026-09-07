@@ -4,5 +4,6 @@ Document/
 *.md
 appsettings.*.json
 appsettings.json
-
+.sonarqube/
 !readme.md
+sonar-*.*

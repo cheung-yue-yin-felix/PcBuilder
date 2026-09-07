@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -37,37 +38,97 @@ public class NetworkAdapterTests
     [Fact]
     public void Wireless_m2_must_be_e_key()
     {
-        var ok = new WirelessNetworkAdapter("AX210", ManufacturerId, WifiStandard.Wifi6E, WirelessHostInterface.M2,
-            2400, null, null, BluetoothVersion.V5Point2, m2Key: M2Key.E, m2FormFactor: M2FormFactor.M22230);
+        var ok = new WirelessNetworkAdapter("AX210", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6E,
+            HostInterface = WirelessHostInterface.M2,
+            MaxSpeedMbps = 2400,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = BluetoothVersion.V5Point2,
+            M2Key = M2Key.E,
+            M2FormFactor = M2FormFactor.M22230
+        });
         ok.Key.Should().Be(M2Key.E);
 
-        var wrongKey = () => new WirelessNetworkAdapter("AX210", ManufacturerId, WifiStandard.Wifi6E,
-            WirelessHostInterface.M2, 2400, null, null, null, m2Key: M2Key.M, m2FormFactor: M2FormFactor.M22230);
+        var wrongKey = () => new WirelessNetworkAdapter("AX210", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6E,
+            HostInterface = WirelessHostInterface.M2,
+            MaxSpeedMbps = 2400,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = null,
+            M2Key = M2Key.M,
+            M2FormFactor = M2FormFactor.M22230
+        });
         wrongKey.Should().Throw<ArgumentException>();
     }
 
     [Fact]
     public void Wireless_usb_rejects_pcie_and_m2_fields()
     {
-        var ok = new WirelessNetworkAdapter("USB WiFi", ManufacturerId, WifiStandard.Wifi6, WirelessHostInterface.Usb,
-            1200, null, null, null, usbVersion: UsbVersion.Usb32Gen1, usbType: UsbType.TypeA);
+        var ok = new WirelessNetworkAdapter("USB WiFi", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6,
+            HostInterface = WirelessHostInterface.Usb,
+            MaxSpeedMbps = 1200,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = null,
+            UsbVersion = UsbVersion.Usb32Gen1,
+            UsbType = UsbType.TypeA
+        });
         ok.HostInterface.Should().Be(WirelessHostInterface.Usb);
 
-        var mixed = () => new WirelessNetworkAdapter("USB WiFi", ManufacturerId, WifiStandard.Wifi6,
-            WirelessHostInterface.Usb, 1200, null, null, null, pcieSlotType: PcieSlotType.X1,
-            usbVersion: UsbVersion.Usb32Gen1, usbType: UsbType.TypeA);
+        var mixed = () => new WirelessNetworkAdapter("USB WiFi", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6,
+            HostInterface = WirelessHostInterface.Usb,
+            MaxSpeedMbps = 1200,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = null,
+            PcieSlotType = PcieSlotType.X1,
+            UsbVersion = UsbVersion.Usb32Gen1,
+            UsbType = UsbType.TypeA
+        });
         mixed.Should().Throw<ArgumentException>();
     }
 
     [Fact]
     public void Graphics_card_rejects_empty_gpu_and_zero_memory()
     {
-        var card = new GraphicsCard("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4,
-            false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+        var card = new GraphicsCard("RTX 4070", ManufacturerId, new GraphicsCardSpecs
+        {
+            GpuId = Guid.NewGuid(),
+            VideoMemoryGb = 12,
+            PcieSlotsUsed = 2,
+            PcieGeneration = PcieGeneration.Gen4,
+            IsLowProfile = false,
+            LengthMm = 240,
+            WidthMm = 120,
+            HeightMm = 50,
+            PowerConsumptionWatts = 200,
+            PowerConnectorType = PsuCableType.Pcie6Plus2Pin,
+            PowerConnectorCount = 2
+        });
         card.VideoMemoryGb.Should().Be(12);
 
-        var emptyGpu = () => new GraphicsCard("GPU", ManufacturerId, Guid.Empty, 12, 2, PcieGeneration.Gen4,
-            false, 240, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+        var emptyGpu = () => new GraphicsCard("GPU", ManufacturerId, new GraphicsCardSpecs
+        {
+            GpuId = Guid.Empty,
+            VideoMemoryGb = 12,
+            PcieSlotsUsed = 2,
+            PcieGeneration = PcieGeneration.Gen4,
+            IsLowProfile = false,
+            LengthMm = 240,
+            WidthMm = 120,
+            HeightMm = 50,
+            PowerConsumptionWatts = 200,
+            PowerConnectorType = PsuCableType.Pcie6Plus2Pin,
+            PowerConnectorCount = 2
+        });
         emptyGpu.Should().Throw<ArgumentException>();
     }
 

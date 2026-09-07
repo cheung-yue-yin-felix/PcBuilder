@@ -8,7 +8,7 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
 
 public sealed class EfReadStore<TEntity, TDto>(PcBuilderDbContext db, IMapper mapper)
-    : IReadStore<TEntity, TDto>
+    : IReadStore<TDto>
     where TEntity : BaseEntity
 {
     public Task<TDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>

@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.ImportWirelessNetworkAdapters;
 
@@ -34,17 +35,20 @@ public class ImportWirelessNetworkAdaptersHandler(
             var entity = new WirelessNetworkAdapter(
                 row.Name,
                 row.ManufacturerId,
-                row.WifiStandard,
-                row.HostInterface,
-                row.MaxSpeedMbps,
-                row.MaxSpeedMbps5G,
-                row.MaxSpeedMbps6G,
-                row.BluetoothVersion,
-                row.PcieSlotType,
-                row.Key,
-                row.M2FormFactor,
-                row.UsbVersion,
-                row.UsbType);
+                new WirelessNetworkAdapterSpecs
+                {
+                    WifiStandard = row.WifiStandard,
+                    HostInterface = row.HostInterface,
+                    MaxSpeedMbps = row.MaxSpeedMbps,
+                    MaxSpeedMbps5G = row.MaxSpeedMbps5G,
+                    MaxSpeedMbps6G = row.MaxSpeedMbps6G,
+                    BluetoothVersion = row.BluetoothVersion,
+                    PcieSlotType = row.PcieSlotType,
+                    M2Key = row.Key,
+                    M2FormFactor = row.M2FormFactor,
+                    UsbVersion = row.UsbVersion,
+                    UsbType = row.UsbType
+                });
 
             adapters.Add(entity);
             result.Add(entity);

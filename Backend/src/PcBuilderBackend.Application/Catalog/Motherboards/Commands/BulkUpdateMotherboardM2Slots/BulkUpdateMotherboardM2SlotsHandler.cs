@@ -75,12 +75,9 @@ public class BulkUpdateMotherboardM2SlotsHandler(
         var requested = formFactors.Distinct().ToHashSet();
         var existingByKey = existing.FormFactors.ToDictionary(x => x.FormFactor);
 
-        foreach (var formFactor in requested)
+        foreach (var formFactor in requested.Where(formFactor => !existingByKey.ContainsKey(formFactor)))
         {
-            if (!existingByKey.ContainsKey(formFactor))
-            {
-                existing.AddFormFactor(new MotherboardM2FormFactor(existing.Id, formFactor));
-            }
+            existing.AddFormFactor(new MotherboardM2FormFactor(existing.Id, formFactor));
         }
 
         foreach (var formFactorEntity in existingByKey.Values.Where(x => !requested.Contains(x.FormFactor)))

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.UpdateChassis;
 
@@ -26,15 +27,17 @@ public class UpdateChassisHandler(
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.LengthMm,
-            request.WidthMm,
-            request.HeightMm,
-            request.MotherboardMaxWidthMm,
-            request.MotherboardMaxHeightMm,
-            request.MaxCpuCoolerHeightMm,
-            request.MaxGraphicsCardLengthMm,
-            request.MaxPsuLengthMm);
+        entity.UpdateSpecs(new ChassisSpecs
+        {
+            LengthMm = request.LengthMm,
+            WidthMm = request.WidthMm,
+            HeightMm = request.HeightMm,
+            MotherboardMaxWidthMm = request.MotherboardMaxWidthMm,
+            MotherboardMaxHeightMm = request.MotherboardMaxHeightMm,
+            MaxCpuCoolerHeightMm = request.MaxCpuCoolerHeightMm,
+            MaxGraphicsCardLengthMm = request.MaxGraphicsCardLengthMm,
+            MaxPsuLengthMm = request.MaxPsuLengthMm
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

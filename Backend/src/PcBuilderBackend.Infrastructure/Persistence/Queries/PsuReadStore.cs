@@ -36,29 +36,9 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
         PagedRequest<PsuFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var queryable = ApplyAttributeFilters(request.Filter);
 
-        var queryable = db.Psus.AsNoTracking()
-            .Include(x => x.Manufacturer)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
-            .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
-            .WhereIf(filter.Wattage is not null,
-                x => x.Wattage >= filter.Wattage!.Min && x.Wattage <= filter.Wattage!.Max)
-            .WhereIf(filter.Modularity.HasValue, x => x.Modularity == filter.Modularity)
-            .WhereIf(filter.FormFactor.HasValue, x => x.FormFactor == filter.FormFactor)
-            .WhereIf(filter.LengthMm is not null,
-                x => x.LengthMm >= filter.LengthMm!.Min && x.LengthMm <= filter.LengthMm!.Max)
-            .WhereIf(filter.WidthMm is not null,
-                x => x.WidthMm >= filter.WidthMm!.Min && x.WidthMm <= filter.WidthMm!.Max)
-            .WhereIf(filter.HeightMm is not null,
-                x => x.HeightMm >= filter.HeightMm!.Min && x.HeightMm <= filter.HeightMm!.Max);
-
-        var needsCompatibility = filter.ChassisId.HasValue
-            || filter.MotherboardId.HasValue
-            || filter.GraphicsCardId.HasValue
-            || filter.CpuId.HasValue;
-
-        if (!needsCompatibility)
+        if (!NeedsCompatibility(request.Filter))
         {
             return await queryable
                 .ApplySorting(request.SortFields, request.SortDirection)
@@ -69,89 +49,15 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
                     cancellationToken);
         }
 
-        Chassis? chassis = null;
-        if (filter.ChassisId is { } chassisId)
-        {
-            chassis = await db.Chassis
-                .AsNoTracking()
-                .Include(c => c.PsuFormFactors)
-                .FirstOrDefaultAsync(c => c.Id == chassisId, cancellationToken);
-
-            if (chassis is null)
-                return PagedResult<PsuListItemDto>.Empty(request);
-        }
-
-        Motherboard? motherboard = null;
-        if (filter.MotherboardId is { } motherboardId)
-        {
-            motherboard = await db.Motherboards
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == motherboardId, cancellationToken);
-
-            if (motherboard is null)
-                return PagedResult<PsuListItemDto>.Empty(request);
-        }
-
-        GraphicsCard? graphicsCard = null;
-        if (filter.GraphicsCardId is { } graphicsCardId)
-        {
-            graphicsCard = await db.GraphicsCards
-                .AsNoTracking()
-                .FirstOrDefaultAsync(g => g.Id == graphicsCardId, cancellationToken);
-
-            if (graphicsCard is null)
-                return PagedResult<PsuListItemDto>.Empty(request);
-        }
-
-        Cpu? cpu = null;
-        if (filter.CpuId is { } cpuId)
-        {
-            cpu = await db.Cpus
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == cpuId, cancellationToken);
-
-            if (cpu is null)
-                return PagedResult<PsuListItemDto>.Empty(request);
-        }
+        var parts = await LoadCompatibilityPartsAsync(request.Filter, cancellationToken);
+        if (parts is null)
+            return PagedResult<PsuListItemDto>.Empty(request);
 
         IEnumerable<Psu> psus = await queryable
             .Include(x => x.Cables)
             .ToListAsync(cancellationToken);
 
-        if (chassis is not null)
-            psus = psus.Where(chassis.CheckPsuCompatibility);
-
-        if (motherboard is not null)
-        {
-            psus = psus.Where(x =>
-                x.CheckMotherboardCompatibility(motherboard).Status != PartsCompatibility.Incompatible);
-        }
-
-        if (graphicsCard is not null)
-        {
-            psus = psus.Where(x =>
-                x.CheckGraphicsCardCompatibility(graphicsCard).Status != PartsCompatibility.Incompatible);
-        }
-
-        if (cpu is not null)
-        {
-            psus = psus.Where(x =>
-                x.CheckPowerBudget(cpu, graphicsCard).Status != PartsCompatibility.Incompatible);
-        }
-
-        var list = psus
-            .ApplySorting(request.SortFields, request.SortDirection)
-            .ToList();
-
-        return new PagedResult<PsuListItemDto>
-        {
-            PageIndex = request.PageIndex,
-            PageSize = request.PageSize,
-            TotalCount = list.Count,
-            Items = mapper.Map<List<PsuListItemDto>>(list
-                .Skip(request.PageIndex * request.PageSize)
-                .Take(request.PageSize))
-        };
+        return PageInMemory(ApplyCompatibility(psus, parts), request);
     }
 
     public async Task<List<PsuCableDto>> ListCablesAsync(Guid psuId, CancellationToken cancellationToken)
@@ -167,4 +73,137 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
         return mapper.Map<List<PsuCableDto>>(
             psu.Cables.Where(x => x.IsActive).OrderBy(x => x.Type).ToList());
     }
+
+    private IQueryable<Psu> ApplyAttributeFilters(PsuFilter filter)
+    {
+        return db.Psus.AsNoTracking()
+            .Include(x => x.Manufacturer)
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
+            .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
+            .WhereIf(filter.Wattage, range => x => x.Wattage >= range.Min && x.Wattage <= range.Max)
+            .WhereIf(filter.Modularity.HasValue, x => x.Modularity == filter.Modularity)
+            .WhereIf(filter.FormFactor.HasValue, x => x.FormFactor == filter.FormFactor)
+            .WhereIf(filter.LengthMm, range => x => x.LengthMm >= range.Min && x.LengthMm <= range.Max)
+            .WhereIf(filter.WidthMm, range => x => x.WidthMm >= range.Min && x.WidthMm <= range.Max)
+            .WhereIf(filter.HeightMm, range => x => x.HeightMm >= range.Min && x.HeightMm <= range.Max);
+    }
+
+    private static bool NeedsCompatibility(PsuFilter filter) =>
+        filter.ChassisId.HasValue
+        || filter.MotherboardId.HasValue
+        || filter.GraphicsCardId.HasValue
+        || filter.CpuId.HasValue;
+
+    private async Task<PsuCompatibilityParts?> LoadCompatibilityPartsAsync(
+        PsuFilter filter,
+        CancellationToken cancellationToken)
+    {
+        var chassis = await LoadChassisAsync(filter.ChassisId, cancellationToken);
+        if (filter.ChassisId.HasValue && chassis is null)
+            return null;
+
+        var motherboard = await LoadMotherboardAsync(filter.MotherboardId, cancellationToken);
+        if (filter.MotherboardId.HasValue && motherboard is null)
+            return null;
+
+        var graphicsCard = await LoadGraphicsCardAsync(filter.GraphicsCardId, cancellationToken);
+        if (filter.GraphicsCardId.HasValue && graphicsCard is null)
+            return null;
+
+        var cpu = await LoadCpuAsync(filter.CpuId, cancellationToken);
+        if (filter.CpuId.HasValue && cpu is null)
+            return null;
+
+        return new PsuCompatibilityParts(chassis, motherboard, graphicsCard, cpu);
+    }
+
+    private async Task<Chassis?> LoadChassisAsync(Guid? chassisId, CancellationToken cancellationToken)
+    {
+        if (chassisId is not { } id)
+            return null;
+
+        return await db.Chassis
+            .AsNoTracking()
+            .Include(c => c.PsuFormFactors)
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
+    private async Task<Motherboard?> LoadMotherboardAsync(Guid? motherboardId, CancellationToken cancellationToken)
+    {
+        if (motherboardId is not { } id)
+            return null;
+
+        return await db.Motherboards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+    }
+
+    private async Task<GraphicsCard?> LoadGraphicsCardAsync(Guid? graphicsCardId, CancellationToken cancellationToken)
+    {
+        if (graphicsCardId is not { } id)
+            return null;
+
+        return await db.GraphicsCards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+    }
+
+    private async Task<Cpu?> LoadCpuAsync(Guid? cpuId, CancellationToken cancellationToken)
+    {
+        if (cpuId is not { } id)
+            return null;
+
+        return await db.Cpus
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
+    private static IEnumerable<Psu> ApplyCompatibility(IEnumerable<Psu> psus, PsuCompatibilityParts parts)
+    {
+        if (parts.Chassis is { } chassis)
+            psus = psus.Where(chassis.CheckPsuCompatibility);
+
+        if (parts.Motherboard is { } motherboard)
+        {
+            psus = psus.Where(x =>
+                x.CheckMotherboardCompatibility(motherboard).Status != PartsCompatibility.Incompatible);
+        }
+
+        if (parts.GraphicsCard is { } graphicsCard)
+        {
+            psus = psus.Where(x =>
+                x.CheckGraphicsCardCompatibility(graphicsCard).Status != PartsCompatibility.Incompatible);
+        }
+
+        if (parts.Cpu is { } cpu)
+        {
+            psus = psus.Where(x =>
+                x.CheckPowerBudget(cpu, parts.GraphicsCard).Status != PartsCompatibility.Incompatible);
+        }
+
+        return psus;
+    }
+
+    private PagedResult<PsuListItemDto> PageInMemory(IEnumerable<Psu> psus, PagedRequest<PsuFilter> request)
+    {
+        var list = psus
+            .ApplySorting(request.SortFields, request.SortDirection)
+            .ToList();
+
+        return new PagedResult<PsuListItemDto>
+        {
+            PageIndex = request.PageIndex,
+            PageSize = request.PageSize,
+            TotalCount = list.Count,
+            Items = mapper.Map<List<PsuListItemDto>>(list
+                .Skip(request.PageIndex * request.PageSize)
+                .Take(request.PageSize))
+        };
+    }
+
+    private sealed record PsuCompatibilityParts(
+        Chassis? Chassis,
+        Motherboard? Motherboard,
+        GraphicsCard? GraphicsCard,
+        Cpu? Cpu);
 }

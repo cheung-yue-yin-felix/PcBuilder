@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkUpdateStorageDrives;
 
@@ -33,13 +34,15 @@ public class BulkUpdateStorageDrivesHandler(
 
             entity.Rename(item.Name);
             entity.UpdateManufacturer(item.ManufacturerId);
-            entity.UpdateSpecs(
-                item.Media,
-                item.Interface,
-                item.FormFactor,
-                item.CapacityGb,
-                item.PcieGeneration,
-                item.Rpm);
+            entity.UpdateSpecs(new StorageDriveSpecs
+            {
+                Media = item.Media,
+                Interface = item.Interface,
+                FormFactor = item.FormFactor,
+                CapacityGb = item.CapacityGb,
+                PcieGeneration = item.PcieGeneration,
+                Rpm = item.Rpm
+            });
 
             result.Add(mapper.Map<StorageDriveDto>(entity));
         }

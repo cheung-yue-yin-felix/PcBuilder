@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -11,15 +12,31 @@ public class StorageAndCoolerTests
     [Fact]
     public void Storage_hdd_requires_rpm_and_hdd_media()
     {
-        var ok = new StorageDrive("HDD", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata,
-            StorageFormFactor.Sata35, 4000, rpm: 7200);
+        var ok = new StorageDrive("HDD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Hdd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 4000,
+            Rpm = 7200
+        });
         ok.IsM2.Should().BeFalse();
         ok.Rpm.Should().Be(7200);
 
-        var ssdOnHddForm = () => new StorageDrive("Bad", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata35, 1000);
-        var missingRpm = () => new StorageDrive("Bad", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata,
-            StorageFormFactor.Sata35, 1000);
+        var ssdOnHddForm = () => new StorageDrive("Bad", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 1000
+        });
+        var missingRpm = () => new StorageDrive("Bad", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Hdd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 1000
+        });
 
         ssdOnHddForm.Should().Throw<ArgumentException>().WithParameterName("storageMedia");
         missingRpm.Should().Throw<ArgumentException>().WithParameterName("rpm");
@@ -28,28 +45,49 @@ public class StorageAndCoolerTests
     [Fact]
     public void Storage_2_5_ssd_is_sata_without_rpm_or_pcie()
     {
-        var ok = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata25, 1000);
+        var ok = new StorageDrive("MX500", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         ok.IsM2.Should().BeFalse();
         ok.Rpm.Should().BeNull();
         ok.PcieGeneration.Should().BeNull();
 
-        var nvme = () => new StorageDrive("Bad", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,
-            StorageFormFactor.Sata25, 1000);
+        var nvme = () => new StorageDrive("Bad", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         nvme.Should().Throw<ArgumentException>().WithParameterName("storageInterface");
     }
 
     [Fact]
     public void Storage_ssd_requires_pcie_generation_and_exposes_m2_key()
     {
-        var nvme = new StorageDrive("990 PRO", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,
-            StorageFormFactor.M22280, 2000, PcieGeneration.Gen4);
+        var nvme = new StorageDrive("990 PRO", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 2000,
+            PcieGeneration = PcieGeneration.Gen4
+        });
         nvme.IsM2.Should().BeTrue();
         nvme.ModuleKey.Should().Be(M2Key.M);
         nvme.M2FormFactor.Should().Be(M2FormFactor.M22280);
 
-        var missingGen = () => new StorageDrive("SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,
-            StorageFormFactor.M22280, 1000);
+        var missingGen = () => new StorageDrive("SSD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 1000
+        });
         missingGen.Should().Throw<ArgumentException>().WithParameterName("pcieGeneration");
     }
 
@@ -60,18 +98,65 @@ public class StorageAndCoolerTests
         var socketId = Guid.NewGuid();
         cooler.AddCpuCoolerSocket(new CpuCoolerSocket(cooler.Id, socketId));
 
-        var cpuOk = new Cpu("CPU", ManufacturerId, socketId, Guid.NewGuid(), 128, false, false, 120, 120);
-        var cpuHot = new Cpu("CPU", ManufacturerId, socketId, Guid.NewGuid(), 128, false, false, 200, 200);
-        var otherSocket = new Cpu("CPU", ManufacturerId, Guid.NewGuid(), Guid.NewGuid(), 128, false, false, 65, 65);
+        var cpuOk = new Cpu("CPU", ManufacturerId, new CpuSpecs
+        {
+            SocketId = socketId,
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
+        var cpuHot = new Cpu("CPU", ManufacturerId, new CpuSpecs
+        {
+            SocketId = socketId,
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 200,
+            PowerConsumptionWatts = 200
+        });
+        var otherSocket = new Cpu("CPU", ManufacturerId, new CpuSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 65,
+            PowerConsumptionWatts = 65
+        });
 
         cooler.CheckCompatibility(cpuOk).Status.Should().Be(PartsCompatibility.Compatible);
         cooler.CheckCompatibility(cpuHot).Reason.Should().Be(CompatibilityReason.ExceedsThermalDesignPower);
         cooler.CheckCompatibility(otherSocket).Reason.Should().Be(CompatibilityReason.MissingCpuCoolerSocket);
 
-        var shortRam = new Ram("Low", ManufacturerId, "Black", DdrGeneration.Ddr5, RamFormFactor.UDimm,
-            RamRank.SingleRank, 16, 32, 2, 6000, 30);
-        var tallRam = new Ram("Tall", ManufacturerId, "Black", DdrGeneration.Ddr5, RamFormFactor.UDimm,
-            RamRank.SingleRank, 16, 32, 2, 6000, 50);
+        var shortRam = new Ram("Low", ManufacturerId, new RamSpecs
+        {
+            Color = "Black",
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            RamRank = RamRank.SingleRank,
+            MemorySizePerStickGb = 16,
+            TotalMemorySizeGb = 32,
+            ModulesCount = 2,
+            MaxMemorySpeedMts = 6000,
+            HeightMm = 30
+        });
+        var tallRam = new Ram("Tall", ManufacturerId, new RamSpecs
+        {
+            Color = "Black",
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            RamRank = RamRank.SingleRank,
+            MemorySizePerStickGb = 16,
+            TotalMemorySizeGb = 32,
+            ModulesCount = 2,
+            MaxMemorySpeedMts = 6000,
+            HeightMm = 50
+        });
         cooler.CheckCompatibility(shortRam).Status.Should().Be(PartsCompatibility.Compatible);
         cooler.CheckCompatibility(tallRam).Reason.Should().Be(CompatibilityReason.RamHeightExceedsCoolerLimit);
     }

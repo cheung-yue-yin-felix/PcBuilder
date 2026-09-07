@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.BulkCreateWirelessNetworkAdapters;
 
@@ -24,17 +25,20 @@ public class BulkCreateWirelessNetworkAdaptersHandler(
         foreach (var entity in request.Adapters.Select(item => new WirelessNetworkAdapter(
                      item.Name,
                      item.ManufacturerId,
-                     item.WifiStandard,
-                     item.HostInterface,
-                     item.MaxSpeedMbps,
-                     item.MaxSpeedMbps5G,
-                     item.MaxSpeedMbps6G,
-                     item.BluetoothVersion,
-                     item.PcieSlotType,
-                     item.Key,
-                     item.M2FormFactor,
-                     item.UsbVersion,
-                     item.UsbType)))
+                     new WirelessNetworkAdapterSpecs
+                     {
+                         WifiStandard = item.WifiStandard,
+                         HostInterface = item.HostInterface,
+                         MaxSpeedMbps = item.MaxSpeedMbps,
+                         MaxSpeedMbps5G = item.MaxSpeedMbps5G,
+                         MaxSpeedMbps6G = item.MaxSpeedMbps6G,
+                         BluetoothVersion = item.BluetoothVersion,
+                         PcieSlotType = item.PcieSlotType,
+                         M2Key = item.Key,
+                         M2FormFactor = item.M2FormFactor,
+                         UsbVersion = item.UsbVersion,
+                         UsbType = item.UsbType
+                     })))
         {
             adapters.Add(entity);
             result.Add(mapper.Map<WirelessNetworkAdapterDto>(entity));

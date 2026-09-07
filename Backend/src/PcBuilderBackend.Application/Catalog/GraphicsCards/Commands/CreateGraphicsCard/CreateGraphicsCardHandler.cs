@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
 
@@ -22,17 +23,20 @@ public class CreateGraphicsCardHandler(
         var entity = new GraphicsCard(
             request.Name,
             request.ManufacturerId,
-            request.GpuId,
-            request.VideoMemoryGb,
-            request.PcieSlotsUsed,
-            request.PcieGeneration,
-            request.IsLowProfile,
-            request.LengthMm,
-            request.WidthMm,
-            request.HeightMm,
-            request.PowerConsumptionWatts,
-            request.PowerConnectorType,
-            request.PowerConnectorCount);
+            new GraphicsCardSpecs
+            {
+                GpuId = request.GpuId,
+                VideoMemoryGb = request.VideoMemoryGb,
+                PcieSlotsUsed = request.PcieSlotsUsed,
+                PcieGeneration = request.PcieGeneration,
+                IsLowProfile = request.IsLowProfile,
+                LengthMm = request.LengthMm,
+                WidthMm = request.WidthMm,
+                HeightMm = request.HeightMm,
+                PowerConsumptionWatts = request.PowerConsumptionWatts,
+                PowerConnectorType = request.PowerConnectorType,
+                PowerConnectorCount = request.PowerConnectorCount
+            });
 
         graphicsCards.Add(entity);
         await unitOfWork.SaveChangesAsync(cancellationToken);

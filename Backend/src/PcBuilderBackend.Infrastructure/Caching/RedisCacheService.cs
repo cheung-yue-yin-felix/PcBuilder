@@ -26,7 +26,7 @@ public sealed class RedisCacheService(
 
         try
         {
-            return JsonSerializer.Deserialize<T>((string)value!, JsonOptions);
+            return JsonSerializer.Deserialize<T>(value.ToString(), JsonOptions);
         }
         catch (JsonException ex)
         {

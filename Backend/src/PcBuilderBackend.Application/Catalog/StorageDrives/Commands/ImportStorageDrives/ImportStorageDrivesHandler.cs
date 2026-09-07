@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.ImportStorageDrives;
 
@@ -34,12 +35,15 @@ public class ImportStorageDrivesHandler(
             var entity = new StorageDrive(
                 row.Name,
                 row.ManufacturerId,
-                row.Media,
-                row.Interface,
-                row.FormFactor,
-                row.CapacityGb,
-                row.PcieGeneration,
-                row.Rpm);
+                new StorageDriveSpecs
+                {
+                    Media = row.Media,
+                    Interface = row.Interface,
+                    FormFactor = row.FormFactor,
+                    CapacityGb = row.CapacityGb,
+                    PcieGeneration = row.PcieGeneration,
+                    Rpm = row.Rpm
+                });
 
             storageDrives.Add(entity);
             result.Add(entity);

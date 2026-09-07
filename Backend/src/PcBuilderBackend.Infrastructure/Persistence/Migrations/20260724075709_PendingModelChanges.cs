@@ -96,14 +96,14 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                 table: "Gpus",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "SeriesId",
                 table: "Cpus",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.CreateTable(
                 name: "ChassisMbFormFactor",

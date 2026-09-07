@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -45,7 +46,15 @@ public class PsuTests
     [Fact]
     public void Constructor_rejects_empty_manufacturer()
     {
-        var act = () => new Psu("RM850x", Guid.Empty, 850, PsuModularity.FullModular, PsuFormFactor.Atx, 160, 150, 86);
+        var act = () => new Psu("RM850x", Guid.Empty, new PsuSpecs
+        {
+            Wattage = 850,
+            Modularity = PsuModularity.FullModular,
+            FormFactor = PsuFormFactor.Atx,
+            LengthMm = 160,
+            WidthMm = 150,
+            HeightMm = 86
+        });
 
         act.Should().Throw<ArgumentException>().WithParameterName("manufacturerId");
     }
@@ -92,7 +101,15 @@ public class PsuTests
     {
         var psu = Create();
 
-        psu.UpdateSpecs(750, PsuModularity.SemiModular, PsuFormFactor.Sfx, 100, 125, 63.5m);
+        psu.UpdateSpecs(new PsuSpecs
+        {
+            Wattage = 750,
+            Modularity = PsuModularity.SemiModular,
+            FormFactor = PsuFormFactor.Sfx,
+            LengthMm = 100,
+            WidthMm = 125,
+            HeightMm = 63.5m
+        });
 
         psu.Wattage.Should().Be(750);
         psu.Modularity.Should().Be(PsuModularity.SemiModular);
@@ -169,5 +186,13 @@ public class PsuTests
         decimal lengthMm = 160,
         decimal widthMm = 150,
         decimal heightMm = 86) =>
-        new(name, ManufacturerId, wattage, modularity, formFactor, lengthMm, widthMm, heightMm);
+        new(name, ManufacturerId, new PsuSpecs
+        {
+            Wattage = wattage,
+            Modularity = modularity,
+            FormFactor = formFactor,
+            LengthMm = lengthMm,
+            WidthMm = widthMm,
+            HeightMm = heightMm
+        });
 }

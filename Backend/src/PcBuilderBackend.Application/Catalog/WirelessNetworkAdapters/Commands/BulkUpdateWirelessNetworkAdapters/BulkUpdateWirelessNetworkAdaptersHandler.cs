@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.BulkUpdateWirelessNetworkAdapters;
 
@@ -33,18 +34,20 @@ public class BulkUpdateWirelessNetworkAdaptersHandler(
 
             entity.Rename(item.Name);
             entity.UpdateManufacturer(item.ManufacturerId);
-            entity.UpdateSpecs(
-                item.WifiStandard,
-                item.HostInterface,
-                item.MaxSpeedMbps,
-                item.MaxSpeedMbps5G,
-                item.MaxSpeedMbps6G,
-                item.BluetoothVersion,
-                item.PcieSlotType,
-                item.Key,
-                item.M2FormFactor,
-                item.UsbVersion,
-                item.UsbType);
+            entity.UpdateSpecs(new WirelessNetworkAdapterSpecs
+            {
+                WifiStandard = item.WifiStandard,
+                HostInterface = item.HostInterface,
+                MaxSpeedMbps = item.MaxSpeedMbps,
+                MaxSpeedMbps5G = item.MaxSpeedMbps5G,
+                MaxSpeedMbps6G = item.MaxSpeedMbps6G,
+                BluetoothVersion = item.BluetoothVersion,
+                PcieSlotType = item.PcieSlotType,
+                M2Key = item.Key,
+                M2FormFactor = item.M2FormFactor,
+                UsbVersion = item.UsbVersion,
+                UsbType = item.UsbType
+            });
 
             result.Add(mapper.Map<WirelessNetworkAdapterDto>(entity));
         }

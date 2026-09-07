@@ -97,7 +97,7 @@ public static class AuthEndpoints
         if (!result.Succeeded || result.Tokens is null)
             return TypedResults.Unauthorized();
 
-        RefreshTokenCookies.Set(context.Response, result.Tokens.RefreshToken, jwt, context.Request.IsHttps);
+        RefreshTokenCookies.Set(context.Response, result.Tokens.RefreshToken, jwt);
         return TypedResults.Ok(result.Tokens);
     }
 
@@ -116,7 +116,7 @@ public static class AuthEndpoints
         if (tokens is null)
             return TypedResults.Unauthorized();
 
-        RefreshTokenCookies.Set(context.Response, tokens.RefreshToken, jwt, context.Request.IsHttps);
+        RefreshTokenCookies.Set(context.Response, tokens.RefreshToken, jwt);
         return TypedResults.Ok(tokens);
     }
 
@@ -129,7 +129,7 @@ public static class AuthEndpoints
     {
         var refreshToken = FirstNonEmpty(body?.RefreshToken, RefreshTokenCookies.Read(context.Request));
         await sender.Send(new LogoutCommand(refreshToken), cancellationToken);
-        RefreshTokenCookies.Delete(context.Response, jwt, context.Request.IsHttps);
+        RefreshTokenCookies.Delete(context.Response, jwt);
         return TypedResults.NoContent();
     }
 

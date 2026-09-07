@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.ImportMotherboards;
 
@@ -35,21 +36,24 @@ public class ImportMotherboardsHandler(
             var entity = new Motherboard(
                 row.ManufacturerId,
                 row.Name,
-                row.SocketId,
-                row.ChipsetId,
-                row.RamSlots,
-                row.MaxMemoryGb,
-                row.MaxDimmSizeGb,
-                row.SataPorts,
-                row.FanConnectors,
-                row.EpsConnectors,
-                row.WidthMm,
-                row.HeightMm,
-                row.DdrGeneration,
-                row.RamFormFactor,
-                row.FormFactor,
-                row.WifiEnabled,
-                row.BluetoothEnabled);
+                new MotherboardSpecs
+                {
+                    SocketId = row.SocketId,
+                    ChipsetId = row.ChipsetId,
+                    RamSlots = row.RamSlots,
+                    MaxMemoryGb = row.MaxMemoryGb,
+                    MaxDimmSizeGb = row.MaxDimmSizeGb,
+                    SataPorts = row.SataPorts,
+                    FanConnectors = row.FanConnectors,
+                    EpsConnectors = row.EpsConnectors,
+                    WidthMm = row.WidthMm,
+                    HeightMm = row.HeightMm,
+                    DdrGeneration = row.DdrGeneration,
+                    RamFormFactor = row.RamFormFactor,
+                    MbFormFactor = row.FormFactor,
+                    WifiEnabled = row.WifiEnabled,
+                    BluetoothEnabled = row.BluetoothEnabled
+                });
 
             foreach (var slot in row.PcieSlots)
             {

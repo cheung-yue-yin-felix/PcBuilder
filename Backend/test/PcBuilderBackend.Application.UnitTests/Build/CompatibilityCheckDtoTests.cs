@@ -87,18 +87,7 @@ public class CompatibilityCheckDtoTests
 
     private sealed class StubChecker(List<CompatibilityCheck> checks) : ICompatibilityChecker
     {
-        public Task<List<CompatibilityCheck>> CheckCompatibilityAsync(
-            Guid? chassisId,
-            Guid? motherboardId,
-            Guid? cpuId,
-            Guid? cpuCoolerId,
-            Guid? ramKitId,
-            Guid? graphicsCardId,
-            Guid? psuId,
-            List<PcBuildPartDto>? chassisFans,
-            List<PcBuildPartDto>? storageDevices,
-            List<PcBuildPartDto>? wiredNetworkAdapters,
-            List<PcBuildPartDto>? wirelessNetworkAdapters) =>
+        public Task<List<CompatibilityCheck>> CheckCompatibilityAsync(CompatibilityCheckRequest request) =>
             Task.FromResult(checks);
     }
 }

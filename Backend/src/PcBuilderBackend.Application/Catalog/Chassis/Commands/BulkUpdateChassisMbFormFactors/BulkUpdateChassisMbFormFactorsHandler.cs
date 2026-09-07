@@ -28,12 +28,9 @@ public class BulkUpdateChassisMbFormFactorsHandler(
         var requested = request.MbFormFactors.Distinct().ToHashSet();
         var existingByKey = entity.MbFormFactors.ToDictionary(x => x.MbFormFactor);
 
-        foreach (var formFactor in requested)
+        foreach (var formFactor in requested.Where(formFactor => !existingByKey.ContainsKey(formFactor)))
         {
-            if (!existingByKey.ContainsKey(formFactor))
-            {
-                entity.AddMbFormFactor(new ChassisMbFormFactor(request.ChassisId, formFactor));
-            }
+            entity.AddMbFormFactor(new ChassisMbFormFactor(request.ChassisId, formFactor));
         }
 
         foreach (var existing in existingByKey.Values.Where(x => !requested.Contains(x.MbFormFactor)))

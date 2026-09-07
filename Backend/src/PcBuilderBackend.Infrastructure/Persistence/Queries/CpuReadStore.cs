@@ -46,20 +46,17 @@ public sealed class CpuReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuRe
 
         var cpuQuery = db.Cpus
             .AsNoTracking()
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name),
-                x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue,
                 x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.SocketId.HasValue,
                 x => x.SocketId == filter.SocketId)
             .WhereIf(filter.SeriesId.HasValue,
                 x => x.SeriesId == filter.SeriesId)
-            .WhereIf(filter.PowerConsumptionWatts is not null,
-                x => x.PowerConsumptionWatts >= filter.PowerConsumptionWatts!.Min &&
-                     x.PowerConsumptionWatts <= filter.PowerConsumptionWatts!.Max)
-            .WhereIf(filter.ThermalDesignPower is not null,
-                x => x.ThermalDesignPower >= filter.ThermalDesignPower!.Min &&
-                     x.ThermalDesignPower <= filter.ThermalDesignPower!.Max);
+            .WhereIf(filter.PowerConsumptionWatts, range =>
+                x => x.PowerConsumptionWatts >= range.Min && x.PowerConsumptionWatts <= range.Max)
+            .WhereIf(filter.ThermalDesignPower, range =>
+                x => x.ThermalDesignPower >= range.Min && x.ThermalDesignPower <= range.Max);
 
         if (filter.MotherboardId is not { } motherboardId)
         {

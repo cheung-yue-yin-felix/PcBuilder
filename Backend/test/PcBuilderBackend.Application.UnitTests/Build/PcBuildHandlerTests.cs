@@ -138,11 +138,7 @@ public class PcBuildHandlerTests : IDisposable
     private static ICompatibilityChecker CompatibleChecker()
     {
         var checker = Substitute.For<ICompatibilityChecker>();
-        checker.CheckCompatibilityAsync(
-                Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(),
-                Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(),
-                Arg.Any<List<PcBuildPartDto>?>(), Arg.Any<List<PcBuildPartDto>?>(),
-                Arg.Any<List<PcBuildPartDto>?>(), Arg.Any<List<PcBuildPartDto>?>())
+        checker.CheckCompatibilityAsync(Arg.Any<CompatibilityCheckRequest>())
             .Returns([]);
         return checker;
     }

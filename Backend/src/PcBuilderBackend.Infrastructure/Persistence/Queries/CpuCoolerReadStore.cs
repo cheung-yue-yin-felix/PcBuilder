@@ -39,9 +39,50 @@ public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoo
         PagedRequest<CpuCoolerFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var queryable = ApplyAttributeFilters(request.Filter);
 
-        var queryable = db.CpuCoolers
+        queryable = await ApplyMotherboardFilterAsync(queryable, request.Filter.MotherboardId, cancellationToken);
+        if (queryable is null)
+            return PagedResult<CpuCoolerListItemDto>.Empty(request);
+
+        if (!NeedsInMemoryFilter(request.Filter))
+        {
+            return await queryable
+                .ApplySorting(request.SortFields, request.SortDirection)
+                .ToPagedResultAsync<CpuCooler, CpuCoolerListItemDto>(
+                    request.PageIndex,
+                    request.PageSize,
+                    mapper.ConfigurationProvider,
+                    cancellationToken);
+        }
+
+        var parts = await LoadCompatibilityPartsAsync(request.Filter, cancellationToken);
+        if (parts is null)
+            return PagedResult<CpuCoolerListItemDto>.Empty(request);
+
+        IEnumerable<CpuCooler> coolers = await queryable
+            .Include(x => x.Manufacturer)
+            .Include(x => x.CpuCoolerSockets)
+            .ToListAsync(cancellationToken);
+
+        return PageInMemory(ApplyCompatibility(coolers, parts), request);
+    }
+
+    public async Task<List<CpuCoolerSocketDto>> ListCpuCoolerSockets(
+        Guid cpuCoolerId,
+        CancellationToken cancellationToken)
+    {
+        return await db.CpuCoolerSockets
+            .AsNoTracking()
+            .Where(x => x.CpuCoolerId == cpuCoolerId)
+            .OrderBy(x => x.Socket.Name)
+            .ProjectTo<CpuCoolerSocketDto>(mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
+    private IQueryable<CpuCooler> ApplyAttributeFilters(CpuCoolerFilter filter)
+    {
+        return db.CpuCoolers
             .AsNoTracking()
             .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
@@ -59,86 +100,106 @@ public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoo
             .WhereIf(filter.RadiatorLength.HasValue, x => x.RadiatorLength == filter.RadiatorLength)
             .WhereIf(filter.SocketId.HasValue,
                 x => x.CpuCoolerSockets.Any(s => s.SocketId == filter.SocketId && s.IsActive));
+    }
 
-        if (filter.MotherboardId is { } motherboardId)
-        {
-            var motherboard = await db.Motherboards
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == motherboardId, cancellationToken);
+    private async Task<IQueryable<CpuCooler>?> ApplyMotherboardFilterAsync(
+        IQueryable<CpuCooler> queryable,
+        Guid? motherboardId,
+        CancellationToken cancellationToken)
+    {
+        if (motherboardId is not { } id)
+            return queryable;
 
-            if (motherboard is null)
-                return PagedResult<CpuCoolerListItemDto>.Empty(request);
+        var motherboard = await db.Motherboards
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
-            queryable = queryable.Where(x =>
-                x.CpuCoolerSockets.Any(s => s.SocketId == motherboard.SocketId && s.IsActive));
-        }
+        if (motherboard is null)
+            return null;
 
-        if (!filter.CpuId.HasValue && !filter.ChassisId.HasValue && !filter.RamId.HasValue)
-        {
-            return await queryable
-                .ApplySorting(request.SortFields, request.SortDirection)
-                .ToPagedResultAsync<CpuCooler, CpuCoolerListItemDto>(
-                    request.PageIndex,
-                    request.PageSize,
-                    mapper.ConfigurationProvider,
-                    cancellationToken);
-        }
+        return queryable.Where(x =>
+            x.CpuCoolerSockets.Any(s => s.SocketId == motherboard.SocketId && s.IsActive));
+    }
 
-        Cpu? cpu = null;
-        if (filter.CpuId is { } cpuId)
-        {
-            cpu = await db.Cpus
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == cpuId, cancellationToken);
+    private static bool NeedsInMemoryFilter(CpuCoolerFilter filter) =>
+        filter.CpuId.HasValue || filter.ChassisId.HasValue || filter.RamId.HasValue;
 
-            if (cpu is null)
-                return PagedResult<CpuCoolerListItemDto>.Empty(request);
-        }
+    private async Task<CpuCoolerCompatibilityParts?> LoadCompatibilityPartsAsync(
+        CpuCoolerFilter filter,
+        CancellationToken cancellationToken)
+    {
+        var cpu = await LoadCpuAsync(filter.CpuId, cancellationToken);
+        if (filter.CpuId.HasValue && cpu is null)
+            return null;
 
-        Chassis? chassis = null;
-        if (filter.ChassisId is { } chassisId)
-        {
-            chassis = await db.Chassis
-                .AsNoTracking()
-                .Include(x => x.Radiators)
-                .FirstOrDefaultAsync(x => x.Id == chassisId, cancellationToken);
+        var chassis = await LoadChassisAsync(filter.ChassisId, cancellationToken);
+        if (filter.ChassisId.HasValue && chassis is null)
+            return null;
 
-            if (chassis is null)
-                return PagedResult<CpuCoolerListItemDto>.Empty(request);
-        }
+        var ram = await LoadRamAsync(filter.RamId, cancellationToken);
+        if (filter.RamId.HasValue && ram is null)
+            return null;
 
-        Ram? ram = null;
-        if (filter.RamId is { } ramId)
-        {
-            ram = await db.Rams
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == ramId, cancellationToken);
+        return new CpuCoolerCompatibilityParts(cpu, chassis, ram);
+    }
 
-            if (ram is null)
-                return PagedResult<CpuCoolerListItemDto>.Empty(request);
-        }
+    private async Task<Cpu?> LoadCpuAsync(Guid? cpuId, CancellationToken cancellationToken)
+    {
+        if (cpuId is not { } id)
+            return null;
 
-        // Domain CheckCompatibility is not EF-translatable; filter in memory then page.
-        IEnumerable<CpuCooler> coolers = await queryable
-            .Include(x => x.Manufacturer)
-            .Include(x => x.CpuCoolerSockets)
-            .ToListAsync(cancellationToken);
+        return await db.Cpus
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
 
-        if (cpu is not null)
+    private async Task<Chassis?> LoadChassisAsync(Guid? chassisId, CancellationToken cancellationToken)
+    {
+        if (chassisId is not { } id)
+            return null;
+
+        return await db.Chassis
+            .AsNoTracking()
+            .Include(x => x.Radiators)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    private async Task<Ram?> LoadRamAsync(Guid? ramId, CancellationToken cancellationToken)
+    {
+        if (ramId is not { } id)
+            return null;
+
+        return await db.Rams
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    private static IEnumerable<CpuCooler> ApplyCompatibility(
+        IEnumerable<CpuCooler> coolers,
+        CpuCoolerCompatibilityParts parts)
+    {
+        if (parts.Cpu is { } cpu)
         {
             coolers = coolers.Where(x =>
                 x.CheckCompatibility(cpu).Status != PartsCompatibility.Incompatible);
         }
 
-        if (chassis is not null)
+        if (parts.Chassis is { } chassis)
             coolers = coolers.Where(chassis.CheckCpuCoolerCompatibility);
 
-        if (ram is not null)
+        if (parts.Ram is { } ram)
         {
             coolers = coolers.Where(x =>
                 x.CheckCompatibility(ram).Status != PartsCompatibility.Incompatible);
         }
 
+        return coolers;
+    }
+
+    private PagedResult<CpuCoolerListItemDto> PageInMemory(
+        IEnumerable<CpuCooler> coolers,
+        PagedRequest<CpuCoolerFilter> request)
+    {
         var list = coolers
             .ApplySorting(request.SortFields, request.SortDirection)
             .ToList();
@@ -154,16 +215,5 @@ public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoo
         };
     }
 
-    public async Task<List<CpuCoolerSocketDto>> ListCpuCoolerSockets(
-        Guid cpuCoolerId,
-        CancellationToken cancellationToken)
-    {
-        return await db.CpuCoolerSockets
-            .AsNoTracking()
-            .Where(x => x.CpuCoolerId == cpuCoolerId)
-            .OrderBy(x => x.Socket.Name)
-            .ProjectTo<CpuCoolerSocketDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
+    private sealed record CpuCoolerCompatibilityParts(Cpu? Cpu, Chassis? Chassis, Ram? Ram);
 }
-

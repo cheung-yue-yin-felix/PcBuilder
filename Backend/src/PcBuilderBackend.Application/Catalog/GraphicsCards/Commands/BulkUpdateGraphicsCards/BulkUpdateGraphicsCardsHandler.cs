@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.BulkUpdateGraphicsCards;
 
@@ -32,18 +33,20 @@ public class BulkUpdateGraphicsCardsHandler(
 
             entity.Rename(item.Name);
             entity.UpdateManufacturer(item.ManufacturerId);
-            entity.UpdateSpecs(
-                item.GpuId,
-                item.VideoMemoryGb,
-                item.PcieSlotsUsed,
-                item.PcieGeneration,
-                item.IsLowProfile,
-                item.LengthMm,
-                item.WidthMm,
-                item.HeightMm,
-                item.PowerConsumptionWatts,
-                item.PowerConnectorType,
-                item.PowerConnectorCount);
+            entity.UpdateSpecs(new GraphicsCardSpecs
+            {
+                GpuId = item.GpuId,
+                VideoMemoryGb = item.VideoMemoryGb,
+                PcieSlotsUsed = item.PcieSlotsUsed,
+                PcieGeneration = item.PcieGeneration,
+                IsLowProfile = item.IsLowProfile,
+                LengthMm = item.LengthMm,
+                WidthMm = item.WidthMm,
+                HeightMm = item.HeightMm,
+                PowerConsumptionWatts = item.PowerConsumptionWatts,
+                PowerConnectorType = item.PowerConnectorType,
+                PowerConnectorCount = item.PowerConnectorCount
+            });
 
             result.Add(mapper.Map<GraphicsCardDto>(entity));
         }

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.UpdateMemory;
 
@@ -15,16 +16,18 @@ public class UpdateMemoryHandler(IRamRepository memories, IUnitOfWork unitOfWork
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.Color,
-            request.DdrGeneration,
-            request.RamFormFactor,
-            request.RamRank,
-            request.MemorySizePerStickGb,
-            request.TotalMemorySizeGb,
-            request.ModulesCount,
-            request.MaxMemorySpeedMts,
-            request.HeightMm);
+        entity.UpdateSpecs(new RamSpecs
+        {
+            Color = request.Color,
+            DdrGeneration = request.DdrGeneration,
+            RamFormFactor = request.RamFormFactor,
+            RamRank = request.RamRank,
+            MemorySizePerStickGb = request.MemorySizePerStickGb,
+            TotalMemorySizeGb = request.TotalMemorySizeGb,
+            ModulesCount = request.ModulesCount,
+            MaxMemorySpeedMts = request.MaxMemorySpeedMts,
+            HeightMm = request.HeightMm
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

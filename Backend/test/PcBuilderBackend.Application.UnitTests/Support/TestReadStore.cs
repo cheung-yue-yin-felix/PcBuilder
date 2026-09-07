@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 namespace PcBuilderBackend.Application.UnitTests.Support;
 
 public sealed class TestReadStore<TEntity, TDto>(TestApplicationDbContext db, IMapper mapper)
-    : IReadStore<TEntity, TDto>
+    : IReadStore<TDto>
     where TEntity : BaseEntity
 {
     public async Task<TDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

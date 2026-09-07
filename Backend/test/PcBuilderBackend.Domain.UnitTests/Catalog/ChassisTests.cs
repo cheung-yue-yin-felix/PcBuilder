@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -30,10 +31,42 @@ public class ChassisTests
     {
         var chassis = Create();
         chassis.AddMbFormFactor(new ChassisMbFormFactor(chassis.Id, MbFormFactor.Atx));
-        var board = new Motherboard(ManufacturerId, "B650", Guid.NewGuid(), Guid.NewGuid(), 4, 128, 48, 4, 4, 2,
-            244, 244, DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Atx, false, false);
-        var itx = new Motherboard(ManufacturerId, "ITX", Guid.NewGuid(), Guid.NewGuid(), 2, 64, 32, 4, 3, 1,
-            170, 170, DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Mitx, false, false);
+        var board = new Motherboard(ManufacturerId, "B650", new MotherboardSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            ChipsetId = Guid.NewGuid(),
+            RamSlots = 4,
+            MaxMemoryGb = 128,
+            MaxDimmSizeGb = 48,
+            SataPorts = 4,
+            FanConnectors = 4,
+            EpsConnectors = 2,
+            WidthMm = 244,
+            HeightMm = 244,
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            MbFormFactor = MbFormFactor.Atx,
+            WifiEnabled = false,
+            BluetoothEnabled = false
+        });
+        var itx = new Motherboard(ManufacturerId, "ITX", new MotherboardSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            ChipsetId = Guid.NewGuid(),
+            RamSlots = 2,
+            MaxMemoryGb = 64,
+            MaxDimmSizeGb = 32,
+            SataPorts = 4,
+            FanConnectors = 3,
+            EpsConnectors = 1,
+            WidthMm = 170,
+            HeightMm = 170,
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            MbFormFactor = MbFormFactor.Mitx,
+            WifiEnabled = false,
+            BluetoothEnabled = false
+        });
 
         chassis.CheckMotherboardCompatibility(board).Should().BeTrue();
         chassis.CheckMotherboardCompatibility(itx).Should().BeFalse();
@@ -44,18 +77,35 @@ public class ChassisTests
     {
         var chassis = Create();
         chassis.AddDriveBay(new ChassisDriveBay(chassis.Id, DriveBayFormFactor.Inch35, 1));
-        var hdd = new StorageDrive("HDD", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata,
-            StorageFormFactor.Sata35, 4000, rpm: 7200);
-        var nvme = new StorageDrive("SSD", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme,
-            StorageFormFactor.M22280, 2000, PcieGeneration.Gen4);
+        var hdd = new StorageDrive("HDD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Hdd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 4000,
+            Rpm = 7200
+        });
+        var nvme = new StorageDrive("SSD", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 2000,
+            PcieGeneration = PcieGeneration.Gen4
+        });
 
         chassis.CheckStorageDriveCompatibility(nvme).Should().BeTrue();
         chassis.CheckStorageDriveCompatibility(hdd).Should().BeTrue();
         chassis.CheckStorageDriveCompatibility([hdd, hdd]).Should().BeFalse();
 
         chassis.AddDriveBay(new ChassisDriveBay(chassis.Id, DriveBayFormFactor.Inch25, 1));
-        var sataSsd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata25, 1000);
+        var sataSsd = new StorageDrive("MX500", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         chassis.CheckStorageDriveCompatibility(sataSsd).Should().BeTrue();
         chassis.CheckStorageDriveCompatibility([sataSsd, sataSsd]).Should().BeFalse();
     }
@@ -95,11 +145,31 @@ public class ChassisTests
     [Fact]
     public void Constructor_rejects_non_positive_dimensions()
     {
-        var act = () => new Chassis("Case", ManufacturerId, 0, 230, 460, 305, 244, 170, 370, 180);
+        var act = () => new Chassis("Case", ManufacturerId, new ChassisSpecs
+        {
+            LengthMm = 0,
+            WidthMm = 230,
+            HeightMm = 460,
+            MotherboardMaxWidthMm = 305,
+            MotherboardMaxHeightMm = 244,
+            MaxCpuCoolerHeightMm = 170,
+            MaxGraphicsCardLengthMm = 370,
+            MaxPsuLengthMm = 180
+        });
 
         act.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     private static Chassis Create() =>
-        new("4000D", ManufacturerId, 450, 230, 460, 305, 244, 170, 370, 180);
+        new("4000D", ManufacturerId, new ChassisSpecs
+        {
+            LengthMm = 450,
+            WidthMm = 230,
+            HeightMm = 460,
+            MotherboardMaxWidthMm = 305,
+            MotherboardMaxHeightMm = 244,
+            MaxCpuCoolerHeightMm = 170,
+            MaxGraphicsCardLengthMm = 370,
+            MaxPsuLengthMm = 180
+        });
 }

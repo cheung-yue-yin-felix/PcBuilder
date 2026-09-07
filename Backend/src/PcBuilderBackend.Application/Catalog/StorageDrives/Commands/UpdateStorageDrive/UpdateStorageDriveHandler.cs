@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.UpdateStorageDrive;
 
@@ -29,13 +30,15 @@ public class UpdateStorageDriveHandler(
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.Media,
-            request.Interface,
-            request.FormFactor,
-            request.CapacityGb,
-            request.PcieGeneration,
-            request.Rpm);
+        entity.UpdateSpecs(new StorageDriveSpecs
+        {
+            Media = request.Media,
+            Interface = request.Interface,
+            FormFactor = request.FormFactor,
+            CapacityGb = request.CapacityGb,
+            PcieGeneration = request.PcieGeneration,
+            Rpm = request.Rpm
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.CreatePsu;
 
@@ -20,12 +21,15 @@ public class CreatePsuHandler(
         var entity = new Psu(
             request.Name,
             request.ManufacturerId,
-            request.Wattage,
-            request.Modularity,
-            request.FormFactor,
-            request.LengthMm,
-            request.WidthMm,
-            request.HeightMm);
+            new PsuSpecs
+            {
+                Wattage = request.Wattage,
+                Modularity = request.Modularity,
+                FormFactor = request.FormFactor,
+                LengthMm = request.LengthMm,
+                WidthMm = request.WidthMm,
+                HeightMm = request.HeightMm
+            });
 
         foreach (var cable in request.Cables)
         {

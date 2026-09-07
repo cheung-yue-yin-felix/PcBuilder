@@ -47,35 +47,27 @@ public class ChassisReadStore(PcBuilderDbContext db, IMapper mapper) : IChassisR
         return await db.Chassis
             .AsNoTracking()
             .Include(x => x.MbFormFactors)
-            .WhereIf(!string.IsNullOrWhiteSpace(request.Filter.Name),
-                x => x.Name.Contains(request.Filter.Name!))
+            .WhereIfHasText(request.Filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(request.Filter.ManufacturerId.HasValue,
                 x => x.ManufacturerId == request.Filter.ManufacturerId)
             .WhereIf(request.Filter.SupportedMbFormFactors.Count != 0,
                 x => x.MbFormFactors.Any(f => request.Filter.SupportedMbFormFactors.Contains(f.MbFormFactor)))
-            .WhereIf(request.Filter.HeightMm != null,
-                x => x.HeightMm <= request.Filter.HeightMm!.Max &&
-                     x.HeightMm >= request.Filter.HeightMm!.Min)
-            .WhereIf(request.Filter.LengthMm != null,
-                x => x.LengthMm <= request.Filter.LengthMm!.Max &&
-                     x.LengthMm >= request.Filter.LengthMm!.Min)
-            .WhereIf(request.Filter.WidthMm != null,
-                x => x.WidthMm <= request.Filter.WidthMm!.Max && x.WidthMm >= request.Filter.WidthMm!.Min)
-            .WhereIf(request.Filter.MotherboardMaxWidthMm != null,
-                x => x.MotherboardMaxWidthMm <= request.Filter.MotherboardMaxWidthMm!.Max &&
-                     x.MotherboardMaxWidthMm >= request.Filter.MotherboardMaxWidthMm!.Min)
-            .WhereIf(request.Filter.MotherboardMaxHeightMm != null,
-                x => x.MotherboardMaxHeightMm <= request.Filter.MotherboardMaxHeightMm!.Max &&
-                     x.MotherboardMaxHeightMm >= request.Filter.MotherboardMaxHeightMm!.Min)
-            .WhereIf(request.Filter.MaxCpuCoolerHeightMm != null,
-                x => x.MaxCpuCoolerHeightMm <= request.Filter.MaxCpuCoolerHeightMm!.Max &&
-                     x.MaxCpuCoolerHeightMm >= request.Filter.MaxCpuCoolerHeightMm!.Min)
-            .WhereIf(request.Filter.MaxGraphicsCardLengthMm != null,
-                x => x.MaxGraphicsCardLengthMm <= request.Filter.MaxGraphicsCardLengthMm!.Max &&
-                     x.MaxGraphicsCardLengthMm >= request.Filter.MaxGraphicsCardLengthMm!.Min)
-            .WhereIf(request.Filter.MaxPsuLengthMm != null,
-                x => x.MaxPsuLengthMm <= request.Filter.MaxPsuLengthMm!.Max &&
-                     x.MaxPsuLengthMm >= request.Filter.MaxPsuLengthMm!.Min)
+            .WhereIf(request.Filter.HeightMm, range => x =>
+                x.HeightMm <= range.Max && x.HeightMm >= range.Min)
+            .WhereIf(request.Filter.LengthMm, range => x =>
+                x.LengthMm <= range.Max && x.LengthMm >= range.Min)
+            .WhereIf(request.Filter.WidthMm, range => x =>
+                x.WidthMm <= range.Max && x.WidthMm >= range.Min)
+            .WhereIf(request.Filter.MotherboardMaxWidthMm, range => x =>
+                x.MotherboardMaxWidthMm <= range.Max && x.MotherboardMaxWidthMm >= range.Min)
+            .WhereIf(request.Filter.MotherboardMaxHeightMm, range => x =>
+                x.MotherboardMaxHeightMm <= range.Max && x.MotherboardMaxHeightMm >= range.Min)
+            .WhereIf(request.Filter.MaxCpuCoolerHeightMm, range => x =>
+                x.MaxCpuCoolerHeightMm <= range.Max && x.MaxCpuCoolerHeightMm >= range.Min)
+            .WhereIf(request.Filter.MaxGraphicsCardLengthMm, range => x =>
+                x.MaxGraphicsCardLengthMm <= range.Max && x.MaxGraphicsCardLengthMm >= range.Min)
+            .WhereIf(request.Filter.MaxPsuLengthMm, range => x =>
+                x.MaxPsuLengthMm <= range.Max && x.MaxPsuLengthMm >= range.Min)
             .ApplySorting(request.SortFields, request.SortDirection)
             .ToPagedResultAsync<Domain.Entities.Chassis, ChassisListItemDto>(
                 request.PageIndex,

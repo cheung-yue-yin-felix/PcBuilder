@@ -345,137 +345,59 @@ public class Motherboard : ProductEntity
         bool RequiresSata,
         PcieGeneration? Generation);
 
-    public Motherboard(
-        Guid manufacturerId,
-        string name,
-        Guid socketId,
-        Guid chipsetId,
-        int ramSlots,
-        int maxMemoryGb,
-        int maxDimmSizeGb,
-        int sataPorts,
-        int fanConnectors,
-        int epsConnectors,
-        decimal widthMm,
-        decimal heightMm,
-        DdrGeneration ddrGeneration,
-        RamFormFactor ramFormFactor,
-        MbFormFactor mbFormFactor,
-        bool wifiEnabled,
-        bool bluetoothEnabled)
+    public Motherboard(Guid manufacturerId, string name, MotherboardSpecs specs)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(
-            socketId,
-            chipsetId,
-            ramSlots,
-            maxMemoryGb,
-            maxDimmSizeGb,
-            sataPorts,
-            fanConnectors,
-            epsConnectors,
-            widthMm,
-            heightMm,
-            ddrGeneration,
-            ramFormFactor,
-            mbFormFactor,
-            wifiEnabled,
-            bluetoothEnabled
-        );
+        SetSpecs(specs);
     }
 
-    public void UpdateSpecs(
-        Guid socketId,
-        Guid chipsetId,
-        int ramSlots,
-        int maxMemoryGb,
-        int maxDimmSizeGb,
-        int sataPorts,
-        int fanConnectors,
-        int epsConnectors,
-        decimal widthMm,
-        decimal heightMm,
-        DdrGeneration ddrGeneration,
-        RamFormFactor ramFormFactor,
-        MbFormFactor mbFormFactor,
-        bool wifiEnabled,
-        bool bluetoothEnabled)
+    public void UpdateSpecs(MotherboardSpecs specs)
     {
-        SetSpecs(
-            socketId,
-            chipsetId,
-            ramSlots,
-            maxMemoryGb,
-            maxDimmSizeGb,
-            sataPorts,
-            fanConnectors,
-            epsConnectors,
-            widthMm,
-            heightMm,
-            ddrGeneration,
-            ramFormFactor,
-            mbFormFactor,
-            wifiEnabled,
-            bluetoothEnabled);
+        SetSpecs(specs);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    private void SetSpecs(
-        Guid socketId,
-        Guid chipsetId,
-        int ramSlots,
-        int maxMemoryGb,
-        int maxDimmSizeGb,
-        int sataPorts,
-        int fanConnectors,
-        int epsConnectors,
-        decimal widthMm,
-        decimal heightMm,
-        DdrGeneration ddrGeneration,
-        RamFormFactor ramFormFactor,
-        MbFormFactor mbFormFactor,
-        bool wifiEnabled,
-        bool bluetoothEnabled)
+    private void SetSpecs(MotherboardSpecs specs)
     {
-        if (socketId == Guid.Empty)
+        if (specs.SocketId == Guid.Empty)
             throw new ArgumentException("Socket ID cannot be empty");
 
-        if (chipsetId == Guid.Empty)
+        if (specs.ChipsetId == Guid.Empty)
             throw new ArgumentException("Chipset ID cannot be empty");
 
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ramSlots, "Ram Slots cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxDimmSizeGb, "Max DIMM Size GB cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxMemoryGb, "Max Memory GB cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sataPorts, "SATA Ports cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fanConnectors, "Fan Connectors cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(epsConnectors, "EPS Connectors cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(widthMm, "Width mm cannot be negative");
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(heightMm, "Height mm cannot be negative");
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.RamSlots);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MaxDimmSizeGb);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MaxMemoryGb);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.SataPorts);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.FanConnectors);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.EpsConnectors);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.WidthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.HeightMm);
 
-        if (!Enum.IsDefined(ddrGeneration))
+        if (!Enum.IsDefined(specs.DdrGeneration))
             throw new ArgumentException("DDR Generation is invalid");
 
-        if (!Enum.IsDefined(mbFormFactor))
+        if (!Enum.IsDefined(specs.MbFormFactor))
             throw new ArgumentException("Motherboard Form Factor is invalid");
 
-        if (!Enum.IsDefined(ramFormFactor))
+        if (!Enum.IsDefined(specs.RamFormFactor))
             throw new ArgumentException("RAM Form Factor is invalid");
 
-        SocketId = socketId;
-        ChipsetId = chipsetId;
-        RamSlots = ramSlots;
-        MaxMemoryGb = maxMemoryGb;
-        MaxDimmSizeGb = maxDimmSizeGb;
-        SataPorts = sataPorts;
-        FanConnectors = fanConnectors;
-        EpsConnectors = epsConnectors;
-        DdrGeneration = ddrGeneration;
-        RamFormFactor = ramFormFactor;
-        FormFactor = mbFormFactor;
-        WidthMm = widthMm;
-        HeightMm = heightMm;
-        WifiEnabled = wifiEnabled;
-        BluetoothEnabled = bluetoothEnabled;
+        SocketId = specs.SocketId;
+        ChipsetId = specs.ChipsetId;
+        RamSlots = specs.RamSlots;
+        MaxMemoryGb = specs.MaxMemoryGb;
+        MaxDimmSizeGb = specs.MaxDimmSizeGb;
+        SataPorts = specs.SataPorts;
+        FanConnectors = specs.FanConnectors;
+        EpsConnectors = specs.EpsConnectors;
+        DdrGeneration = specs.DdrGeneration;
+        RamFormFactor = specs.RamFormFactor;
+        FormFactor = specs.MbFormFactor;
+        WidthMm = specs.WidthMm;
+        HeightMm = specs.HeightMm;
+        WifiEnabled = specs.WifiEnabled;
+        BluetoothEnabled = specs.BluetoothEnabled;
     }
 }

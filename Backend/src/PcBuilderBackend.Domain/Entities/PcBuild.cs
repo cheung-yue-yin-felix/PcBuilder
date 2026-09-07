@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -14,7 +15,7 @@ public class PcBuild : BaseEntity
     public Guid? GraphicsCardId { get; private set; }
     public Guid PsuId { get; private set; }
 
-    public PcBuildUser? User { get; private set; }
+    public PcBuildUser? User { get; }
 
     private readonly List<PcBuildPart> _parts = [];
 
@@ -36,36 +37,18 @@ public class PcBuild : BaseEntity
     {
     }
 
-    public PcBuild(
-        string name,
-        string? description,
-        Guid chassisId,
-        Guid motherboardId,
-        Guid cpuId,
-        Guid? cpuCoolerId,
-        Guid ramKitId,
-        Guid? graphicsCardId,
-        Guid psuId)
+    public PcBuild(string name, string? description, PcBuildComponents components)
     {
         SetName(name);
         SetDescription(description);
-        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId, psuId);
+        SetComponents(components);
     }
 
-    public void Update(
-        string name,
-        string? description,
-        Guid chassisId,
-        Guid motherboardId,
-        Guid cpuId,
-        Guid? cpuCoolerId,
-        Guid ramKitId,
-        Guid? graphicsCardId,
-        Guid psuId)
+    public void Update(string name, string? description, PcBuildComponents components)
     {
         SetName(name);
         SetDescription(description);
-        SetComponents(chassisId, motherboardId, cpuId, cpuCoolerId, ramKitId, graphicsCardId, psuId);
+        SetComponents(components);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -117,37 +100,30 @@ public class PcBuild : BaseEntity
         Description = description?.Trim();
     }
 
-    private void SetComponents(
-        Guid chassisId,
-        Guid motherboardId,
-        Guid cpuId,
-        Guid? cpuCoolerId,
-        Guid ramKitId,
-        Guid? graphicsCardId,
-        Guid psuId)
+    private void SetComponents(PcBuildComponents components)
     {
-        if (chassisId == Guid.Empty)
-            throw new ArgumentException("Chassis ID is required.", nameof(chassisId));
+        if (components.ChassisId == Guid.Empty)
+            throw new ArgumentException("Chassis ID is required.", nameof(components));
 
-        if (motherboardId == Guid.Empty)
-            throw new ArgumentException("Motherboard ID is required.", nameof(motherboardId));
+        if (components.MotherboardId == Guid.Empty)
+            throw new ArgumentException("Motherboard ID is required.", nameof(components));
 
-        if (cpuId == Guid.Empty)
-            throw new ArgumentException("CPU ID is required.", nameof(cpuId));
+        if (components.CpuId == Guid.Empty)
+            throw new ArgumentException("CPU ID is required.", nameof(components));
 
-        if (ramKitId == Guid.Empty)
-            throw new ArgumentException("RAM Kit ID is required.", nameof(ramKitId));
+        if (components.RamKitId == Guid.Empty)
+            throw new ArgumentException("RAM Kit ID is required.", nameof(components));
 
-        if (psuId == Guid.Empty)
-            throw new ArgumentException("PSU ID is required.", nameof(psuId));
+        if (components.PsuId == Guid.Empty)
+            throw new ArgumentException("PSU ID is required.", nameof(components));
 
-        ChassisId = chassisId;
-        MotherboardId = motherboardId;
-        CpuId = cpuId;
-        RamKitId = ramKitId;
-        CpuCoolerId = OptionalId(cpuCoolerId);
-        GraphicsCardId = OptionalId(graphicsCardId);
-        PsuId = psuId;
+        ChassisId = components.ChassisId;
+        MotherboardId = components.MotherboardId;
+        CpuId = components.CpuId;
+        RamKitId = components.RamKitId;
+        CpuCoolerId = OptionalId(components.CpuCoolerId);
+        GraphicsCardId = OptionalId(components.GraphicsCardId);
+        PsuId = components.PsuId;
     }
 
     private static Guid? OptionalId(Guid? id)

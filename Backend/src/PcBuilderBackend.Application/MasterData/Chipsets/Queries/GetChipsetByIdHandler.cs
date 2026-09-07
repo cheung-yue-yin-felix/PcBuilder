@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Chipsets.Queries;
 
-public class GetChipsetByIdHandler(IReadStore<Chipset, ChipsetDto> store, ICacheService cache)
+public class GetChipsetByIdHandler(IReadStore<ChipsetDto> store, ICacheService cache)
     : IRequestHandler<GetChipsetByIdQuery, ChipsetDto?>
 {
     public async Task<ChipsetDto?> Handle(GetChipsetByIdQuery request, CancellationToken cancellationToken)

@@ -4,6 +4,7 @@ using PcBuilderBackend.Application.Build.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.UnitTests.Build;
 
@@ -17,17 +18,20 @@ public class CompatibilityCheckerTests
         var checker = new CompatibilityChecker(new FakeCatalog());
 
         var act = () => checker.CheckCompatibilityAsync(
-            chassisId: null,
-            motherboardId: null,
-            cpuId: null,
-            cpuCoolerId: null,
-            ramKitId: null,
-            graphicsCardId: null,
-            psuId: null,
-            chassisFans: [],
-            storageDevices: [new PcBuildPartDto(PcBuildPartType.StorageDrive, Guid.NewGuid(), 1)],
-            wiredNetworkAdapters: [],
-            wirelessNetworkAdapters: []);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = null,
+                MotherboardId = null,
+                CpuId = null,
+                CpuCoolerId = null,
+                RamKitId = null,
+                GraphicsCardId = null,
+                PsuId = null,
+                ChassisFans = [],
+                StorageDevices = [new PcBuildPartDto(PcBuildPartType.StorageDrive, Guid.NewGuid(), 1)],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         await act.Should().ThrowAsync<ArgumentException>();
     }
@@ -38,17 +42,20 @@ public class CompatibilityCheckerTests
         var checker = new CompatibilityChecker(new FakeCatalog());
 
         var act = () => checker.CheckCompatibilityAsync(
-            chassisId: Guid.NewGuid(),
-            motherboardId: null,
-            cpuId: null,
-            cpuCoolerId: null,
-            ramKitId: null,
-            graphicsCardId: null,
-            psuId: null,
-            chassisFans: [],
-            storageDevices: [],
-            wiredNetworkAdapters: [],
-            wirelessNetworkAdapters: []);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = Guid.NewGuid(),
+                MotherboardId = null,
+                CpuId = null,
+                CpuCoolerId = null,
+                RamKitId = null,
+                GraphicsCardId = null,
+                PsuId = null,
+                ChassisFans = [],
+                StorageDevices = [],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         await act.Should().ThrowAsync<ArgumentException>();
     }
@@ -59,17 +66,25 @@ public class CompatibilityCheckerTests
         var catalog = new FakeCatalog();
         var board = CreateMotherboard(sataPorts: 2);
         catalog.Motherboards[board.Id] = board;
-        var ssd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata25, 1000);
+        var ssd = new StorageDrive("MX500", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         catalog.Drives[ssd.Id] = ssd;
 
         var checker = new CompatibilityChecker(catalog);
         var results = await checker.CheckCompatibilityAsync(
-            null, board.Id, null, null, null, null, null,
-            [],
-            [new PcBuildPartDto(PcBuildPartType.StorageDrive, ssd.Id, 2)],
-            [],
-            []);
+            new CompatibilityCheckRequest
+            {
+                MotherboardId = board.Id,
+                ChassisFans = [],
+                StorageDevices = [new PcBuildPartDto(PcBuildPartType.StorageDrive, ssd.Id, 2)],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         results.Should().Contain(r => r.Result.Status == PartsCompatibility.Compatible);
         results.Should().NotContain(r => r.Result.Reason == CompatibilityReason.InsufficientSataPorts);
@@ -81,17 +96,25 @@ public class CompatibilityCheckerTests
         var catalog = new FakeCatalog();
         var board = CreateMotherboard(sataPorts: 1);
         catalog.Motherboards[board.Id] = board;
-        var ssd = new StorageDrive("MX500", ManufacturerId, StorageMedia.Ssd, StorageInterface.Sata,
-            StorageFormFactor.Sata25, 1000);
+        var ssd = new StorageDrive("MX500", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata25,
+            CapacityGb = 1000
+        });
         catalog.Drives[ssd.Id] = ssd;
 
         var checker = new CompatibilityChecker(catalog);
         var results = await checker.CheckCompatibilityAsync(
-            null, board.Id, null, null, null, null, null,
-            [],
-            [new PcBuildPartDto(PcBuildPartType.StorageDrive, ssd.Id, 2)],
-            [],
-            []);
+            new CompatibilityCheckRequest
+            {
+                MotherboardId = board.Id,
+                ChassisFans = [],
+                StorageDevices = [new PcBuildPartDto(PcBuildPartType.StorageDrive, ssd.Id, 2)],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         var issue = results.Should().ContainSingle(r => r.Result.Reason == CompatibilityReason.InsufficientSataPorts)
             .Subject;
@@ -109,19 +132,30 @@ public class CompatibilityCheckerTests
 
         var wired = new WiredNetworkAdapter("USB NIC", ManufacturerId, WiredHostInterface.Usb, 1000,
             UsbVersion.Usb32Gen1, UsbType.TypeA);
-        var wireless = new WirelessNetworkAdapter("USB WiFi", ManufacturerId, WifiStandard.Wifi6,
-            WirelessHostInterface.Usb, 1200, null, null, null,
-            usbVersion: UsbVersion.Usb32Gen1, usbType: UsbType.TypeA);
+        var wireless = new WirelessNetworkAdapter("USB WiFi", ManufacturerId, new WirelessNetworkAdapterSpecs
+        {
+            WifiStandard = WifiStandard.Wifi6,
+            HostInterface = WirelessHostInterface.Usb,
+            MaxSpeedMbps = 1200,
+            MaxSpeedMbps5G = null,
+            MaxSpeedMbps6G = null,
+            BluetoothVersion = null,
+            UsbVersion = UsbVersion.Usb32Gen1,
+            UsbType = UsbType.TypeA
+        });
         catalog.Wired[wired.Id] = wired;
         catalog.Wireless[wireless.Id] = wireless;
 
         var checker = new CompatibilityChecker(catalog);
         var results = await checker.CheckCompatibilityAsync(
-            null, board.Id, null, null, null, null, null,
-            [],
-            [],
-            [new PcBuildPartDto(PcBuildPartType.WiredNetworkAdapter, wired.Id, 1)],
-            [new PcBuildPartDto(PcBuildPartType.WirelessNetworkAdapter, wireless.Id, 1)]);
+            new CompatibilityCheckRequest
+            {
+                MotherboardId = board.Id,
+                ChassisFans = [],
+                StorageDevices = [],
+                WiredNetworkAdapters = [new PcBuildPartDto(PcBuildPartType.WiredNetworkAdapter, wired.Id, 1)],
+                WirelessNetworkAdapters = [new PcBuildPartDto(PcBuildPartType.WirelessNetworkAdapter, wireless.Id, 1)]
+            });
 
         var issue = results.Should().ContainSingle(r => r.Result.Reason == CompatibilityReason.NoMatchingUsbPort)
             .Subject;
@@ -135,7 +169,17 @@ public class CompatibilityCheckerTests
     public async Task Fan_quantity_is_expanded_before_chassis_check()
     {
         var catalog = new FakeCatalog();
-        var chassis = new Chassis("Case", ManufacturerId, 400, 200, 400, 305, 244, 160, 320, 180);
+        var chassis = new Chassis("Case", ManufacturerId, new ChassisSpecs
+        {
+            LengthMm = 400,
+            WidthMm = 200,
+            HeightMm = 400,
+            MotherboardMaxWidthMm = 305,
+            MotherboardMaxHeightMm = 244,
+            MaxCpuCoolerHeightMm = 160,
+            MaxGraphicsCardLengthMm = 320,
+            MaxPsuLengthMm = 180
+        });
         var mount = new ChassisFanMount(chassis.Id, FanMountLocation.Front, false);
         mount.AddOption(new ChassisFanMountOption(mount.Id, FanDiameterMm.Mm120, 3));
         chassis.AddFanMount(mount);
@@ -146,11 +190,14 @@ public class CompatibilityCheckerTests
 
         var checker = new CompatibilityChecker(catalog);
         var results = await checker.CheckCompatibilityAsync(
-            chassis.Id, null, null, null, null, null, null,
-            [new PcBuildPartDto(PcBuildPartType.ChassisFan, fan.Id, 2)],
-            [],
-            [],
-            []);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = chassis.Id,
+                ChassisFans = [new PcBuildPartDto(PcBuildPartType.ChassisFan, fan.Id, 2)],
+                StorageDevices = [],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         var issue = results.Should().ContainSingle(r => r.Result.Status == PartsCompatibility.Incompatible).Subject;
         issue.Result.Reason.Should().Be(CompatibilityReason.PartSizeExceedsLimits);
@@ -162,23 +209,51 @@ public class CompatibilityCheckerTests
     public async Task Chassis_versus_graphics_card_names_graphics_card_slot()
     {
         var catalog = new FakeCatalog();
-        var chassis = new Chassis("Case", ManufacturerId, 400, 200, 400, 305, 244, 160, 320, 180);
+        var chassis = new Chassis("Case", ManufacturerId, new ChassisSpecs
+        {
+            LengthMm = 400,
+            WidthMm = 200,
+            HeightMm = 400,
+            MotherboardMaxWidthMm = 305,
+            MotherboardMaxHeightMm = 244,
+            MaxCpuCoolerHeightMm = 160,
+            MaxGraphicsCardLengthMm = 320,
+            MaxPsuLengthMm = 180
+        });
         chassis.AddPcieSlot(new ChassisPcieSlot(chassis.Id, lowProfileSlots: false, slotCount: 3,
             PcieOrientation.Horizontal));
         catalog.Chassis[chassis.Id] = chassis;
 
         var graphicsCard = new GraphicsCard(
-            "Long card", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4,
-            false, 400, 120, 50, 200, PsuCableType.Pcie6Plus2Pin, 2);
+            "Long card",
+            ManufacturerId,
+            new GraphicsCardSpecs
+            {
+                GpuId = Guid.NewGuid(),
+                VideoMemoryGb = 12,
+                PcieSlotsUsed = 2,
+                PcieGeneration = PcieGeneration.Gen4,
+                IsLowProfile = false,
+                LengthMm = 400,
+                WidthMm = 120,
+                HeightMm = 50,
+                PowerConsumptionWatts = 200,
+                PowerConnectorType = PsuCableType.Pcie6Plus2Pin,
+                PowerConnectorCount = 2
+            });
         catalog.GraphicsCards[graphicsCard.Id] = graphicsCard;
 
         var checker = new CompatibilityChecker(catalog);
         var results = await checker.CheckCompatibilityAsync(
-            chassis.Id, null, null, null, null, graphicsCard.Id, null,
-            [],
-            [],
-            [],
-            []);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = chassis.Id,
+                GraphicsCardId = graphicsCard.Id,
+                ChassisFans = [],
+                StorageDevices = [],
+                WiredNetworkAdapters = [],
+                WirelessNetworkAdapters = []
+            });
 
         var issue = results.Should().ContainSingle(r => r.Result.Reason == CompatibilityReason.PartSizeExceedsLimits)
             .Subject;
@@ -188,8 +263,24 @@ public class CompatibilityCheckerTests
     }
 
     private static Motherboard CreateMotherboard(int sataPorts) =>
-        new(ManufacturerId, "B650", Guid.NewGuid(), Guid.NewGuid(), 4, 128, 48, sataPorts, 4, 2, 244, 305,
-            DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Atx, false, false);
+        new(ManufacturerId, "B650", new MotherboardSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            ChipsetId = Guid.NewGuid(),
+            RamSlots = 4,
+            MaxMemoryGb = 128,
+            MaxDimmSizeGb = 48,
+            SataPorts = sataPorts,
+            FanConnectors = 4,
+            EpsConnectors = 2,
+            WidthMm = 244,
+            HeightMm = 305,
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            MbFormFactor = MbFormFactor.Atx,
+            WifiEnabled = false,
+            BluetoothEnabled = false
+        });
 
     private sealed class FakeCatalog : ICatalogRepository
     {

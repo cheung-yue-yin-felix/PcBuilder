@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.ImportGraphicsCards;
 
@@ -36,17 +37,20 @@ public class ImportGraphicsCardsHandler(
             var entity = new GraphicsCard(
                 row.Name,
                 row.ManufacturerId,
-                row.GpuId,
-                row.VideoMemoryGb,
-                row.PcieSlotsUsed,
-                row.PcieGeneration,
-                row.IsLowProfile,
-                row.LengthMm,
-                row.WidthMm,
-                row.HeightMm,
-                row.PowerConsumptionWatts,
-                row.PowerConnectorType,
-                row.PowerConnectorCount);
+                new GraphicsCardSpecs
+                {
+                    GpuId = row.GpuId,
+                    VideoMemoryGb = row.VideoMemoryGb,
+                    PcieSlotsUsed = row.PcieSlotsUsed,
+                    PcieGeneration = row.PcieGeneration,
+                    IsLowProfile = row.IsLowProfile,
+                    LengthMm = row.LengthMm,
+                    WidthMm = row.WidthMm,
+                    HeightMm = row.HeightMm,
+                    PowerConsumptionWatts = row.PowerConsumptionWatts,
+                    PowerConnectorType = row.PowerConnectorType,
+                    PowerConnectorCount = row.PowerConnectorCount
+                });
 
             graphicsCards.Add(entity);
             result.Add(entity);

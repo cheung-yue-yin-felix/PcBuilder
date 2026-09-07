@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -35,51 +36,16 @@ public class Chassis : ProductEntity
     {
     }
 
-    public Chassis(
-        string name,
-        Guid manufacturerId,
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        decimal motherboardMaxWidthMm,
-        decimal motherboardMaxHeightMm,
-        decimal maxCpuCoolerHeightMm,
-        decimal maxGraphicsCardLengthMm,
-        decimal maxPsuLengthMm)
+    public Chassis(string name, Guid manufacturerId, ChassisSpecs specs)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(
-            lengthMm,
-            widthMm,
-            heightMm,
-            motherboardMaxWidthMm,
-            motherboardMaxHeightMm,
-            maxCpuCoolerHeightMm,
-            maxGraphicsCardLengthMm,
-            maxPsuLengthMm);
+        SetSpecs(specs);
     }
 
-    public void UpdateSpecs(
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        decimal motherboardMaxWidthMm,
-        decimal motherboardMaxHeightMm,
-        decimal maxCpuCoolerHeightMm,
-        decimal maxGraphicsCardLengthMm,
-        decimal maxPsuLengthMm)
+    public void UpdateSpecs(ChassisSpecs specs)
     {
-        SetSpecs(
-            lengthMm,
-            widthMm,
-            heightMm,
-            motherboardMaxWidthMm,
-            motherboardMaxHeightMm,
-            maxCpuCoolerHeightMm,
-            maxGraphicsCardLengthMm,
-            maxPsuLengthMm);
-
+        SetSpecs(specs);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -214,7 +180,7 @@ public class Chassis : ProductEntity
         {
             CpuCoolerType.Air => cpuCooler.CoolerHeightMm <= MaxCpuCoolerHeightMm,
             CpuCoolerType.Water => _radiators.Any(x => x.Length == cpuCooler.RadiatorLength),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(cpuCooler), cpuCooler.Type, $"Unsupported cooler type '{cpuCooler.Type}'.")
         };
     }
 
@@ -318,32 +284,24 @@ public class Chassis : ProductEntity
         return false;
     }
 
-    private void SetSpecs(
-        decimal lengthMm,
-        decimal widthMm,
-        decimal heightMm,
-        decimal motherboardMaxWidthMm,
-        decimal motherboardMaxHeightMm,
-        decimal maxCpuCoolerHeightMm,
-        decimal maxGraphicsCardLengthMm,
-        decimal maxPsuLengthMm)
+    private void SetSpecs(ChassisSpecs specs)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(lengthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(widthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(heightMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(motherboardMaxWidthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(motherboardMaxHeightMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCpuCoolerHeightMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxGraphicsCardLengthMm);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxPsuLengthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.LengthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.WidthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.HeightMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MotherboardMaxWidthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MotherboardMaxHeightMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MaxCpuCoolerHeightMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MaxGraphicsCardLengthMm);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(specs.MaxPsuLengthMm);
 
-        LengthMm = lengthMm;
-        WidthMm = widthMm;
-        HeightMm = heightMm;
-        MotherboardMaxWidthMm = motherboardMaxWidthMm;
-        MotherboardMaxHeightMm = motherboardMaxHeightMm;
-        MaxCpuCoolerHeightMm = maxCpuCoolerHeightMm;
-        MaxGraphicsCardLengthMm = maxGraphicsCardLengthMm;
-        MaxPsuLengthMm = maxPsuLengthMm;
+        LengthMm = specs.LengthMm;
+        WidthMm = specs.WidthMm;
+        HeightMm = specs.HeightMm;
+        MotherboardMaxWidthMm = specs.MotherboardMaxWidthMm;
+        MotherboardMaxHeightMm = specs.MotherboardMaxHeightMm;
+        MaxCpuCoolerHeightMm = specs.MaxCpuCoolerHeightMm;
+        MaxGraphicsCardLengthMm = specs.MaxGraphicsCardLengthMm;
+        MaxPsuLengthMm = specs.MaxPsuLengthMm;
     }
 }

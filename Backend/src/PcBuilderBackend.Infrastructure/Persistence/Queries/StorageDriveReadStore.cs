@@ -38,16 +38,14 @@ public sealed class StorageDriveReadStore(PcBuilderDbContext db, IMapper mapper)
 
         var queryable = db.StorageDrives.AsNoTracking()
             .Include(x => x.Manufacturer)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.Media.HasValue, x => x.Media == filter.Media)
             .WhereIf(filter.Interface.HasValue, x => x.Interface == filter.Interface)
             .WhereIf(filter.FormFactor.HasValue, x => x.FormFactor == filter.FormFactor)
-            .WhereIf(filter.CapacityGb is not null,
-                x => x.CapacityGb >= filter.CapacityGb!.Min && x.CapacityGb <= filter.CapacityGb!.Max)
+            .WhereIf(filter.CapacityGb, range => x => x.CapacityGb >= range.Min && x.CapacityGb <= range.Max)
             .WhereIf(filter.PcieGeneration.HasValue, x => x.PcieGeneration == filter.PcieGeneration)
-            .WhereIf(filter.Rpm is not null,
-                x => x.Rpm >= filter.Rpm!.Min && x.Rpm <= filter.Rpm!.Max);
+            .WhereIf(filter.Rpm, range => x => x.Rpm >= range.Min && x.Rpm <= range.Max);
 
         if (!filter.MotherboardId.HasValue && !filter.ChassisId.HasValue)
         {

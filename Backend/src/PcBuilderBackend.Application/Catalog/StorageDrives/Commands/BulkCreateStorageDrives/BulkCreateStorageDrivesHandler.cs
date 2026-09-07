@@ -5,6 +5,7 @@ using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkCreateStorageDrives;
 
@@ -24,12 +25,15 @@ public class BulkCreateStorageDrivesHandler(
         foreach (var entity in request.Drives.Select(item => new StorageDrive(
                      item.Name,
                      item.ManufacturerId,
-                     item.Media,
-                     item.Interface,
-                     item.FormFactor,
-                     item.CapacityGb,
-                     item.PcieGeneration,
-                     item.Rpm)))
+                     new StorageDriveSpecs
+                     {
+                         Media = item.Media,
+                         Interface = item.Interface,
+                         FormFactor = item.FormFactor,
+                         CapacityGb = item.CapacityGb,
+                         PcieGeneration = item.PcieGeneration,
+                         Rpm = item.Rpm
+                     })))
         {
             storageDrives.Add(entity);
             result.Add(mapper.Map<StorageDriveDto>(entity));

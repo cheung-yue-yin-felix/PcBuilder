@@ -41,17 +41,17 @@ public sealed class WirelessNetworkAdapterReadStore(PcBuilderDbContext db, IMapp
 
         var queryable = db.WirelessNetworkAdapters.AsNoTracking()
             .Include(x => x.Manufacturer)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.WifiStandard.HasValue, x => x.WifiStandard == filter.WifiStandard)
             .WhereIf(filter.BluetoothVersion.HasValue, x => x.BluetoothVersion == filter.BluetoothVersion)
             .WhereIf(filter.HostInterface.HasValue, x => x.HostInterface == filter.HostInterface)
-            .WhereIf(filter.MaxSpeedMbps is not null,
-                x => x.MaxSpeedMbps >= filter.MaxSpeedMbps!.Min && x.MaxSpeedMbps <= filter.MaxSpeedMbps!.Max)
-            .WhereIf(filter.MaxSpeedMbps5G is not null,
-                x => x.MaxSpeedMbps5G >= filter.MaxSpeedMbps5G!.Min && x.MaxSpeedMbps5G <= filter.MaxSpeedMbps5G!.Max)
-            .WhereIf(filter.MaxSpeedMbps6G is not null,
-                x => x.MaxSpeedMbps6G >= filter.MaxSpeedMbps6G!.Min && x.MaxSpeedMbps6G <= filter.MaxSpeedMbps6G!.Max)
+            .WhereIf(filter.MaxSpeedMbps, range =>
+                x => x.MaxSpeedMbps >= range.Min && x.MaxSpeedMbps <= range.Max)
+            .WhereIf(filter.MaxSpeedMbps5G, range =>
+                x => x.MaxSpeedMbps5G >= range.Min && x.MaxSpeedMbps5G <= range.Max)
+            .WhereIf(filter.MaxSpeedMbps6G, range =>
+                x => x.MaxSpeedMbps6G >= range.Min && x.MaxSpeedMbps6G <= range.Max)
             .WhereIf(filter.PcieSlotType.HasValue, x => x.PcieSlotType == filter.PcieSlotType)
             .WhereIf(filter.Key.HasValue, x => x.Key == filter.Key)
             .WhereIf(filter.M2FormFactor.HasValue, x => x.M2FormFactor == filter.M2FormFactor)

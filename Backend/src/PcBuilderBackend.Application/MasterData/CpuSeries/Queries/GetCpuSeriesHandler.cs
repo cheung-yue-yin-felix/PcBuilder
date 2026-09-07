@@ -5,7 +5,7 @@ using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.CpuSeries.Queries;
 
-public class GetCpuSeriesHandler(IReadStore<Domain.Entities.CpuSeries, CpuSeriesDto> store, ICacheService cache)
+public class GetCpuSeriesHandler(IReadStore<CpuSeriesDto> store, ICacheService cache)
     : IRequestHandler<GetCpuSeriesQuery, List<CpuSeriesDto>>
 {
     public Task<List<CpuSeriesDto>> Handle(GetCpuSeriesQuery query, CancellationToken cancellationToken)

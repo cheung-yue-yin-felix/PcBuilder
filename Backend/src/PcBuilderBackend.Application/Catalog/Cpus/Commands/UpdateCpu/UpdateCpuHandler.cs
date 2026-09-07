@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.UpdateCpu;
 
@@ -25,14 +26,16 @@ public class UpdateCpuHandler(
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.SocketId,
-            request.SeriesId,
-            request.MaxMemoryGb,
-            request.IntegratedGraphics,
-            request.IncludedStockCooler,
-            request.ThermalDesignPower,
-            request.PowerConsumptionWatts);
+        entity.UpdateSpecs(new CpuSpecs
+        {
+            SocketId = request.SocketId,
+            SeriesId = request.SeriesId,
+            MaxMemoryGb = request.MaxMemoryGb,
+            IntegratedGraphics = request.IntegratedGraphics,
+            IncludedStockCooler = request.IncludedStockCooler,
+            ThermalDesignPower = request.ThermalDesignPower,
+            PowerConsumptionWatts = request.PowerConsumptionWatts
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

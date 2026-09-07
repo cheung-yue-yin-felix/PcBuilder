@@ -3,6 +3,7 @@ using MediatR;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkCreateMotherboards;
 
@@ -19,22 +20,24 @@ public class BulkCreateMotherboardsHandler(IMotherboardRepository motherboards, 
             var motherboard = new Motherboard(
                 motherboardDto.ManufacturerId,
                 motherboardDto.Name,
-                motherboardDto.SocketId,
-                motherboardDto.ChipsetId,
-                motherboardDto.RamSlots,
-                motherboardDto.MaxMemoryGb,
-                motherboardDto.MaxDimmSizeGb,
-                motherboardDto.SataPorts,
-                motherboardDto.FanConnectors,
-                motherboardDto.EpsConnectors,
-                motherboardDto.WidthMm,
-                motherboardDto.HeightMm,
-                motherboardDto.DdrGeneration,
-                motherboardDto.RamFormFactor,
-                motherboardDto.FormFactor,
-                motherboardDto.WifiEnabled,
-                motherboardDto.BluetoothEnabled
-            );
+                new MotherboardSpecs
+                {
+                    SocketId = motherboardDto.SocketId,
+                    ChipsetId = motherboardDto.ChipsetId,
+                    RamSlots = motherboardDto.RamSlots,
+                    MaxMemoryGb = motherboardDto.MaxMemoryGb,
+                    MaxDimmSizeGb = motherboardDto.MaxDimmSizeGb,
+                    SataPorts = motherboardDto.SataPorts,
+                    FanConnectors = motherboardDto.FanConnectors,
+                    EpsConnectors = motherboardDto.EpsConnectors,
+                    WidthMm = motherboardDto.WidthMm,
+                    HeightMm = motherboardDto.HeightMm,
+                    DdrGeneration = motherboardDto.DdrGeneration,
+                    RamFormFactor = motherboardDto.RamFormFactor,
+                    MbFormFactor = motherboardDto.FormFactor,
+                    WifiEnabled = motherboardDto.WifiEnabled,
+                    BluetoothEnabled = motherboardDto.BluetoothEnabled
+                });
 
             foreach (var slot in motherboardDto.PcieSlots)
             {

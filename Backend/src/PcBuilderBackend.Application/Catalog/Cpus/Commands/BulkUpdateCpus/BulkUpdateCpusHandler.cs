@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.BulkUpdateCpus;
 
@@ -30,14 +31,16 @@ public class BulkUpdateCpusHandler(
 
             entity.Rename(command.Name);
             entity.UpdateManufacturer(command.ManufacturerId);
-            entity.UpdateSpecs(
-                command.SocketId,
-                command.SeriesId,
-                command.MaxMemoryGb,
-                command.IntegratedGraphics,
-                command.IncludedStockCooler,
-                command.ThermalDesignPower,
-                command.PowerConsumptionWatts);
+            entity.UpdateSpecs(new CpuSpecs
+            {
+                SocketId = command.SocketId,
+                SeriesId = command.SeriesId,
+                MaxMemoryGb = command.MaxMemoryGb,
+                IntegratedGraphics = command.IntegratedGraphics,
+                IncludedStockCooler = command.IncludedStockCooler,
+                ThermalDesignPower = command.ThermalDesignPower,
+                PowerConsumptionWatts = command.PowerConsumptionWatts
+            });
 
             result.Add(mapper.Map<CpuDto>(entity));
         }

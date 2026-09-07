@@ -1,4 +1,5 @@
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.Entities;
 
@@ -11,96 +12,109 @@ public class StorageDrive : ProductEntity
     public PcieGeneration? PcieGeneration { get; private set; }
     public int? Rpm { get; private set; }
 
-    public bool IsM2 => FormFactor is
-        StorageFormFactor.M22230 or
-        StorageFormFactor.M22242 or
-        StorageFormFactor.M22260 or
-        StorageFormFactor.M22280 or
-        StorageFormFactor.M222110;
+    public bool IsM2 => IsM2Form(FormFactor);
 
-    public M2Key? ModuleKey =>
-        !IsM2
-            ? null
-            : Interface == StorageInterface.Sata
-                ? M2Key.BM
-                : M2Key.M;
+    public M2Key? ModuleKey
+    {
+        get
+        {
+            if (!IsM2)
+                return null;
+
+            return Interface == StorageInterface.Sata ? M2Key.BM : M2Key.M;
+        }
+    }
 
     public M2FormFactor? M2FormFactor =>
         IsM2 ? (M2FormFactor)(int)FormFactor : null;
     
     protected StorageDrive() {}
 
-    public StorageDrive(
-        string name,
-        Guid manufacturerId,
+    public StorageDrive(string name, Guid manufacturerId, StorageDriveSpecs specs)
+    {
+        SetName(name);
+        SetManufacturer(manufacturerId);
+        SetSpecs(specs);
+    }
+
+    public void UpdateSpecs(StorageDriveSpecs specs)
+    {
+        SetSpecs(specs);
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    private void SetSpecs(StorageDriveSpecs specs)
+    {
+        if (specs.FormFactor == StorageFormFactor.Sata35)
+            SetSata35Specs(specs.Media, specs.Interface, specs.FormFactor, specs.CapacityGb, specs.Rpm);
+        else if (specs.FormFactor == StorageFormFactor.Sata25)
+            SetSata25Specs(specs.Media, specs.Interface, specs.FormFactor, specs.CapacityGb, specs.Rpm);
+        else if (IsM2Form(specs.FormFactor))
+            SetM2Specs(specs.Media, specs.Interface, specs.FormFactor, specs.CapacityGb, specs.PcieGeneration);
+        else
+            throw new ArgumentException("Storage form factor is not recognized as HDD or SSD.", nameof(specs));
+    }
+
+    private static bool IsM2Form(StorageFormFactor factor) => factor is
+        StorageFormFactor.M22230 or
+        StorageFormFactor.M22242 or
+        StorageFormFactor.M22260 or
+        StorageFormFactor.M22280 or
+        StorageFormFactor.M222110;
+
+    private void SetSata35Specs(
         StorageMedia storageMedia,
         StorageInterface storageInterface,
         StorageFormFactor factor,
         int capacityGb,
-        PcieGeneration? pcieGeneration = null,
-        int? rpm = null)
+        int? rpm)
     {
-        SetName(name);
-        SetManufacturer(manufacturerId);
-        SetSpecs(storageMedia, storageInterface, factor, capacityGb, pcieGeneration, rpm);
+        if (storageMedia != StorageMedia.Hdd)
+            throw new ArgumentException("Storage media must be HDD for the selected form factor.", nameof(storageMedia));
+
+        if (!rpm.HasValue)
+            throw new ArgumentException("RPM is required for HDD.", nameof(rpm));
+
+        SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
     }
 
-    public void UpdateSpecs(StorageMedia storageMedia, StorageInterface storageInterface, StorageFormFactor factor,
-        int capacityGb, PcieGeneration? pcieGeneration = null, int? rpm = null)
+    private void SetSata25Specs(
+        StorageMedia storageMedia,
+        StorageInterface storageInterface,
+        StorageFormFactor factor,
+        int capacityGb,
+        int? rpm)
     {
-        SetSpecs(storageMedia, storageInterface, factor, capacityGb, pcieGeneration, rpm);
-        UpdatedAtUtc = DateTime.UtcNow;
+        switch (storageMedia)
+        {
+            case StorageMedia.Hdd:
+                if (!rpm.HasValue)
+                    throw new ArgumentException("RPM is required for HDD.", nameof(rpm));
+
+                SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
+                break;
+            case StorageMedia.Ssd:
+                SetSataSsdSpecs(storageMedia, storageInterface, factor, capacityGb);
+                break;
+            default:
+                throw new ArgumentException("Storage media is invalid.", nameof(storageMedia));
+        }
     }
-    
-    private void SetSpecs(StorageMedia storageMedia, StorageInterface storageInterface, StorageFormFactor factor, int capacityGb, PcieGeneration? pcieGeneration = null, int? rpm = null)
+
+    private void SetM2Specs(
+        StorageMedia storageMedia,
+        StorageInterface storageInterface,
+        StorageFormFactor factor,
+        int capacityGb,
+        PcieGeneration? pcieGeneration)
     {
-        var m2Forms = new[]
-        {
-            StorageFormFactor.M22230, StorageFormFactor.M22242, StorageFormFactor.M22260, StorageFormFactor.M22280,
-            StorageFormFactor.M222110
-        };
+        if (storageMedia != StorageMedia.Ssd)
+            throw new ArgumentException("Storage media must be SSD for the selected form factor.", nameof(storageMedia));
 
-        if (factor == StorageFormFactor.Sata35)
-        {
-            if (storageMedia != StorageMedia.Hdd)
-                throw new ArgumentException("Storage media must be HDD for the selected form factor.", nameof(storageMedia));
+        if (!pcieGeneration.HasValue)
+            throw new ArgumentException("PCIe generation is required for SSD.", nameof(pcieGeneration));
 
-            if (!rpm.HasValue)
-                throw new ArgumentException("RPM is required for HDD.", nameof(rpm));
-
-            SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
-        }
-        else if (factor == StorageFormFactor.Sata25)
-        {
-            switch (storageMedia)
-            {
-                case StorageMedia.Hdd:
-                    if (!rpm.HasValue)
-                        throw new ArgumentException("RPM is required for HDD.", nameof(rpm));
-
-                    SetHddSpecs(storageMedia, storageInterface, factor, capacityGb, rpm.Value);
-                    break;
-                case StorageMedia.Ssd:
-                    SetSataSsdSpecs(storageMedia, storageInterface, factor, capacityGb);
-                    break;
-                default:
-                    throw new ArgumentException("Storage media is invalid.", nameof(storageMedia));
-            }
-        }
-        else if (m2Forms.Contains(factor))
-        {
-            if (storageMedia != StorageMedia.Ssd)
-                throw new ArgumentException("Storage media must be SSD for the selected form factor.", nameof(storageMedia));
-
-            if (!pcieGeneration.HasValue)
-                throw new ArgumentException("PCIe generation is required for SSD.", nameof(pcieGeneration));
-
-            SetSsdSpecs(storageMedia, storageInterface, factor, capacityGb, pcieGeneration.Value);
-        }
-        else
-        {
-            throw new ArgumentException("Storage form factor is not recognized as HDD or SSD.", nameof(factor));
-        }
+        SetSsdSpecs(storageMedia, storageInterface, factor, capacityGb, pcieGeneration.Value);
     }
 
     private void SetHddSpecs(StorageMedia storageMedia, StorageInterface storageInterface, StorageFormFactor factor,

@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.ImportPsus;
 
@@ -32,12 +33,15 @@ public class ImportPsusHandler(
             var entity = new Psu(
                 row.Name,
                 row.ManufacturerId,
-                row.Wattage,
-                row.Modularity,
-                row.FormFactor,
-                row.LengthMm,
-                row.WidthMm,
-                row.HeightMm);
+                new PsuSpecs
+                {
+                    Wattage = row.Wattage,
+                    Modularity = row.Modularity,
+                    FormFactor = row.FormFactor,
+                    LengthMm = row.LengthMm,
+                    WidthMm = row.WidthMm,
+                    HeightMm = row.HeightMm
+                });
 
             foreach (var cable in row.Cables)
             {

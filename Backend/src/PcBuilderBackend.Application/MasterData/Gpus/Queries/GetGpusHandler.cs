@@ -5,7 +5,7 @@ using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 
 namespace PcBuilderBackend.Application.MasterData.Gpus.Queries;
 
-public class GetGpusHandler(IReadStore<Domain.Entities.Gpu, GpuDto> store, ICacheService cache)
+public class GetGpusHandler(IReadStore<GpuDto> store, ICacheService cache)
     : IRequestHandler<GetGpusQuery, List<GpuDto>>
 {
     public Task<List<GpuDto>> Handle(GetGpusQuery query, CancellationToken cancellationToken)

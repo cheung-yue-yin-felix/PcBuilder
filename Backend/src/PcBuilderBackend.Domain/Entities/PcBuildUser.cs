@@ -6,7 +6,7 @@ public class PcBuildUser : BaseEntity
     public Guid UserId { get; private set; }
     public bool IsPublic { get; private set; }
 
-    public PcBuild? PcBuild { get; private set; }
+    public PcBuild? PcBuild { get; }
 
     protected PcBuildUser()
     {

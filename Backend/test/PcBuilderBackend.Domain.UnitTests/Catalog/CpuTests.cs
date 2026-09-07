@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -24,15 +25,51 @@ public class CpuTests
     [Fact]
     public void Constructor_rejects_empty_socket_series_and_non_positive_limits()
     {
-        var emptySocket = () => new Cpu("x", ManufacturerId, Guid.Empty, SeriesId, 128, false, false, 120, 120);
-        var emptySeries = () => new Cpu("x", ManufacturerId, SocketId, Guid.Empty, 128, false, false, 120, 120);
-        var badMemory = () => new Cpu("x", ManufacturerId, SocketId, SeriesId, 0, false, false, 120, 120);
-        var badTdp = () => new Cpu("x", ManufacturerId, SocketId, SeriesId, 128, false, false, 0, 120);
+        var emptySocket = () => new Cpu("x", ManufacturerId, new CpuSpecs
+        {
+            SocketId = Guid.Empty,
+            SeriesId = SeriesId,
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
+        var emptySeries = () => new Cpu("x", ManufacturerId, new CpuSpecs
+        {
+            SocketId = SocketId,
+            SeriesId = Guid.Empty,
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
+        var badMemory = () => new Cpu("x", ManufacturerId, new CpuSpecs
+        {
+            SocketId = SocketId,
+            SeriesId = SeriesId,
+            MaxMemoryGb = 0,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
+        var badTdp = () => new Cpu("x", ManufacturerId, new CpuSpecs
+        {
+            SocketId = SocketId,
+            SeriesId = SeriesId,
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 0,
+            PowerConsumptionWatts = 120
+        });
 
-        emptySocket.Should().Throw<ArgumentException>().WithParameterName("socketId");
-        emptySeries.Should().Throw<ArgumentException>().WithParameterName("seriesId");
-        badMemory.Should().Throw<ArgumentException>().WithParameterName("maxMemoryGb");
-        badTdp.Should().Throw<ArgumentException>().WithParameterName("thermalDesignPower");
+        emptySocket.Should().Throw<ArgumentException>().WithParameterName("specs");
+        emptySeries.Should().Throw<ArgumentException>().WithParameterName("specs");
+        badMemory.Should().Throw<ArgumentException>().WithParameterName("specs");
+        badTdp.Should().Throw<ArgumentException>().WithParameterName("specs");
     }
 
     [Fact]
@@ -85,8 +122,28 @@ public class CpuTests
     }
 
     private static Cpu Create() =>
-        new("7800X3D", ManufacturerId, SocketId, SeriesId, 128, false, false, 120, 120);
+        new("7800X3D", ManufacturerId, new CpuSpecs
+        {
+            SocketId = SocketId,
+            SeriesId = SeriesId,
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = 120
+        });
 
     private static Ram CreateRam(DdrGeneration ddr, int modules, RamRank rank, int speed) =>
-        new("Kit", ManufacturerId, "Black", ddr, RamFormFactor.UDimm, rank, 16, 16 * modules, modules, speed, 40);
+        new("Kit", ManufacturerId, new RamSpecs
+        {
+            Color = "Black",
+            DdrGeneration = ddr,
+            RamFormFactor = RamFormFactor.UDimm,
+            RamRank = rank,
+            MemorySizePerStickGb = 16,
+            TotalMemorySizeGb = 16 * modules,
+            ModulesCount = modules,
+            MaxMemorySpeedMts = speed,
+            HeightMm = 40
+        });
 }

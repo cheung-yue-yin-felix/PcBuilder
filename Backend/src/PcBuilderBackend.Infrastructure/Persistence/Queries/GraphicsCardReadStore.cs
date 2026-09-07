@@ -42,22 +42,18 @@ public class GraphicsCardReadStore(PcBuilderDbContext db, IMapper mapper) : IGra
         var queryable = db.GraphicsCards.AsNoTracking()
             .Include(x => x.Gpu)
             .ThenInclude(x => x.Series)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.GpuId.HasValue, x => x.GpuId == filter.GpuId)
             .WhereIf(filter.VideoMemoryGb.HasValue, x => x.VideoMemoryGb == filter.VideoMemoryGb)
             .WhereIf(filter.PcieGeneration.HasValue, x => x.PcieGeneration == filter.PcieGeneration)
             .WhereIf(filter.PcieSlotsUsed.HasValue, x => x.PcieSlotsUsed == filter.PcieSlotsUsed)
             .WhereIf(filter.IsLowProfile.HasValue, x => x.IsLowProfile == filter.IsLowProfile)
-            .WhereIf(filter.LengthMm is not null,
-                x => x.LengthMm >= filter.LengthMm!.Min && x.LengthMm <= filter.LengthMm!.Max)
-            .WhereIf(filter.WidthMm is not null,
-                x => x.WidthMm >= filter.WidthMm!.Min && x.WidthMm <= filter.WidthMm!.Max)
-            .WhereIf(filter.HeightMm is not null,
-                x => x.HeightMm >= filter.HeightMm!.Min && x.HeightMm <= filter.HeightMm!.Max)
-            .WhereIf(filter.PowerConsumptionWatts is not null,
-                x => x.PowerConsumptionWatts >= filter.PowerConsumptionWatts!.Min &&
-                     x.PowerConsumptionWatts <= filter.PowerConsumptionWatts!.Max);
+            .WhereIf(filter.LengthMm, range => x => x.LengthMm >= range.Min && x.LengthMm <= range.Max)
+            .WhereIf(filter.WidthMm, range => x => x.WidthMm >= range.Min && x.WidthMm <= range.Max)
+            .WhereIf(filter.HeightMm, range => x => x.HeightMm >= range.Min && x.HeightMm <= range.Max)
+            .WhereIf(filter.PowerConsumptionWatts, range =>
+                x => x.PowerConsumptionWatts >= range.Min && x.PowerConsumptionWatts <= range.Max);
 
         if (!filter.ChassisId.HasValue && !filter.MotherboardId.HasValue)
         {

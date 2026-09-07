@@ -71,4 +71,4 @@ app.MapPcBuildEndpoints();
 app.MapSpaFallback();
 
 await app.SeedIdentityAsync();
-app.Run();
+await app.RunAsync();

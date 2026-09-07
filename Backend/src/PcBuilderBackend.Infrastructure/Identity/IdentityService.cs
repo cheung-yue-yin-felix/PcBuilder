@@ -35,7 +35,7 @@ public class IdentityService(
         if (!roleResult.Succeeded)
             return new RegisterResultDto(false, null, ToErrors(roleResult));
 
-        IdentityLog.Registered(logger, user.Id, user.Email!);
+        IdentityLog.Registered(logger, user.Id, user.Email ?? string.Empty);
         return new RegisterResultDto(true, await MapAsync(user), new Dictionary<string, string[]>());
     }
 

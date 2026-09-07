@@ -6,7 +6,7 @@ using PcBuilderBackend.Domain.Entities;
 
 namespace PcBuilderBackend.Application.MasterData.Manufacturers.Queries;
 
-public class GetManufacturerByIdHandler(IReadStore<Manufacturer, ManufacturerDto> store, ICacheService cache)
+public class GetManufacturerByIdHandler(IReadStore<ManufacturerDto> store, ICacheService cache)
     : IRequestHandler<GetManufacturerByIdQuery, ManufacturerDto?>
 {
     public async Task<ManufacturerDto?> Handle(GetManufacturerByIdQuery request, CancellationToken cancellationToken)

@@ -15,6 +15,13 @@ using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters;
 using PcBuilderBackend.Application.Build;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Options;
+using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
+using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Gpus.Dto;
+using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Application.MasterData.Sockets.Dto;
+using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Infrastructure.Caching;
 using PcBuilderBackend.Infrastructure.Identity;
 using PcBuilderBackend.Infrastructure.Persistence;
@@ -47,7 +54,12 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IActiveEntityLookup, ActiveEntityLookup>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
-        services.AddScoped(typeof(IReadStore<,>), typeof(EfReadStore<,>));
+        services.AddScoped<IReadStore<ManufacturerDto>, EfReadStore<Manufacturer, ManufacturerDto>>();
+        services.AddScoped<IReadStore<SocketDto>, EfReadStore<Socket, SocketDto>>();
+        services.AddScoped<IReadStore<ChipsetDto>, EfReadStore<Chipset, ChipsetDto>>();
+        services.AddScoped<IReadStore<CpuSeriesDto>, EfReadStore<CpuSeries, CpuSeriesDto>>();
+        services.AddScoped<IReadStore<GpuDto>, EfReadStore<Gpu, GpuDto>>();
+        services.AddScoped<IReadStore<GpuSeriesDto>, EfReadStore<GpuSeries, GpuSeriesDto>>();
 
         // Read Stores
         services.AddScoped<IChassisReadStore, ChassisReadStore>();

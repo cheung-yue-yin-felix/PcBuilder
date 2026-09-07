@@ -10,9 +10,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register AutoMapper profiles from this assembly
-        //services.AddAutoMapper(cfg => {}, typeof(DependencyInjection).Assembly);
-
         services.AddAutoMapper(cfg =>
         {
             cfg.LicenseKey = configuration["AutoMapper:LicenseKey"];

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.BulkUpdateMemories;
 
@@ -17,17 +18,18 @@ public class BulkUpdateMemoriesHandler(IRamRepository memories, IUnitOfWork unit
 
             entity.Rename(command.Name);
             entity.UpdateManufacturer(command.ManufacturerId);
-            entity.UpdateSpecs(
-                command.Color,
-                command.DdrGeneration,
-                command.RamFormFactor,
-                command.RamRank,
-                command.MemorySizePerStickGb,
-                command.TotalMemorySizeGb,
-                command.ModulesCount,
-                command.MaxMemorySpeedMts,
-                command.HeightMm
-            );
+            entity.UpdateSpecs(new RamSpecs
+            {
+                Color = command.Color,
+                DdrGeneration = command.DdrGeneration,
+                RamFormFactor = command.RamFormFactor,
+                RamRank = command.RamRank,
+                MemorySizePerStickGb = command.MemorySizePerStickGb,
+                TotalMemorySizeGb = command.TotalMemorySizeGb,
+                ModulesCount = command.ModulesCount,
+                MaxMemorySpeedMts = command.MaxMemorySpeedMts,
+                HeightMm = command.HeightMm
+            });
             result.Add(mapper.Map<RamDto>(entity));
         }
 

@@ -28,12 +28,9 @@ public class BulkUpdateChassisPsuFormFactorsHandler(
         var requested = request.PsuFormFactors.Distinct().ToHashSet();
         var existingByKey = entity.PsuFormFactors.ToDictionary(x => x.PsuFormFactor);
 
-        foreach (var formFactor in requested)
+        foreach (var formFactor in requested.Where(formFactor => !existingByKey.ContainsKey(formFactor)))
         {
-            if (!existingByKey.ContainsKey(formFactor))
-            {
-                entity.AddPsuFormFactor(new ChassisPsuFormFactor(request.ChassisId, formFactor));
-            }
+            entity.AddPsuFormFactor(new ChassisPsuFormFactor(request.ChassisId, formFactor));
         }
 
         foreach (var existing in existingByKey.Values.Where(x => !requested.Contains(x.PsuFormFactor)))

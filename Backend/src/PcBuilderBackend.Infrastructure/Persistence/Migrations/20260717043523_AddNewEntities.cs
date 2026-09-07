@@ -81,7 +81,7 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                 table: "Psus",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.AddColumn<bool>(
                 name: "BluetoothEnabled",
@@ -175,14 +175,14 @@ namespace PcBuilderBackend.Infrastructure.Persistence.Migrations
                 table: "Chipsets",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.AddColumn<Guid>(
                 name: "SocketId",
                 table: "Chipsets",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.CreateTable(
                 name: "Chassis",

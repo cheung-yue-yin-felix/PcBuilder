@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.UpdateMotherboard;
 
@@ -15,22 +16,24 @@ public class UpdateMotherboardHandler(IMotherboardRepository motherboards, IUnit
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.SocketId,
-            request.ChipsetId,
-            request.RamSlots,
-            request.MaxMemoryGb,
-            request.MaxDimmSizeGb,
-            request.SataPorts,
-            request.FanConnectors,
-            request.EpsConnectors,
-            request.WidthMm,
-            request.HeightMm,
-            request.DdrGeneration,
-            request.RamFormFactor,
-            request.FormFactor,
-            request.WifiEnabled,
-            request.BluetoothEnabled);
+        entity.UpdateSpecs(new MotherboardSpecs
+        {
+            SocketId = request.SocketId,
+            ChipsetId = request.ChipsetId,
+            RamSlots = request.RamSlots,
+            MaxMemoryGb = request.MaxMemoryGb,
+            MaxDimmSizeGb = request.MaxDimmSizeGb,
+            SataPorts = request.SataPorts,
+            FanConnectors = request.FanConnectors,
+            EpsConnectors = request.EpsConnectors,
+            WidthMm = request.WidthMm,
+            HeightMm = request.HeightMm,
+            DdrGeneration = request.DdrGeneration,
+            RamFormFactor = request.RamFormFactor,
+            MbFormFactor = request.FormFactor,
+            WifiEnabled = request.WifiEnabled,
+            BluetoothEnabled = request.BluetoothEnabled
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

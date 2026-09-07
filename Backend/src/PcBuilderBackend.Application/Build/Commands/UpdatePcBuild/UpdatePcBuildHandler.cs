@@ -6,6 +6,7 @@ using PcBuilderBackend.Application.Build.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Build.Commands.UpdatePcBuild;
 
@@ -34,17 +35,20 @@ public class UpdatePcBuildHandler(
         }
 
         var compatibilityResults = await checker.CheckCompatibilityAsync(
-            command.ChassisId,
-            command.MotherboardId,
-            command.CpuId,
-            command.CpuCoolerId,
-            command.RamKitId,
-            command.GraphicsCardId,
-            command.PsuId,
-            command.ChassisFans,
-            command.StorageDevices,
-            command.WiredNetworkAdapters,
-            command.WirelessNetworkAdapters);
+            new CompatibilityCheckRequest
+            {
+                ChassisId = command.ChassisId,
+                MotherboardId = command.MotherboardId,
+                CpuId = command.CpuId,
+                CpuCoolerId = command.CpuCoolerId,
+                RamKitId = command.RamKitId,
+                GraphicsCardId = command.GraphicsCardId,
+                PsuId = command.PsuId,
+                ChassisFans = command.ChassisFans,
+                StorageDevices = command.StorageDevices,
+                WiredNetworkAdapters = command.WiredNetworkAdapters,
+                WirelessNetworkAdapters = command.WirelessNetworkAdapters
+            });
 
         if (compatibilityResults.Any(r => r.Result.Status == PartsCompatibility.Incompatible))
         {
@@ -55,13 +59,16 @@ public class UpdatePcBuildHandler(
         pcBuild.Update(
             command.Name,
             command.Description,
-            command.ChassisId,
-            command.MotherboardId,
-            command.CpuId,
-            command.CpuCoolerId,
-            command.RamKitId,
-            command.GraphicsCardId,
-            command.PsuId);
+            new PcBuildComponents
+            {
+                ChassisId = command.ChassisId,
+                MotherboardId = command.MotherboardId,
+                CpuId = command.CpuId,
+                CpuCoolerId = command.CpuCoolerId,
+                RamKitId = command.RamKitId,
+                GraphicsCardId = command.GraphicsCardId,
+                PsuId = command.PsuId
+            });
 
         pcBuild.User.Update(pcBuild.Id, userId, command.IsPublic);
 
@@ -82,7 +89,7 @@ public class UpdatePcBuildHandler(
                     pcBuild.RemoveWirelessNetworkAdapter(part.PartId, part.Quantity);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(part.Type), part.Type, null);
+                    throw new ArgumentOutOfRangeException(nameof(command), part.Type, $"Unsupported part type '{part.Type}'.");
             }
 
             pcBuilds.DeletePart(part);

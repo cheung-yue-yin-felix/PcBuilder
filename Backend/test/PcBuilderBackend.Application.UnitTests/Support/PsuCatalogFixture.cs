@@ -7,6 +7,7 @@ using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Mappings;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.UnitTests.Support;
 
@@ -64,12 +65,15 @@ public sealed class PsuCatalogFixture : IDisposable
         var psu = new Psu(
             name,
             Manufacturer.Id,
-            wattage,
-            PsuModularity.FullModular,
-            formFactor,
-            lengthMm,
-            150,
-            86);
+            new PsuSpecs
+            {
+                Wattage = wattage,
+                Modularity = PsuModularity.FullModular,
+                FormFactor = formFactor,
+                LengthMm = lengthMm,
+                WidthMm = 150,
+                HeightMm = 86
+            });
         Context.Psus.Add(psu);
         Context.SaveChanges();
         Context.Entry(psu).Reference(x => x.Manufacturer).Load();

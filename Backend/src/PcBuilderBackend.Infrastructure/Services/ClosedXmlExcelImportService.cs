@@ -146,47 +146,13 @@ public class ClosedXmlExcelImportService : IExcelImportService
         var chassisByRow = chassis.ToDictionary(x => x.RowNumber);
         var fanMountByRow = fanMounts.ToDictionary(x => x.RowNumber);
 
-        foreach (var bay in driveBays)
-        {
-            if (chassisByRow.TryGetValue(bay.ParentRowNumber, out var parent))
-                parent.DriveBays.Add(bay);
-        }
-
-        foreach (var mount in fanMounts)
-        {
-            if (chassisByRow.TryGetValue(mount.ParentRowNumber, out var parent))
-                parent.FanMounts.Add(mount);
-        }
-
-        foreach (var option in fanMountOptions)
-        {
-            if (fanMountByRow.TryGetValue(option.ParentRowNumber, out var mount))
-                mount.Options.Add(option);
-        }
-
-        foreach (var slot in pcieSlots)
-        {
-            if (chassisByRow.TryGetValue(slot.ParentRowNumber, out var parent))
-                parent.PcieSlots.Add(slot);
-        }
-
-        foreach (var radiator in radiators)
-        {
-            if (chassisByRow.TryGetValue(radiator.ParentRowNumber, out var parent))
-                parent.Radiators.Add(radiator);
-        }
-
-        foreach (var formFactor in mbFormFactors)
-        {
-            if (chassisByRow.TryGetValue(formFactor.ParentRowNumber, out var parent))
-                parent.MbFormFactors.Add(formFactor);
-        }
-
-        foreach (var formFactor in psuFormFactors)
-        {
-            if (chassisByRow.TryGetValue(formFactor.ParentRowNumber, out var parent))
-                parent.PsuFormFactors.Add(formFactor);
-        }
+        AttachChildren(chassisByRow, driveBays, bay => bay.ParentRowNumber, (parent, bay) => parent.DriveBays.Add(bay));
+        AttachChildren(chassisByRow, fanMounts, mount => mount.ParentRowNumber, (parent, mount) => parent.FanMounts.Add(mount));
+        AttachChildren(fanMountByRow, fanMountOptions, option => option.ParentRowNumber, (mount, option) => mount.Options.Add(option));
+        AttachChildren(chassisByRow, pcieSlots, slot => slot.ParentRowNumber, (parent, slot) => parent.PcieSlots.Add(slot));
+        AttachChildren(chassisByRow, radiators, radiator => radiator.ParentRowNumber, (parent, radiator) => parent.Radiators.Add(radiator));
+        AttachChildren(chassisByRow, mbFormFactors, formFactor => formFactor.ParentRowNumber, (parent, formFactor) => parent.MbFormFactors.Add(formFactor));
+        AttachChildren(chassisByRow, psuFormFactors, formFactor => formFactor.ParentRowNumber, (parent, formFactor) => parent.PsuFormFactors.Add(formFactor));
 
         return Task.FromResult(chassis);
     }
@@ -881,6 +847,19 @@ public class ClosedXmlExcelImportService : IExcelImportService
                     UsbType = ParseOptionalEnum<UsbType>(row.Cell(13))
                 })
         ];
+    }
+
+    private static void AttachChildren<TParent, TChild>(
+        IReadOnlyDictionary<int, TParent> parents,
+        IEnumerable<TChild> children,
+        Func<TChild, int> parentRow,
+        Action<TParent, TChild> attach)
+    {
+        foreach (var child in children)
+        {
+            if (parents.TryGetValue(parentRow(child), out var parent))
+                attach(parent, child);
+        }
     }
 
     private static IEnumerable<IXLRow> UsedDataRows(IXLWorksheet sheet)

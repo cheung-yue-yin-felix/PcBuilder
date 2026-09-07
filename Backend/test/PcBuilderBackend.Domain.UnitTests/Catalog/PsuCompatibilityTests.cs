@@ -1,6 +1,7 @@
 using FluentAssertions;
 using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Domain.UnitTests.Catalog;
 
@@ -140,9 +141,17 @@ public class PsuCompatibilityTests
         var chassis = new Chassis(
             "4000D",
             ManufacturerId,
-            450, 230, 460,
-            305, 244,
-            170, 370, 180);
+            new ChassisSpecs
+            {
+                LengthMm = 450,
+                WidthMm = 230,
+                HeightMm = 460,
+                MotherboardMaxWidthMm = 305,
+                MotherboardMaxHeightMm = 244,
+                MaxCpuCoolerHeightMm = 170,
+                MaxGraphicsCardLengthMm = 370,
+                MaxPsuLengthMm = 180
+            });
         chassis.AddPsuFormFactor(new ChassisPsuFormFactor(chassis.Id, PsuFormFactor.Atx));
 
         var fitting = CreatePsu(formFactor: PsuFormFactor.Atx, lengthMm: 160);
@@ -158,24 +167,81 @@ public class PsuCompatibilityTests
         int wattage = 850,
         PsuFormFactor formFactor = PsuFormFactor.Atx,
         decimal lengthMm = 160) =>
-        new("RM850x", ManufacturerId, wattage, PsuModularity.FullModular, formFactor, lengthMm, 150, 86);
+        new("RM850x", ManufacturerId, new PsuSpecs
+        {
+            Wattage = wattage,
+            Modularity = PsuModularity.FullModular,
+            FormFactor = formFactor,
+            LengthMm = lengthMm,
+            WidthMm = 150,
+            HeightMm = 86
+        });
 
     private static Cpu CreateCpu(int powerConsumptionWatts) =>
-        new("7800X3D", ManufacturerId, Guid.NewGuid(), Guid.NewGuid(), 128, false, false, 120, powerConsumptionWatts);
+        new("7800X3D", ManufacturerId, new CpuSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            SeriesId = Guid.NewGuid(),
+            MaxMemoryGb = 128,
+            IntegratedGraphics = false,
+            IncludedStockCooler = false,
+            ThermalDesignPower = 120,
+            PowerConsumptionWatts = powerConsumptionWatts
+        });
 
     private static GraphicsCard CreateGpu(int powerConsumptionWatts, PsuCableType connector, int powerConnectorCount) =>
-        new("RTX 4070", ManufacturerId, Guid.NewGuid(), 12, 2, PcieGeneration.Gen4, false, 240, 120, 50,
-            powerConsumptionWatts, connector, powerConnectorCount);
+        new("RTX 4070", ManufacturerId, new GraphicsCardSpecs
+        {
+            GpuId = Guid.NewGuid(),
+            VideoMemoryGb = 12,
+            PcieSlotsUsed = 2,
+            PcieGeneration = PcieGeneration.Gen4,
+            IsLowProfile = false,
+            LengthMm = 240,
+            WidthMm = 120,
+            HeightMm = 50,
+            PowerConsumptionWatts = powerConsumptionWatts,
+            PowerConnectorType = connector,
+            PowerConnectorCount = powerConnectorCount
+        });
 
     private static Motherboard CreateMotherboard(int epsConnectors) =>
-        new(ManufacturerId, "B650", Guid.NewGuid(), Guid.NewGuid(), 4, 128, 48, 4, 4, epsConnectors,
-            244, 305, DdrGeneration.Ddr5, RamFormFactor.UDimm, MbFormFactor.Atx, false, false);
+        new(ManufacturerId, "B650", new MotherboardSpecs
+        {
+            SocketId = Guid.NewGuid(),
+            ChipsetId = Guid.NewGuid(),
+            RamSlots = 4,
+            MaxMemoryGb = 128,
+            MaxDimmSizeGb = 48,
+            SataPorts = 4,
+            FanConnectors = 4,
+            EpsConnectors = epsConnectors,
+            WidthMm = 244,
+            HeightMm = 305,
+            DdrGeneration = DdrGeneration.Ddr5,
+            RamFormFactor = RamFormFactor.UDimm,
+            MbFormFactor = MbFormFactor.Atx,
+            WifiEnabled = false,
+            BluetoothEnabled = false
+        });
 
     private static StorageDrive CreateNvme() =>
-        new("990 PRO", ManufacturerId, StorageMedia.Ssd, StorageInterface.Nvme, StorageFormFactor.M22280, 2000,
-            PcieGeneration.Gen4);
+        new("990 PRO", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Ssd,
+            Interface = StorageInterface.Nvme,
+            FormFactor = StorageFormFactor.M22280,
+            CapacityGb = 2000,
+            PcieGeneration = PcieGeneration.Gen4
+        });
 
     private static StorageDrive CreateHdd() =>
-        new("Barracuda", ManufacturerId, StorageMedia.Hdd, StorageInterface.Sata, StorageFormFactor.Sata35, 4000,
-            rpm: 7200);
+        new("Barracuda", ManufacturerId, new StorageDriveSpecs
+        {
+            Media = StorageMedia.Hdd,
+            Interface = StorageInterface.Sata,
+            FormFactor = StorageFormFactor.Sata35,
+            CapacityGb = 4000,
+            Rpm = 7200
+        });
 }

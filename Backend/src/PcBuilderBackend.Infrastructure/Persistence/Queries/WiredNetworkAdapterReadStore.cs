@@ -41,11 +41,11 @@ public sealed class WiredNetworkAdapterReadStore(PcBuilderDbContext db, IMapper 
 
         var queryable = db.WiredNetworkAdapters.AsNoTracking()
             .Include(x => x.Manufacturer)
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name), x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.HostInterface.HasValue, x => x.HostInterface == filter.HostInterface)
-            .WhereIf(filter.MaxSpeedMbps is not null,
-                x => x.MaxSpeedMbps >= filter.MaxSpeedMbps!.Min && x.MaxSpeedMbps <= filter.MaxSpeedMbps!.Max)
+            .WhereIf(filter.MaxSpeedMbps, range =>
+                x => x.MaxSpeedMbps >= range.Min && x.MaxSpeedMbps <= range.Max)
             .WhereIf(filter.UsbVersion.HasValue, x => x.UsbVersion == filter.UsbVersion)
             .WhereIf(filter.UsbType.HasValue, x => x.UsbType == filter.UsbType)
             .WhereIf(filter.PcieSlotType.HasValue, x => x.PcieSlotType == filter.PcieSlotType);

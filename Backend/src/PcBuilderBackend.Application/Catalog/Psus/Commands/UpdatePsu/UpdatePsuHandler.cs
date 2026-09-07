@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.UpdatePsu;
 
@@ -26,13 +27,15 @@ public class UpdatePsuHandler(
 
         entity.Rename(request.Name);
         entity.UpdateManufacturer(request.ManufacturerId);
-        entity.UpdateSpecs(
-            request.Wattage,
-            request.Modularity,
-            request.FormFactor,
-            request.LengthMm,
-            request.WidthMm,
-            request.HeightMm);
+        entity.UpdateSpecs(new PsuSpecs
+        {
+            Wattage = request.Wattage,
+            Modularity = request.Modularity,
+            FormFactor = request.FormFactor,
+            LengthMm = request.LengthMm,
+            WidthMm = request.WidthMm,
+            HeightMm = request.HeightMm
+        });
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 

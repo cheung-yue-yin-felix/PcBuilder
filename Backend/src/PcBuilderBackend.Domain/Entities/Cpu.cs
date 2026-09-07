@@ -25,21 +25,11 @@ public class Cpu : ProductEntity
     {
     }
 
-    public Cpu(
-        string name,
-        Guid manufacturerId,
-        Guid socketId,
-        Guid seriesId,
-        int maxMemoryGb,
-        bool integratedGraphics,
-        bool includedStockCooler,
-        int thermalDesignPower,
-        int powerConsumptionWatts
-    )
+    public Cpu(string name, Guid manufacturerId, CpuSpecs specs)
     {
         SetName(name);
         SetManufacturer(manufacturerId);
-        SetSpecs(socketId, seriesId, maxMemoryGb, integratedGraphics, includedStockCooler, thermalDesignPower, powerConsumptionWatts);
+        SetSpecs(specs);
     }
 
     public void AddRamCompat(CpuRamCompat ramCompat)
@@ -99,49 +89,35 @@ public class Cpu : ProductEntity
     }
 
 
-    public void UpdateSpecs(
-        Guid socketId,
-        Guid seriesId,
-        int maxMemoryGb,
-        bool integratedGraphics,
-        bool includedStockCooler,
-        int thermalDesignPower,
-        int powerConsumptionWatts)
+    public void UpdateSpecs(CpuSpecs specs)
     {
-        SetSpecs(socketId, seriesId, maxMemoryGb, integratedGraphics, includedStockCooler, thermalDesignPower, powerConsumptionWatts);
+        SetSpecs(specs);
         UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    private void SetSpecs(
-        Guid socketId,
-        Guid seriesId,
-        int maxMemoryGb,
-        bool integratedGraphics,
-        bool includedStockCooler,
-        int thermalDesignPower,
-        int powerConsumptionWatts)
+    private void SetSpecs(CpuSpecs specs)
     {
-        if (socketId == Guid.Empty)
-            throw new ArgumentException("Socket ID is required", nameof(socketId));
+        if (specs.SocketId == Guid.Empty)
+            throw new ArgumentException("Socket ID is required", nameof(specs));
 
-        if (seriesId == Guid.Empty)
-            throw new ArgumentException("Series ID is required", nameof(seriesId));
+        if (specs.SeriesId == Guid.Empty)
+            throw new ArgumentException("Series ID is required", nameof(specs));
 
-        if (maxMemoryGb <= 0)
-            throw new ArgumentException("Max Memory GB is required", nameof(maxMemoryGb));
+        if (specs.MaxMemoryGb <= 0)
+            throw new ArgumentException("Max Memory GB is required", nameof(specs));
 
-        if (thermalDesignPower <= 0)
-            throw new ArgumentException("Thermal Design Power is required", nameof(thermalDesignPower));
-        
-        if (powerConsumptionWatts <= 0)
-            throw new ArgumentException("Power Consumption Watts is required", nameof(powerConsumptionWatts));
+        if (specs.ThermalDesignPower <= 0)
+            throw new ArgumentException("Thermal Design Power is required", nameof(specs));
 
-        SocketId = socketId;
-        SeriesId = seriesId;
-        MaxMemoryGb = maxMemoryGb;
-        IntegratedGraphics = integratedGraphics;
-        IncludedStockCooler = includedStockCooler;
-        ThermalDesignPower = thermalDesignPower;
-        PowerConsumptionWatts = powerConsumptionWatts;
+        if (specs.PowerConsumptionWatts <= 0)
+            throw new ArgumentException("Power Consumption Watts is required", nameof(specs));
+
+        SocketId = specs.SocketId;
+        SeriesId = specs.SeriesId;
+        MaxMemoryGb = specs.MaxMemoryGb;
+        IntegratedGraphics = specs.IntegratedGraphics;
+        IncludedStockCooler = specs.IncludedStockCooler;
+        ThermalDesignPower = specs.ThermalDesignPower;
+        PowerConsumptionWatts = specs.PowerConsumptionWatts;
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.BulkUpdateMotherboards;
 
@@ -30,22 +31,24 @@ public class BulkUpdateMotherboardsHandler(
 
             entity.Rename(command.Name);
             entity.UpdateManufacturer(command.ManufacturerId);
-            entity.UpdateSpecs(
-                command.SocketId,
-                command.ChipsetId,
-                command.RamSlots,
-                command.MaxMemoryGb,
-                command.MaxDimmSizeGb,
-                command.SataPorts,
-                command.FanConnectors,
-                command.EpsConnectors,
-                command.WidthMm,
-                command.HeightMm,
-                command.DdrGeneration,
-                command.RamFormFactor,
-                command.FormFactor,
-                command.WifiEnabled,
-                command.BluetoothEnabled);
+            entity.UpdateSpecs(new MotherboardSpecs
+            {
+                SocketId = command.SocketId,
+                ChipsetId = command.ChipsetId,
+                RamSlots = command.RamSlots,
+                MaxMemoryGb = command.MaxMemoryGb,
+                MaxDimmSizeGb = command.MaxDimmSizeGb,
+                SataPorts = command.SataPorts,
+                FanConnectors = command.FanConnectors,
+                EpsConnectors = command.EpsConnectors,
+                WidthMm = command.WidthMm,
+                HeightMm = command.HeightMm,
+                DdrGeneration = command.DdrGeneration,
+                RamFormFactor = command.RamFormFactor,
+                MbFormFactor = command.FormFactor,
+                WifiEnabled = command.WifiEnabled,
+                BluetoothEnabled = command.BluetoothEnabled
+            });
 
             result.Add(mapper.Map<MotherboardDto>(entity));
         }

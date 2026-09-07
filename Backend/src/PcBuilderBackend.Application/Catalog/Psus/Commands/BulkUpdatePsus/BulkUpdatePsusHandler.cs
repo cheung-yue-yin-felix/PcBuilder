@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkUpdatePsus;
 
@@ -30,13 +31,15 @@ public class BulkUpdatePsusHandler(
 
             entity.Rename(item.Name);
             entity.UpdateManufacturer(item.ManufacturerId);
-            entity.UpdateSpecs(
-                item.Wattage,
-                item.Modularity,
-                item.FormFactor,
-                item.LengthMm,
-                item.WidthMm,
-                item.HeightMm);
+            entity.UpdateSpecs(new PsuSpecs
+            {
+                Wattage = item.Wattage,
+                Modularity = item.Modularity,
+                FormFactor = item.FormFactor,
+                LengthMm = item.LengthMm,
+                WidthMm = item.WidthMm,
+                HeightMm = item.HeightMm
+            });
 
             result.Add(mapper.Map<PsuDto>(entity));
         }

@@ -5,7 +5,7 @@ using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Logging;
 using PcBuilderBackend.Application.Common.Validation;
-using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.ValueObjects;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.ImportChassis;
 
@@ -29,66 +29,7 @@ public class ImportChassisHandler(
 
         foreach (var row in rows)
         {
-            var entity = new Domain.Entities.Chassis(
-                row.Name,
-                row.ManufacturerId,
-                row.LengthMm,
-                row.WidthMm,
-                row.HeightMm,
-                row.MotherboardMaxWidthMm,
-                row.MotherboardMaxHeightMm,
-                row.MaxCpuCoolerHeightMm,
-                row.MaxGraphicsCardLengthMm,
-                row.MaxPsuLengthMm);
-
-            foreach (var bay in row.DriveBays)
-            {
-                entity.AddDriveBay(new ChassisDriveBay(entity.Id, bay.FormFactor, bay.SlotCount));
-            }
-
-            foreach (var mount in row.FanMounts)
-            {
-                var mountEntity = new ChassisFanMount(entity.Id, mount.Location, mount.SingleDiameterOnly);
-
-                foreach (var option in mount.Options)
-                {
-                    mountEntity.AddOption(new ChassisFanMountOption(
-                        mountEntity.Id,
-                        option.Diameter,
-                        option.SlotCount));
-                }
-
-                entity.AddFanMount(mountEntity);
-            }
-
-            foreach (var slot in row.PcieSlots)
-            {
-                entity.AddPcieSlot(new ChassisPcieSlot(
-                    entity.Id,
-                    slot.LowProfileSlots,
-                    slot.SlotCount,
-                    slot.Orientation));
-            }
-
-            foreach (var radiator in row.Radiators)
-            {
-                entity.AddRadiator(new ChassisRadiator(
-                    entity.Id,
-                    radiator.Length,
-                    radiator.Location,
-                    radiator.RadiatorCount));
-            }
-
-            foreach (var formFactor in row.MbFormFactors.Select(x => x.MbFormFactor).Distinct())
-            {
-                entity.AddMbFormFactor(new ChassisMbFormFactor(entity.Id, formFactor));
-            }
-
-            foreach (var formFactor in row.PsuFormFactors.Select(x => x.PsuFormFactor).Distinct())
-            {
-                entity.AddPsuFormFactor(new ChassisPsuFormFactor(entity.Id, formFactor));
-            }
-
+            var entity = CreateChassis(row);
             chassis.Add(entity);
             result.Add(entity);
         }
@@ -98,5 +39,45 @@ public class ImportChassisHandler(
         EntityLog.Imported(logger, result.Count, EntityLog.Chassis);
 
         return [.. result.Select(mapper.Map<ChassisDto>)];
+    }
+
+    private static Domain.Entities.Chassis CreateChassis(ChassisImportRow row)
+    {
+        var entity = new Domain.Entities.Chassis(
+            row.Name,
+            row.ManufacturerId,
+            new ChassisSpecs
+            {
+                LengthMm = row.LengthMm,
+                WidthMm = row.WidthMm,
+                HeightMm = row.HeightMm,
+                MotherboardMaxWidthMm = row.MotherboardMaxWidthMm,
+                MotherboardMaxHeightMm = row.MotherboardMaxHeightMm,
+                MaxCpuCoolerHeightMm = row.MaxCpuCoolerHeightMm,
+                MaxGraphicsCardLengthMm = row.MaxGraphicsCardLengthMm,
+                MaxPsuLengthMm = row.MaxPsuLengthMm
+            });
+
+        ChassisChildCollections.Apply(
+            entity,
+            row.DriveBays.Select(bay => new ChassisDriveBayDto(bay.FormFactor, bay.SlotCount)),
+            row.FanMounts.Select(mount => new ChassisFanMountDto(
+                mount.Location,
+                mount.SingleDiameterOnly,
+                [.. mount.Options.Select(option => new ChassisFanMountOptionDto(option.Diameter, option.SlotCount))])),
+            row.PcieSlots.Select(slot => new ChassisPcieSlotDto(
+                slot.LowProfileSlots,
+                slot.SlotCount,
+                slot.Orientation)),
+            row.Radiators.Select(radiator => new ChassisRadiatorDto
+            {
+                Length = radiator.Length,
+                Location = radiator.Location,
+                RadiatorCount = radiator.RadiatorCount
+            }),
+            row.MbFormFactors.Select(formFactor => formFactor.MbFormFactor),
+            row.PsuFormFactors.Select(formFactor => formFactor.PsuFormFactor));
+
+        return entity;
     }
 }
