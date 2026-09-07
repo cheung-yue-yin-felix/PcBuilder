@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using InfisicalConfiguration;
 using PcBuilderBackend.Api.Endpoints.Auth;
 using PcBuilderBackend.Api.Endpoints.Build;
@@ -34,6 +35,10 @@ builder.Configuration.AddInfisical(
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddOpenApi(options =>
 {
     options.AutoDiscoverSidebarGroups();
