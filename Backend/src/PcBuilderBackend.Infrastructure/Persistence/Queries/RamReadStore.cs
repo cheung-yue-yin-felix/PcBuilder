@@ -35,7 +35,7 @@ public class RamReadStore(PcBuilderDbContext db, IMapper mapper) : IRamReadStore
 
     public async Task<PagedResult<RamDto>> FilterAsync(PagedRequest<RamFilter> request, CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new RamFilter();
 
         var queryable = db.Rams.AsNoTracking()
             .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))

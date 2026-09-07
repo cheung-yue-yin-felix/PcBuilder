@@ -33,7 +33,7 @@ public sealed class ChassisFanReadStore(PcBuilderDbContext db, IMapper mapper) :
         PagedRequest<ChassisFanFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new ChassisFanFilter();
 
         var queryable = db.ChassisFans.AsNoTracking()
             .WhereIf(filter.ManufacturerId.HasValue, x => x.ManufacturerId == filter.ManufacturerId)

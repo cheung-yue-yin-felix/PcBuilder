@@ -36,9 +36,10 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
         PagedRequest<PsuFilter> request,
         CancellationToken cancellationToken)
     {
-        var queryable = ApplyAttributeFilters(request.Filter);
+        var filter = request.Filter ?? new PsuFilter();
+        var queryable = ApplyAttributeFilters(filter);
 
-        if (!NeedsCompatibility(request.Filter))
+        if (!NeedsCompatibility(filter))
         {
             return await queryable
                 .ApplySorting(request.SortFields, request.SortDirection)
@@ -49,7 +50,7 @@ public sealed class PsuReadStore(PcBuilderDbContext db, IMapper mapper) : IPsuRe
                     cancellationToken);
         }
 
-        var parts = await LoadCompatibilityPartsAsync(request.Filter, cancellationToken);
+        var parts = await LoadCompatibilityPartsAsync(filter, cancellationToken);
         if (parts is null)
             return PagedResult<PsuListItemDto>.Empty(request);
 

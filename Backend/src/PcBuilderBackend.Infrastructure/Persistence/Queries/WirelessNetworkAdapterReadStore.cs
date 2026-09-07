@@ -37,7 +37,7 @@ public sealed class WirelessNetworkAdapterReadStore(PcBuilderDbContext db, IMapp
         PagedRequest<WirelessNetworkAdapterFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new WirelessNetworkAdapterFilter();
 
         var queryable = db.WirelessNetworkAdapters.AsNoTracking()
             .Include(x => x.Manufacturer)

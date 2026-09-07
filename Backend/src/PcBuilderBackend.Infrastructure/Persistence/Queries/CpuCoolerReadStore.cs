@@ -39,13 +39,14 @@ public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoo
         PagedRequest<CpuCoolerFilter> request,
         CancellationToken cancellationToken)
     {
-        var queryable = ApplyAttributeFilters(request.Filter);
+        var filter = request.Filter ?? new CpuCoolerFilter();
+        var queryable = ApplyAttributeFilters(filter);
 
-        queryable = await ApplyMotherboardFilterAsync(queryable, request.Filter.MotherboardId, cancellationToken);
+        queryable = await ApplyMotherboardFilterAsync(queryable, filter.MotherboardId, cancellationToken);
         if (queryable is null)
             return PagedResult<CpuCoolerListItemDto>.Empty(request);
 
-        if (!NeedsInMemoryFilter(request.Filter))
+        if (!NeedsInMemoryFilter(filter))
         {
             return await queryable
                 .ApplySorting(request.SortFields, request.SortDirection)
@@ -56,7 +57,7 @@ public class CpuCoolerReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuCoo
                     cancellationToken);
         }
 
-        var parts = await LoadCompatibilityPartsAsync(request.Filter, cancellationToken);
+        var parts = await LoadCompatibilityPartsAsync(filter, cancellationToken);
         if (parts is null)
             return PagedResult<CpuCoolerListItemDto>.Empty(request);
 

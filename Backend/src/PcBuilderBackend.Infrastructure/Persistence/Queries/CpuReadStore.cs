@@ -42,7 +42,7 @@ public sealed class CpuReadStore(PcBuilderDbContext db, IMapper mapper) : ICpuRe
         PagedRequest<CpuFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new CpuFilter();
 
         var cpuQuery = db.Cpus
             .AsNoTracking()

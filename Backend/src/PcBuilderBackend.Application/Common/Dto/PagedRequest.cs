@@ -10,7 +10,8 @@ namespace PcBuilderBackend.Application.Common.Dto;
 /// <para>
 /// Query: <c>?pageIndex=0&amp;pageSize=10&amp;sortBy=name&amp;sortDirection=asc</c>
 /// (multiple fields: <c>sortBy=name,price</c>).
-/// Body (POST filter endpoints): JSON with the same property names; <see cref="PagedRequest{T}.Filter"/> required.
+/// Body (POST filter endpoints): JSON with the same property names.
+/// <see cref="PagedRequest{T}.Filter"/> may be omitted; stores treat null as an empty filter.
 /// </para>
 /// </summary>
 public record PagedRequest(

@@ -34,7 +34,7 @@ public sealed class StorageDriveReadStore(PcBuilderDbContext db, IMapper mapper)
         PagedRequest<StorageDriveFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new StorageDriveFilter();
 
         var queryable = db.StorageDrives.AsNoTracking()
             .Include(x => x.Manufacturer)

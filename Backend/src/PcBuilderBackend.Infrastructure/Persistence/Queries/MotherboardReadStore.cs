@@ -44,12 +44,11 @@ public class MotherboardReadStore(PcBuilderDbContext context, IMapper mapper) : 
         PagedRequest<MotherboardFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new MotherboardFilter();
 
         var queryable = context.Motherboards
             .AsNoTracking()
-            .WhereIf(!string.IsNullOrWhiteSpace(filter.Name),
-                x => x.Name.Contains(filter.Name!))
+            .WhereIfHasText(filter.Name, name => x => x.Name.Contains(name))
             .WhereIf(filter.ManufacturerId.HasValue,
                 x => x.ManufacturerId == filter.ManufacturerId)
             .WhereIf(filter.SocketId.HasValue,

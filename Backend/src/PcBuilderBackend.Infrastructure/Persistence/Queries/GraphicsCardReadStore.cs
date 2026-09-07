@@ -37,7 +37,7 @@ public class GraphicsCardReadStore(PcBuilderDbContext db, IMapper mapper) : IGra
     public async Task<PagedResult<GraphicsCardListItemDto>> FilterAsync(PagedRequest<GraphicsCardFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new GraphicsCardFilter();
 
         var queryable = db.GraphicsCards.AsNoTracking()
             .Include(x => x.Gpu)

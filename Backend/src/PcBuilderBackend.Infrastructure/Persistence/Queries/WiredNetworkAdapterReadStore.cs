@@ -37,7 +37,7 @@ public sealed class WiredNetworkAdapterReadStore(PcBuilderDbContext db, IMapper 
         PagedRequest<WiredNetworkAdapterFilter> request,
         CancellationToken cancellationToken)
     {
-        var filter = request.Filter;
+        var filter = request.Filter ?? new WiredNetworkAdapterFilter();
 
         var queryable = db.WiredNetworkAdapters.AsNoTracking()
             .Include(x => x.Manufacturer)
