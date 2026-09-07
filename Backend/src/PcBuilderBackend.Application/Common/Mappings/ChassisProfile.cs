@@ -11,9 +11,12 @@ public class ChassisProfile : Profile
         CreateMap<ChassisFanMountOption, ChassisFanMountOptionDto>();
 
         CreateMap<ChassisFanMount, ChassisFanMountDto>()
+            .ForCtorParam(nameof(ChassisFanMountDto.Options), o => o.MapFrom(s => s.Options.Where(x => x.IsActive)))
             .ForMember(d => d.Options, o => o.MapFrom(s => s.Options.Where(x => x.IsActive)));
 
         CreateMap<ChassisDriveBay, ChassisDriveBayDto>()
+            .ForCtorParam(nameof(ChassisDriveBayDto.FormFactor), o => o.MapFrom(s => s.DriveBayFormFactor))
+            .ForCtorParam(nameof(ChassisDriveBayDto.SlotCount), o => o.MapFrom(s => s.BayCount))
             .ForMember(d => d.FormFactor, o => o.MapFrom(s => s.DriveBayFormFactor))
             .ForMember(d => d.SlotCount, o => o.MapFrom(s => s.BayCount));
 

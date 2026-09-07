@@ -73,7 +73,15 @@ public class RemainingCatalogHandlerTests : IDisposable
             MaxGraphicsCardLengthMm = 370,
             MaxPsuLengthMm = 180,
             PsuFormFactors = [PsuFormFactor.Atx],
-            MbFormFactors = [MbFormFactor.Atx]
+            MbFormFactors = [MbFormFactor.Atx],
+            DriveBays = [new ChassisDriveBayDto(DriveBayFormFactor.Inch35, 2)],
+            FanMounts =
+            [
+                new ChassisFanMountDto(
+                    FanMountLocation.Front,
+                    false,
+                    [new ChassisFanMountOptionDto(FanDiameterMm.Mm120, 3)])
+            ]
         };
         (await validator.ValidateAsync(command)).IsValid.Should().BeTrue();
         (await validator.ValidateAsync(command with { LengthMm = 0 })).IsValid.Should().BeFalse();
@@ -85,6 +93,13 @@ public class RemainingCatalogHandlerTests : IDisposable
             chassis, _fx.UnitOfWork, _fx.Mapper, NullLogger<CreateChassisHandler>.Instance)
             .Handle(command, CancellationToken.None);
         dto.Name.Should().Be("4000D");
+        dto.DriveBays.Should().ContainSingle()
+            .Which.Should().Be(new ChassisDriveBayDto(DriveBayFormFactor.Inch35, 2));
+        var mount = dto.FanMounts.Should().ContainSingle().Subject;
+        mount.Location.Should().Be(FanMountLocation.Front);
+        mount.SingleDiameterOnly.Should().BeFalse();
+        mount.Options.Should().ContainSingle()
+            .Which.Should().Be(new ChassisFanMountOptionDto(FanDiameterMm.Mm120, 3));
         (await _fx.Context.Chassis.CountAsync()).Should().Be(1);
     }
 
