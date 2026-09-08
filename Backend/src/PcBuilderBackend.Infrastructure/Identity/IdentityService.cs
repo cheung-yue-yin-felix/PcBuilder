@@ -81,6 +81,66 @@ public class IdentityService(
         return user is null ? null : await MapAsync(user);
     }
 
+    public async Task<PasswordResetTokenDto?> GeneratePasswordResetTokenAsync(
+        string email,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            IdentityLog.PasswordResetUnknownEmail(logger, email);
+            return null;
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        IdentityLog.PasswordResetRequested(logger, user.Id);
+        return new PasswordResetTokenDto(user.Id, user.Email!, token);
+    }
+
+    public async Task<IdentityOperationResultDto> ResetPasswordAsync(
+        string email,
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            IdentityLog.PasswordResetFailed(logger, email);
+            return Failed("token", "The password reset link is invalid or has expired.");
+        }
+
+        var result = await userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+        {
+            IdentityLog.PasswordResetFailed(logger, email);
+            return new IdentityOperationResultDto(false, user.Id, ToErrors(result));
+        }
+
+        await userManager.ResetAccessFailedCountAsync(user);
+        await userManager.SetLockoutEndDateAsync(user, null);
+        IdentityLog.PasswordResetCompleted(logger, user.Id);
+        return new IdentityOperationResultDto(true, user.Id, EmptyErrors());
+    }
+
+    public async Task<IdentityOperationResultDto> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+            return Failed("identity", "User was not found.");
+
+        var result = await userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        if (!result.Succeeded)
+            return new IdentityOperationResultDto(false, user.Id, ToErrors(result));
+
+        IdentityLog.PasswordChanged(logger, user.Id);
+        return new IdentityOperationResultDto(true, user.Id, EmptyErrors());
+    }
+
     private async Task<CurrentUserDto> MapAsync(ApplicationUser user)
     {
         var roles = await userManager.GetRolesAsync(user);
@@ -93,9 +153,15 @@ public class IdentityService(
             .GroupBy(error => error.Code switch
             {
                 "DuplicateEmail" or "InvalidEmail" or "DuplicateUserName" or "InvalidUserName" => "email",
+                "InvalidToken" => "token",
                 _ when error.Code.Contains("Password", StringComparison.OrdinalIgnoreCase) => "password",
                 _ => "identity"
             })
             .ToDictionary(group => group.Key, group => group.Select(error => error.Description).ToArray());
     }
+
+    private static IdentityOperationResultDto Failed(string key, string message) =>
+        new(false, null, new Dictionary<string, string[]> { [key] = [message] });
+
+    private static Dictionary<string, string[]> EmptyErrors() => [];
 }

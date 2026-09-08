@@ -80,6 +80,45 @@ Accept: application/json
 
 ###
 
+### Forgot password
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/forgot-password
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "email": "member@localhost"
+}
+
+###
+
+### Reset password
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/reset-password
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "email": "member@localhost",
+  "token": "",
+  "newPassword": "ChangeMe!Member2",
+  "confirmNewPassword": "ChangeMe!Member2"
+}
+
+###
+
+### Change password
+POST {{PcBuilderBackend.Api_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: {{ContentType}}
+Accept: application/json
+
+{
+  "currentPassword": "ChangeMe!Member1",
+  "newPassword": "ChangeMe!Member2",
+  "confirmNewPassword": "ChangeMe!Member2"
+}
+
+###
+
 ### Get Specification
 
 GET {{PcBuilderBackend.Api_HostAddress}}/openapi/v1.json

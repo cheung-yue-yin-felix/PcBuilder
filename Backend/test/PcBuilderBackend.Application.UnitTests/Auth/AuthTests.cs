@@ -1,13 +1,17 @@
 using FluentAssertions;
 using NSubstitute;
+using PcBuilderBackend.Application.Auth.Commands.ChangePassword;
+using PcBuilderBackend.Application.Auth.Commands.ForgotPassword;
 using PcBuilderBackend.Application.Auth.Commands.Login;
 using PcBuilderBackend.Application.Auth.Commands.Logout;
 using PcBuilderBackend.Application.Auth.Commands.RefreshToken;
 using PcBuilderBackend.Application.Auth.Commands.Register;
+using PcBuilderBackend.Application.Auth.Commands.ResetPassword;
 using PcBuilderBackend.Application.Auth.Dto;
 using PcBuilderBackend.Application.Auth.Queries;
 using PcBuilderBackend.Application.Auth.Validators;
 using PcBuilderBackend.Application.Common.Interfaces;
+using PcBuilderBackend.Application.Common.Options;
 
 namespace PcBuilderBackend.Application.UnitTests.Auth;
 
@@ -106,5 +110,100 @@ public class AuthTests
         identity.GetUserAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
         (await new GetCurrentUserHandler(current, identity).Handle(new GetCurrentUserQuery(), CancellationToken.None))
             .Should().Be(user);
+    }
+
+    [Fact]
+    public void Password_validators_require_matching_new_passwords()
+    {
+        new ForgotPasswordCommandValidator().Validate(new ForgotPasswordCommand("")).IsValid.Should().BeFalse();
+        new ForgotPasswordCommandValidator().Validate(new ForgotPasswordCommand("a@b.c")).IsValid.Should().BeTrue();
+
+        new ResetPasswordCommandValidator()
+            .Validate(new ResetPasswordCommand("a@b.c", "token", "ChangeMe!12", "mismatch"))
+            .IsValid.Should().BeFalse();
+        new ResetPasswordCommandValidator()
+            .Validate(new ResetPasswordCommand("a@b.c", "token", "ChangeMe!12", "ChangeMe!12"))
+            .IsValid.Should().BeTrue();
+
+        new ChangePasswordCommandValidator()
+            .Validate(new ChangePasswordCommand("old-password", "old-password", "old-password"))
+            .IsValid.Should().BeFalse();
+        new ChangePasswordCommandValidator()
+            .Validate(new ChangePasswordCommand("old-password", "ChangeMe!12", "ChangeMe!12"))
+            .IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Forgot_password_sends_email_only_when_the_account_exists()
+    {
+        var identity = Substitute.For<IIdentityService>();
+        var email = Substitute.For<IEmailSender>();
+        var app = new AppOptions { PublicBaseUrl = "http://localhost:5173/" };
+        var handler = new ForgotPasswordHandler(identity, email, app);
+
+        identity.GeneratePasswordResetTokenAsync("missing@b.c", Arg.Any<CancellationToken>())
+            .Returns((PasswordResetTokenDto?)null);
+        await handler.Handle(new ForgotPasswordCommand("missing@b.c"), CancellationToken.None);
+        await email.DidNotReceive()
+            .SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+
+        var userId = Guid.NewGuid();
+        identity.GeneratePasswordResetTokenAsync("a@b.c", Arg.Any<CancellationToken>())
+            .Returns(new PasswordResetTokenDto(userId, "a@b.c", "reset-token"));
+        await handler.Handle(new ForgotPasswordCommand("a@b.c"), CancellationToken.None);
+        await email.Received(1).SendAsync(
+            "a@b.c",
+            Arg.Any<string>(),
+            Arg.Is<string>(body =>
+                body.Contains("http://localhost:5173/reset-password?email=a%40b.c&token=reset-token")),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Reset_password_revokes_refresh_tokens_on_success()
+    {
+        var identity = Substitute.For<IIdentityService>();
+        var tokens = Substitute.For<ITokenService>();
+        var userId = Guid.NewGuid();
+        var handler = new ResetPasswordHandler(identity, tokens);
+        var command = new ResetPasswordCommand("a@b.c", "token", "ChangeMe!12", "ChangeMe!12");
+
+        identity.ResetPasswordAsync("a@b.c", "token", "ChangeMe!12", Arg.Any<CancellationToken>())
+            .Returns(new IdentityOperationResultDto(false, null, new Dictionary<string, string[]>()));
+        (await handler.Handle(command, CancellationToken.None)).Succeeded.Should().BeFalse();
+        await tokens.DidNotReceive().RevokeAllForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+
+        identity.ResetPasswordAsync("a@b.c", "token", "ChangeMe!12", Arg.Any<CancellationToken>())
+            .Returns(new IdentityOperationResultDto(true, userId, new Dictionary<string, string[]>()));
+        (await handler.Handle(command, CancellationToken.None)).Succeeded.Should().BeTrue();
+        await tokens.Received(1).RevokeAllForUserAsync(userId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Change_password_requires_sign_in_and_revokes_tokens_on_success()
+    {
+        var identity = Substitute.For<IIdentityService>();
+        var current = Substitute.For<ICurrentUser>();
+        var tokens = Substitute.For<ITokenService>();
+        var handler = new ChangePasswordHandler(identity, current, tokens);
+        var command = new ChangePasswordCommand("old", "ChangeMe!12", "ChangeMe!12");
+
+        current.UserId.Returns((Guid?)null);
+        var anonymous = await handler.Handle(command, CancellationToken.None);
+        anonymous.Succeeded.Should().BeFalse();
+        await identity.DidNotReceive().ChangePasswordAsync(
+            Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+
+        var userId = Guid.NewGuid();
+        current.UserId.Returns(userId);
+        identity.ChangePasswordAsync(userId, "old", "ChangeMe!12", Arg.Any<CancellationToken>())
+            .Returns(new IdentityOperationResultDto(false, userId, new Dictionary<string, string[]>()));
+        (await handler.Handle(command, CancellationToken.None)).Succeeded.Should().BeFalse();
+        await tokens.DidNotReceive().RevokeAllForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+
+        identity.ChangePasswordAsync(userId, "old", "ChangeMe!12", Arg.Any<CancellationToken>())
+            .Returns(new IdentityOperationResultDto(true, userId, new Dictionary<string, string[]>()));
+        (await handler.Handle(command, CancellationToken.None)).Succeeded.Should().BeTrue();
+        await tokens.Received(1).RevokeAllForUserAsync(userId, Arg.Any<CancellationToken>());
     }
 }

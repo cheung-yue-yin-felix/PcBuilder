@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using PcBuilderBackend.Api.Auth;
 using PcBuilderBackend.Api.Extensions;
 using PcBuilderBackend.Api.Filters;
+using PcBuilderBackend.Application.Auth.Commands.ChangePassword;
+using PcBuilderBackend.Application.Auth.Commands.ForgotPassword;
 using PcBuilderBackend.Application.Auth.Commands.Login;
 using PcBuilderBackend.Application.Auth.Commands.Logout;
 using PcBuilderBackend.Application.Auth.Commands.RefreshToken;
 using PcBuilderBackend.Application.Auth.Commands.Register;
+using PcBuilderBackend.Application.Auth.Commands.ResetPassword;
 using PcBuilderBackend.Application.Auth.Dto;
 using PcBuilderBackend.Application.Auth.Queries;
 using PcBuilderBackend.Application.Common.Options;
@@ -21,7 +24,7 @@ public static class AuthEndpoints
         var group = app.MapGroup("api/auth")
             .AddEndpointFilterFactory(ValidationFilter.ValidationFilterFactory)
             .WithSidebarGroup("Auth", "Auth")
-            .WithDescription("Register, sign in, refresh, and inspect the current user");
+            .WithDescription("Register, sign in, refresh, change or reset password, and inspect the current user");
 
         group.MapPost("/register", Register)
             .AllowAnonymous()
@@ -68,6 +71,33 @@ public static class AuthEndpoints
             .ProducesProblem(StatusCodes.Status500InternalServerError)
             .WithSummary("Current user")
             .WithDescription("\n    GET /api/auth/me");
+
+        group.MapPost("/forgot-password", ForgotPassword)
+            .AllowAnonymous()
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Request a password reset")
+            .WithDescription(
+                "Always returns 204 so emails cannot be enumerated. A reset link is emailed when the account exists.\n    POST /api/auth/forgot-password");
+
+        group.MapPost("/reset-password", ResetPassword)
+            .AllowAnonymous()
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Reset password with emailed token")
+            .WithDescription("\n    POST /api/auth/reset-password");
+
+        group.MapPost("/change-password", ChangePassword)
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Change password")
+            .WithDescription(
+                "Requires the current password. Revokes all refresh tokens so the user must sign in again.\n    POST /api/auth/change-password");
     }
 
     private static async Task<Results<Created<CurrentUserDto>, ValidationProblem>> Register(
@@ -140,6 +170,48 @@ public static class AuthEndpoints
         var user = await sender.Send(new GetCurrentUserQuery(), cancellationToken);
         return user is null ? TypedResults.NotFound() : TypedResults.Ok(user);
     }
+
+    private static async Task<NoContent> ForgotPassword(
+        [Validate] [FromBody] ForgotPasswordCommand command,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, ValidationProblem>> ResetPassword(
+        [Validate] [FromBody] ResetPasswordCommand command,
+        [FromServices] ISender sender,
+        [FromServices] JwtOptions jwt,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        if (!result.Succeeded)
+            return TypedResults.ValidationProblem(ToMutableErrors(result.Errors));
+
+        RefreshTokenCookies.Delete(context.Response, jwt);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<NoContent, ValidationProblem>> ChangePassword(
+        [Validate] [FromBody] ChangePasswordCommand command,
+        [FromServices] ISender sender,
+        [FromServices] JwtOptions jwt,
+        HttpContext context,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        if (!result.Succeeded)
+            return TypedResults.ValidationProblem(ToMutableErrors(result.Errors));
+
+        RefreshTokenCookies.Delete(context.Response, jwt);
+        return TypedResults.NoContent();
+    }
+
+    private static Dictionary<string, string[]> ToMutableErrors(IReadOnlyDictionary<string, string[]> errors) =>
+        errors.ToDictionary(pair => pair.Key, pair => pair.Value);
 
     private static string? FirstNonEmpty(params string?[] values) =>
         values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));

@@ -9,4 +9,6 @@ public interface ITokenService
     Task<AuthTokensDto?> RotateAsync(string refreshToken, CancellationToken cancellationToken);
 
     Task RevokeAsync(string refreshToken, CancellationToken cancellationToken);
+
+    Task RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken);
 }

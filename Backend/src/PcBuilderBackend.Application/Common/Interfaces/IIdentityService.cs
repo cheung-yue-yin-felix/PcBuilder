@@ -17,6 +17,22 @@ public interface IIdentityService
         CancellationToken cancellationToken);
 
     Task<CurrentUserDto?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<PasswordResetTokenDto?> GeneratePasswordResetTokenAsync(
+        string email,
+        CancellationToken cancellationToken);
+
+    Task<IdentityOperationResultDto> ResetPasswordAsync(
+        string email,
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken);
+
+    Task<IdentityOperationResultDto> ChangePasswordAsync(
+        Guid userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken);
 }
 
 public record PasswordSignInResultDto(

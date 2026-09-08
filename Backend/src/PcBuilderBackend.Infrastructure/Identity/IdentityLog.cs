@@ -30,4 +30,19 @@ internal static partial class IdentityLog
 
     [LoggerMessage(EventId = 3009, Level = LogLevel.Error, Message = "Failed to seed admin user {Email}: {Errors}")]
     public static partial void AdminSeedFailed(ILogger logger, string email, string errors);
+
+    [LoggerMessage(EventId = 3010, Level = LogLevel.Information, Message = "Password reset requested for user {UserId}.")]
+    public static partial void PasswordResetRequested(ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 3011, Level = LogLevel.Information, Message = "Password reset requested for unknown email {Email}.")]
+    public static partial void PasswordResetUnknownEmail(ILogger logger, string email);
+
+    [LoggerMessage(EventId = 3012, Level = LogLevel.Warning, Message = "Password reset failed for {Email}.")]
+    public static partial void PasswordResetFailed(ILogger logger, string email);
+
+    [LoggerMessage(EventId = 3013, Level = LogLevel.Information, Message = "Password reset completed for user {UserId}.")]
+    public static partial void PasswordResetCompleted(ILogger logger, Guid userId);
+
+    [LoggerMessage(EventId = 3014, Level = LogLevel.Information, Message = "Password changed for user {UserId}.")]
+    public static partial void PasswordChanged(ILogger logger, Guid userId);
 }

@@ -89,6 +89,9 @@ public class TokenService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    public Task RevokeAllForUserAsync(Guid userId, CancellationToken cancellationToken) =>
+        RevokeFamilyAsync(userId, cancellationToken);
+
     private async Task RevokeFamilyAsync(Guid userId, CancellationToken cancellationToken)
     {
         var active = await db.RefreshTokens

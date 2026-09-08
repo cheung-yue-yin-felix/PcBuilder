@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -97,6 +98,8 @@ public static class DependencyInjection
         
         AddIdentity(services);
         AddJwt(services, configuration);
+        AddEmail(services, configuration);
+        AddAppOptions(services, configuration);
         AddRedisCache(services, configuration);
 
         return services;
@@ -114,7 +117,11 @@ public static class DependencyInjection
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
             .AddRoles<ApplicationRole>()
-            .AddEntityFrameworkStores<ApplicationIdentityDbContext>();
+            .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+            .AddDefaultTokenProviders();
+
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+            options.TokenLifespan = TimeSpan.FromHours(1));
 
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ITokenService, TokenService>();
@@ -126,6 +133,24 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Jwt configuration section is missing.");
         jwt.Validate();
         services.AddSingleton(jwt);
+    }
+
+    private static void AddEmail(IServiceCollection services, IConfiguration configuration)
+    {
+        var smtp = configuration.GetSection(SmtpOptions.SectionName).Get<SmtpOptions>()
+            ?? throw new InvalidOperationException("Smtp configuration section is missing.");
+        smtp.Validate();
+        services.AddSingleton(smtp);
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+    }
+
+    private static void AddAppOptions(IServiceCollection services, IConfiguration configuration)
+    {
+        var app = configuration.GetSection(AppOptions.SectionName).Get<AppOptions>() ?? new AppOptions();
+        if (string.IsNullOrWhiteSpace(app.PublicBaseUrl))
+            app.PublicBaseUrl = "http://localhost:5173";
+
+        services.AddSingleton(app);
     }
 
     private static void AddRedisCache(IServiceCollection services, IConfiguration configuration)
