@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AuthRoles, type AuthTokens } from './types.ts'
-import { useAuth } from './useAuth.ts'
+import { AuthRoles, type AuthTokens } from '@/auth/types.ts'
+import { useAuth } from '@/auth/useAuth.ts'
 
 const loginRequest = vi.fn()
 const logoutRequest = vi.fn()
@@ -12,7 +12,7 @@ const resetPasswordRequest = vi.fn()
 const bindAuthBridge = vi.fn()
 const refreshSession = vi.fn()
 
-vi.mock('../api/auth.ts', () => ({
+vi.mock('@/api/auth.ts', () => ({
   loginRequest: (...args: unknown[]) => loginRequest(...args),
   logoutRequest: (...args: unknown[]) => logoutRequest(...args),
   registerRequest: (...args: unknown[]) => registerRequest(...args),
@@ -20,12 +20,12 @@ vi.mock('../api/auth.ts', () => ({
   resetPasswordRequest: (...args: unknown[]) => resetPasswordRequest(...args),
 }))
 
-vi.mock('../api/client.ts', () => ({
+vi.mock('@/api/client.ts', () => ({
   bindAuthBridge: (...args: unknown[]) => bindAuthBridge(...args),
   refreshSession: (...args: unknown[]) => refreshSession(...args),
 }))
 
-import { AuthProvider } from './AuthContext.tsx'
+import { AuthProvider } from '@/auth/AuthContext.tsx'
 
 const tokens: AuthTokens = {
   accessToken: 'access',

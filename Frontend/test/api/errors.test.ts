@@ -1,6 +1,6 @@
 import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { describe, expect, it } from 'vitest'
-import { firstError, parseApiError } from './errors.ts'
+import { firstError, parseApiError } from '@/api/errors.ts'
 
 function axiosError(status?: number, data?: unknown, includeResponse = true): AxiosError {
   const error = new AxiosError('boom')

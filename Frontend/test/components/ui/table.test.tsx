@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './table.tsx'
+} from '@/components/ui/table.tsx'
 
 describe('Table', () => {
   it('renders a basic data table', () => {

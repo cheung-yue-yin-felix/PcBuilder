@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { AuthRoles, type AuthContextValue, type CurrentUser } from '../auth/types.ts'
+import { AuthRoles, type AuthContextValue, type CurrentUser } from '@/auth/types.ts'
 
 export const testUser: CurrentUser = {
   id: 'user-1',

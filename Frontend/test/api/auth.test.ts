@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const post = vi.fn()
 const get = vi.fn()
 
-vi.mock('./client.ts', () => ({
+vi.mock('@/api/client.ts', () => ({
   api: {
     post: (...args: unknown[]) => post(...args),
     get: (...args: unknown[]) => get(...args),
@@ -17,7 +17,7 @@ import {
   meRequest,
   registerRequest,
   resetPasswordRequest,
-} from './auth.ts'
+} from '@/api/auth.ts'
 
 describe('auth API', () => {
   beforeEach(() => {

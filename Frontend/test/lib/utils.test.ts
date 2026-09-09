@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { cn } from './utils.ts'
-import { buttonVariants } from '../components/ui/button-variants.ts'
+import { cn } from '@/lib/utils.ts'
+import { buttonVariants } from '@/components/ui/button-variants.ts'
 
 describe('cn and buttonVariants', () => {
   it('merges class names', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { applyApiFieldErrors, applyApiFormError } from './rhf-api-errors.ts'
+import { applyApiFieldErrors, applyApiFormError } from '@/lib/rhf-api-errors.ts'
 
 describe('applyApiFieldErrors', () => {
   it('sets matching field errors and skips missing ones', () => {

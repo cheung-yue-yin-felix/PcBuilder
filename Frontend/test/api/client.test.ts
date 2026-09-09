@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { api, bindAuthBridge, refreshSession } from './client.ts'
-import type { AuthTokens } from '../auth/types.ts'
+import { api, bindAuthBridge, refreshSession } from '@/api/client.ts'
+import type { AuthTokens } from '@/auth/types.ts'
 
 const tokens: AuthTokens = {
   accessToken: 'new-token',

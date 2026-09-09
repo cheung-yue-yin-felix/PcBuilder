@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getPostLoginPath } from './redirect.ts'
+import { getPostLoginPath } from '@/auth/redirect.ts'
 
 describe('getPostLoginPath', () => {
   it('returns a safe in-app path from location state', () => {

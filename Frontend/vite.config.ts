@@ -23,7 +23,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
+    setupFiles: './test/setup.ts',
+    include: ['test/**/*.test.ts', 'test/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',
@@ -31,9 +32,6 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/main.tsx',
-        'src/test/**',
-        'src/**/*.test.ts',
-        'src/**/*.test.tsx',
         'src/assets/**',
       ],
     },

@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import { AuthRoles } from '../auth/types.ts'
-import { authValue, testUser } from '../test/auth.ts'
+import { AuthRoles } from '@/auth/types.ts'
+import { authValue, testUser } from '../helpers/auth.ts'
 
 const auth = authValue({
   user: { ...testUser, roles: [] },
@@ -12,11 +12,11 @@ const auth = authValue({
   isMember: false,
 })
 
-vi.mock('../auth/useAuth.ts', () => ({
+vi.mock('@/auth/useAuth.ts', () => ({
   useAuth: () => auth,
 }))
 
-import { AccountPage } from './AccountPage.tsx'
+import { AccountPage } from '@/pages/AccountPage.tsx'
 
 describe('AccountPage', () => {
   it('renders nothing without a user', async () => {

@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthContext } from './auth-context.ts'
-import { RequireGuest } from './RequireGuest.tsx'
-import { authValue, testUser } from '../test/auth.ts'
+import { AuthContext } from '@/auth/auth-context.ts'
+import { RequireGuest } from '@/auth/RequireGuest.tsx'
+import { authValue, testUser } from '../helpers/auth.ts'
 
 function renderGuest(auth: ReturnType<typeof authValue>) {
   return render(

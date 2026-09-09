@@ -4,7 +4,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
-} from './schemas.ts'
+} from '@/auth/schemas.ts'
 
 describe('auth schemas', () => {
   it('accepts valid login values and rejects blanks', () => {

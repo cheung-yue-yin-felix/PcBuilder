@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { AuthContext } from './auth-context.ts'
-import { RequireAuth } from './RequireAuth.tsx'
-import { AuthRoles } from './types.ts'
-import { authValue, testUser } from '../test/auth.ts'
+import { AuthContext } from '@/auth/auth-context.ts'
+import { RequireAuth } from '@/auth/RequireAuth.tsx'
+import { AuthRoles } from '@/auth/types.ts'
+import { authValue, testUser } from '../helpers/auth.ts'
 
 function renderAuth(auth: ReturnType<typeof authValue>, path = '/account', role?: (typeof AuthRoles)[keyof typeof AuthRoles]) {
   return render(

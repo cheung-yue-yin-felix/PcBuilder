@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import { AuthContext } from './auth/auth-context.ts'
-import { authValue } from './test/auth.ts'
-import App from './App.tsx'
+import { AuthContext } from '@/auth/auth-context.ts'
+import { authValue } from './helpers/auth.ts'
+import App from '@/App.tsx'
 
-vi.mock('./auth/index.ts', async () => {
-  const actual = await vi.importActual<typeof import('./auth/index.ts')>('./auth/index.ts')
+vi.mock('@/auth/index.ts', async () => {
+  const actual = await vi.importActual<typeof import('@/auth/index.ts')>('@/auth/index.ts')
   return actual
 })
 

@@ -2,13 +2,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import type { CurrentUser } from '../auth/types.ts'
-import { testUser } from '../test/auth.ts'
-import { Header } from './Header.tsx'
-import { AppHeader } from './AppHeader.tsx'
-import { AppLayout } from './AppLayout.tsx'
-import { PageStatus } from './PageStatus.tsx'
-import { HomePage } from '../pages/HomePage.tsx'
+import type { CurrentUser } from '@/auth/types.ts'
+import { testUser } from '../helpers/auth.ts'
+import { Header } from '@/components/Header.tsx'
+import { AppHeader } from '@/components/AppHeader.tsx'
+import { AppLayout } from '@/components/AppLayout.tsx'
+import { PageStatus } from '@/components/PageStatus.tsx'
+import { HomePage } from '@/pages/HomePage.tsx'
 
 const auth: {
   isReady: boolean
@@ -26,7 +26,7 @@ const auth: {
   logout: vi.fn().mockResolvedValue(undefined),
 }
 
-vi.mock('../auth/useAuth.ts', () => ({
+vi.mock('@/auth/useAuth.ts', () => ({
   useAuth: () => auth,
 }))
 

@@ -2,15 +2,15 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { authValue } from '../test/auth.ts'
+import { authValue } from '../helpers/auth.ts'
 
 const auth = authValue()
 
-vi.mock('../auth/useAuth.ts', () => ({
+vi.mock('@/auth/useAuth.ts', () => ({
   useAuth: () => auth,
 }))
 
-import { ResetPasswordPage } from './ResetPasswordPage.tsx'
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage.tsx'
 
 function renderAt(path: string) {
   return render(

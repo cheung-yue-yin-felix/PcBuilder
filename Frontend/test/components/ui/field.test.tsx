@@ -11,7 +11,7 @@ import {
   FieldSeparator,
   FieldSet,
   FieldTitle,
-} from './field.tsx'
+} from '@/components/ui/field.tsx'
 
 describe('Field', () => {
   it('renders labels, descriptions, and a single error', () => {
