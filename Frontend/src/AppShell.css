@@ -1,0 +1,345 @@
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+
+  @media (max-width: 1024px) {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+  }
+}
+
+.brand {
+  color: var(--text-h);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  text-decoration: none;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.nav-user {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-right: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.nav-link,
+.nav-button {
+  color: var(--text-h);
+  font: inherit;
+  font-size: 15px;
+  border-radius: 6px;
+  background: var(--social-bg);
+  border: 0;
+  display: inline-flex;
+  padding: 6px 12px;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow 0.3s;
+}
+
+.nav-link:hover,
+.nav-button:hover {
+  box-shadow: var(--shadow);
+}
+
+.nav-link.active {
+  outline: 2px solid var(--accent-border);
+}
+
+.nav-link:focus-visible,
+.nav-button:focus-visible,
+.auth-submit:focus-visible,
+.auth-field input:focus-visible,
+.auth-card [data-slot='input']:focus-visible,
+.auth-card [data-slot='button']:focus-visible,
+.auth-dialog-card button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+}
+
+.page-status,
+.auth-page,
+.account-page {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 20px;
+  text-align: left;
+}
+
+.page-status {
+  align-items: center;
+}
+
+.auth-card,
+.account-card {
+  width: 100%;
+  max-width: 440px;
+  font-family: var(--sans);
+  color: var(--text);
+}
+
+.auth-card h1,
+.account-card h1 {
+  font-family: var(--heading);
+  font-size: 36px;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+  margin: 0 0 8px;
+  color: var(--text-h);
+
+  @media (max-width: 1024px) {
+    font-size: 28px;
+  }
+}
+
+.auth-lead {
+  margin-bottom: 24px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.auth-field label,
+.auth-card [data-slot='field-label'] {
+  color: var(--text-h);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.auth-field input,
+.auth-card [data-slot='input'] {
+  height: auto;
+  min-height: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: none;
+}
+
+.auth-field input::placeholder,
+.auth-card [data-slot='input']::placeholder {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.auth-card [data-slot='input']:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.auth-card [data-slot='input'][aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.auth-card [data-slot='field-group'] {
+  gap: 16px;
+}
+
+.auth-card [data-slot='field'] {
+  gap: 6px;
+}
+
+.auth-card [data-slot='field-description'] {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.field-hint {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.field-error,
+.form-error,
+.auth-card [data-slot='field-error'] {
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.form-error {
+  margin-bottom: 16px;
+}
+
+.auth-submit,
+.auth-card [data-slot='button'] {
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 10px 16px;
+  border-radius: 6px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.auth-submit:hover:not(:disabled),
+.auth-card [data-slot='button']:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.auth-submit:disabled,
+.auth-card [data-slot='button']:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.auth-switch {
+  margin-top: 20px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.auth-switch a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+.auth-dialog[open] {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 24px 20px;
+  border: 0;
+  background: rgb(8 6 13 / 48%);
+}
+
+.auth-dialog::backdrop {
+  background: rgb(8 6 13 / 48%);
+}
+
+.auth-dialog-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 28px 24px 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.auth-dialog-card h2 {
+  margin: 0 0 8px;
+}
+
+.auth-dialog-card p {
+  margin: 0 0 24px;
+}
+
+.auth-dialog-card .auth-submit {
+  margin-top: 0;
+}
+
+html:has(.auth-dialog[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-dialog[open] {
+    background: rgb(0 0 0 / 62%);
+  }
+
+  .auth-dialog::backdrop {
+    background: rgb(0 0 0 / 62%);
+  }
+}
+
+@media (max-width: 1024px) {
+  .auth-dialog-card {
+    padding: 24px 20px 20px;
+  }
+}
+
+.account-details {
+  margin: 0 0 24px;
+}
+
+.account-details > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-details dt {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.account-details dd {
+  margin: 0;
+  color: var(--text-h);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
