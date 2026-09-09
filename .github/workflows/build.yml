@@ -41,6 +41,10 @@ jobs:
       - name: Build and analyze
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"PcBuilder" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"PcBuilder" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" /d:sonar.javascript.lcov.reportPaths="${{ github.workspace }}/Frontend/coverage/lcov.info"
           dotnet build Backend/PcBuilderBackend.sln
+          cd Frontend
+          npm ci
+          npm run test:coverage
+          cd ..
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
