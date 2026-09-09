@@ -26,7 +26,7 @@ public class ChassisPsuFormFactor: BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID cannot be empty");
         
-        if (!Enum.IsDefined(typeof(PsuFormFactor), formFactor))
+        if (!Enum.IsDefined(formFactor))
             throw new ArgumentException("PSU Form Factor is invalid");
         
         ChassisId = chassisId;

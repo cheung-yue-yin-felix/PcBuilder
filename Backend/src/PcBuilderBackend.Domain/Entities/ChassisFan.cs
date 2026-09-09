@@ -24,7 +24,7 @@ public class ChassisFan : ProductEntity
 
     private void SetSpecs(FanDiameterMm diameterMm, int fansCountPerPack)
     {
-        if (!Enum.IsDefined(typeof(FanDiameterMm), diameterMm))
+        if (!Enum.IsDefined(diameterMm))
             throw new ArgumentException("Fan Diameter mm is invalid");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fansCountPerPack);

@@ -30,7 +30,7 @@ public class ChassisPcieSlot : BaseEntity
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(slotCount);
         
-        if (!Enum.IsDefined(typeof(PcieOrientation), orientation))
+        if (!Enum.IsDefined(orientation))
             throw new ArgumentException($"PCI-E orientation is invalid.");
         
         ChassisId = chassisId;

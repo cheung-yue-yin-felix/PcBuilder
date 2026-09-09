@@ -26,7 +26,7 @@ public class ChassisMbFormFactor: BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID cannot be empty");
         
-        if (!Enum.IsDefined(typeof(MbFormFactor), mbFormFactor))
+        if (!Enum.IsDefined(mbFormFactor))
             throw new ArgumentException("Motherboard form factor is invalid");
         
         ChassisId = chassisId;

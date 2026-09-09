@@ -46,7 +46,7 @@ public class ChassisFanMount : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("ChassisId must be a non-empty guid");
         
-        if (!Enum.IsDefined(typeof(FanMountLocation), location))
+        if (!Enum.IsDefined(location))
             throw new ArgumentException("Invalid location");
         
         ChassisId = chassisId;

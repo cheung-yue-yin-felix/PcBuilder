@@ -40,10 +40,10 @@ public class ChassisRadiator : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID is required.");
 
-        if (!Enum.IsDefined(typeof(RadiatorLength), length))
+        if (!Enum.IsDefined(length))
             throw new ArgumentException("Radiator length is invalid.");
 
-        if (!Enum.IsDefined(typeof(RadiatorMountLocation), mountLocation))
+        if (!Enum.IsDefined(mountLocation))
             throw new ArgumentException("Radiator mount location is invalid.");
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(radiatorCount);

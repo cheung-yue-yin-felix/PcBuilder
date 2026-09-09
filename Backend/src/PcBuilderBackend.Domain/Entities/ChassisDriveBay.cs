@@ -27,7 +27,7 @@ public class ChassisDriveBay : BaseEntity
         if (chassisId == Guid.Empty)
             throw new ArgumentException("Chassis ID cannot be empty.");
         
-        if (!Enum.IsDefined(typeof(DriveBayFormFactor), formFactor))
+        if (!Enum.IsDefined(formFactor))
             throw new ArgumentException("Drive bay form factor is invalid.");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bayCount);

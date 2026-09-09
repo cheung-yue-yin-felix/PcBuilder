@@ -20,7 +20,7 @@ public class ManufacturerTests
     {
         var act = () => new Manufacturer(name!);
 
-        act.Should().Throw<ArgumentException>().WithParameterName("name");
+        act.Should().Throw<ArgumentException>().WithParameterName(nameof(name));
     }
 
     [Fact]

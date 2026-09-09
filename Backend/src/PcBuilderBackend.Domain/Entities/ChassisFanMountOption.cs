@@ -27,7 +27,7 @@ public class ChassisFanMountOption : BaseEntity
         if (chassisFanMountId == Guid.Empty)
             throw new ArgumentException("Chassis Fan Mount ID must be provided");
         
-        if (!Enum.IsDefined(typeof(FanDiameterMm), diameterMm))
+        if (!Enum.IsDefined(diameterMm))
             throw new ArgumentException("Fan Diameter mm must be provided");
         
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(slotCount);

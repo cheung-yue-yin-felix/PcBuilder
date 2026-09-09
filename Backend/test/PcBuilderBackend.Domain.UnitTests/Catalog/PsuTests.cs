@@ -32,7 +32,7 @@ public class PsuTests
     {
         var act = () => Create(name!);
 
-        act.Should().Throw<ArgumentException>().WithParameterName("name");
+        act.Should().Throw<ArgumentException>().WithParameterName(nameof(name));
     }
 
     [Fact]
