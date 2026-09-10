@@ -1,6 +1,7 @@
 ﻿using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 using MediatR;
+using PcBuilderBackend.Application.MasterData.Sockets;
 
 namespace PcBuilderBackend.Application.MasterData.Sockets.Commands.CreateSocket;
 
-public record CreateSocketCommand(Guid ManufacturerId, string Name): IRequest<SocketDto>;
+public record CreateSocketCommand(Guid ManufacturerId, string Name): IRequest<SocketDto>, ISocketFields;

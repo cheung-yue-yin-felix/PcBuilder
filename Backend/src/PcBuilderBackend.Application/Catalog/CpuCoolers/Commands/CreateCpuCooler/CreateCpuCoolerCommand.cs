@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.CpuCoolers.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.CpuCoolers;
 
 namespace PcBuilderBackend.Application.Catalog.CpuCoolers.Commands.CreateCpuCooler;
 
-public record CreateCpuCoolerCommand : IRequest<CpuCoolerDto>
+public record CreateCpuCoolerCommand : IRequest<CpuCoolerDto>, ICpuCoolerFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

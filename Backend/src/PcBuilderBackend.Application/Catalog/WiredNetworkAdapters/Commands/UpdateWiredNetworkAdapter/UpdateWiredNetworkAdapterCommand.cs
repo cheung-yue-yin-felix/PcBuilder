@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.WiredNetworkAdapters;
 
 namespace PcBuilderBackend.Application.Catalog.WiredNetworkAdapters.Commands.UpdateWiredNetworkAdapter;
 
-public record UpdateWiredNetworkAdapterCommand : IRequest<WiredNetworkAdapterDto?>
+public record UpdateWiredNetworkAdapterCommand : IRequest<WiredNetworkAdapterDto?>, IWiredNetworkAdapterFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

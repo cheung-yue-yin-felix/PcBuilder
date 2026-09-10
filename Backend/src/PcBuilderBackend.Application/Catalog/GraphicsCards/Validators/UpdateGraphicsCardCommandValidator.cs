@@ -8,17 +8,6 @@ public class UpdateGraphicsCardCommandValidator : AbstractValidator<UpdateGraphi
     public UpdateGraphicsCardCommandValidator()
     {
         RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ManufacturerId).NotEmpty();
-        RuleFor(x => x.GpuId).NotEmpty();
-        RuleFor(x => x.VideoMemoryGb).GreaterThan(0);
-        RuleFor(x => x.PcieSlotsUsed).GreaterThan(0);
-        RuleFor(x => x.PcieGeneration).IsInEnum();
-        RuleFor(x => x.LengthMm).GreaterThan(0);
-        RuleFor(x => x.WidthMm).GreaterThan(0);
-        RuleFor(x => x.HeightMm).GreaterThan(0);
-        RuleFor(x => x.PowerConsumptionWatts).GreaterThan(0);
-        RuleFor(x => x.PowerConnectorType).IsInEnum();
-        RuleFor(x => x.PowerConnectorCount).GreaterThan(0);
+        Include(new GraphicsCardFieldsValidator<UpdateGraphicsCardCommand>());
     }
 }

@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Psus;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.UpdatePsu;
 
-public record UpdatePsuCommand : IRequest<PsuDto?>
+public record UpdatePsuCommand : IRequest<PsuDto?>, IPsuFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

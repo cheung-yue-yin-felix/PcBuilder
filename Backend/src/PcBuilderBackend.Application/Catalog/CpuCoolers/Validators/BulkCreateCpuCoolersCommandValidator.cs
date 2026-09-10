@@ -3,7 +3,6 @@ using PcBuilderBackend.Application.Catalog.CpuCoolers.Commands.BulkCreateCpuCool
 using PcBuilderBackend.Application.Catalog.CpuCoolers.Dto;
 using PcBuilderBackend.Application.Common.Interfaces;
 using PcBuilderBackend.Application.Common.Validation;
-using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.Catalog.CpuCoolers.Validators;
 
@@ -21,61 +20,23 @@ public class BulkCreateCpuCoolersCommandValidator : AbstractValidator<BulkCreate
             .MustAllBeActiveSockets(db)
             .When(x => x.CpuCoolers is { Count: > 0 });
 
-        RuleForEach(x => x.CpuCoolers).ChildRules(cooler =>
+        RuleForEach(x => x.CpuCoolers).SetValidator(new BulkCreateCpuCoolerItemValidator());
+    }
+}
+
+file sealed class BulkCreateCpuCoolerItemValidator : AbstractValidator<CpuCoolerDto>
+{
+    public BulkCreateCpuCoolerItemValidator()
+    {
+        Include(new CpuCoolerFieldsValidator<CpuCoolerDto>());
+        RuleFor(x => x.Sockets)
+            .NotEmpty().WithMessage("At least one socket is required")
+            .Must(sockets => sockets.GroupBy(s => s.SocketId).All(g => g.Count() == 1))
+            .WithMessage("Duplicate sockets are not allowed.");
+        RuleForEach(x => x.Sockets).ChildRules(socket =>
         {
-            cooler.RuleFor(x => x.Name)
-                .NotEmpty().WithMessage("Name is required")
-                .MaximumLength(200);
-
-            cooler.RuleFor(x => x.ManufacturerId)
-                .NotEmpty().WithMessage("ManufacturerId is required");
-
-            cooler.RuleFor(x => x.MaxTdp)
-                .GreaterThan(0).WithMessage("MaxTdp must be greater than 0");
-
-            cooler.RuleFor(x => x.Type)
-                .IsInEnum().WithMessage("Type is invalid");
-
-            cooler.When(x => x.Type == CpuCoolerType.Air, () =>
-            {
-                cooler.RuleFor(x => x.CoolerHeightMm)
-                    .NotNull().WithMessage("CoolerHeightMm is required for air coolers")
-                    .GreaterThan(0).WithMessage("CoolerHeightMm must be greater than 0");
-
-                cooler.RuleFor(x => x.MaxRamHeightMm)
-                    .NotNull().WithMessage("MaxRamHeightMm is required for air coolers")
-                    .GreaterThan(0).WithMessage("MaxRamHeightMm must be greater than 0");
-
-                cooler.RuleFor(x => x.RadiatorLength)
-                    .Null().WithMessage("RadiatorLength must be empty for air coolers");
-            });
-
-            cooler.When(x => x.Type == CpuCoolerType.Water, () =>
-            {
-                cooler.RuleFor(x => x.RadiatorLength)
-                    .NotNull().WithMessage("RadiatorLength is required for liquid coolers")
-                    .IsInEnum().WithMessage("RadiatorLength is invalid");
-
-                cooler.RuleFor(x => x.CoolerHeightMm)
-                    .Null().WithMessage("CoolerHeightMm must be empty for liquid coolers");
-
-                cooler.RuleFor(x => x.MaxRamHeightMm)
-                    .Null().WithMessage("MaxRamHeightMm must be empty for liquid coolers");
-            });
-
-            cooler.RuleFor(x => x.Sockets)
-                .NotEmpty().WithMessage("At least one socket is required")
-                .Must(BeUniqueSocketIds)
-                .WithMessage("Duplicate sockets are not allowed.");
-
-            cooler.RuleForEach(x => x.Sockets).ChildRules(socket =>
-            {
-                socket.RuleFor(x => x.SocketId)
-                    .NotEmpty().WithMessage("SocketId is required");
-            });
+            socket.RuleFor(x => x.SocketId)
+                .NotEmpty().WithMessage("SocketId is required");
         });
     }
-
-    private static bool BeUniqueSocketIds(List<CpuCoolerSocketDto> sockets) =>
-        sockets.GroupBy(x => x.SocketId).All(g => g.Count() == 1);
 }

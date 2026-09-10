@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Chassis;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.CreateChassis;
 
-public record CreateChassisCommand : IRequest<ChassisDto>
+public record CreateChassisCommand : IRequest<ChassisDto>, IChassisFields, IChassisCollections
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.UpdateWirelessNetworkAdapter;
 
-public record UpdateWirelessNetworkAdapterCommand : IRequest<WirelessNetworkAdapterDto?>
+public record UpdateWirelessNetworkAdapterCommand : IRequest<WirelessNetworkAdapterDto?>, IWirelessNetworkAdapterFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

@@ -1,9 +1,10 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
+using PcBuilderBackend.Application.Catalog.Cpus;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.UpdateCpu;
 
-public record UpdateCpuCommand : IRequest<CpuDto?>
+public record UpdateCpuCommand : IRequest<CpuDto?>, ICpuFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

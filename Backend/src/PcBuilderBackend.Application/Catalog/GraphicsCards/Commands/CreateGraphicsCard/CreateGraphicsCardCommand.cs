@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.GraphicsCards.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.GraphicsCards;
 
 namespace PcBuilderBackend.Application.Catalog.GraphicsCards.Commands.CreateGraphicsCard;
 
-public record CreateGraphicsCardCommand : IRequest<GraphicsCardDto>
+public record CreateGraphicsCardCommand : IRequest<GraphicsCardDto>, IGraphicsCardFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

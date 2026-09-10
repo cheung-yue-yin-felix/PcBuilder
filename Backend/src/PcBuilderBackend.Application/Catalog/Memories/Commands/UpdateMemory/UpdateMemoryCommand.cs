@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Memories;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.UpdateMemory;
 
-public record UpdateMemoryCommand : IRequest<RamDto?>
+public record UpdateMemoryCommand : IRequest<RamDto?>, IMemoryFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

@@ -1,13 +1,14 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.StorageDrives.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.StorageDrives;
 
 namespace PcBuilderBackend.Application.Catalog.StorageDrives.Commands.BulkCreateStorageDrives;
 
 public record BulkCreateStorageDrivesCommand(List<CreateStorageDriveItem> Drives)
     : IRequest<List<StorageDriveDto>>;
 
-public record CreateStorageDriveItem
+public record CreateStorageDriveItem : IStorageDriveFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

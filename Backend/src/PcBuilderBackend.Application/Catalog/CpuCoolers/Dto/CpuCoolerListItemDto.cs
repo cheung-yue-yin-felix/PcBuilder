@@ -1,8 +1,9 @@
+using PcBuilderBackend.Application.Catalog.CpuCoolers;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.Catalog.CpuCoolers.Dto;
 
-public record CpuCoolerListItemDto
+public record CpuCoolerListItemDto : ICpuCoolerFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

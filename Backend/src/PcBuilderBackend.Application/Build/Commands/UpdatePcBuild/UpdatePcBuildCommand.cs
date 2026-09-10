@@ -1,5 +1,6 @@
 using PcBuilderBackend.Application.Build.Dto;
 using MediatR;
+using PcBuilderBackend.Application.Build;
 
 namespace PcBuilderBackend.Application.Build.Commands.UpdatePcBuild;
 
@@ -19,4 +20,4 @@ public record UpdatePcBuildCommand(
     List<PcBuildPartDto> StorageDevices,
     List<PcBuildPartDto> WiredNetworkAdapters,
     List<PcBuildPartDto> WirelessNetworkAdapters
-) : IRequest<PcBuildDto?>;
+) : IRequest<PcBuildDto?>, IPcBuildFields;

@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Motherboards;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.CreateMotherboard;
 
-public record CreateMotherboardCommand : IRequest<MotherboardDto>
+public record CreateMotherboardCommand : IRequest<MotherboardDto>, IMotherboardFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

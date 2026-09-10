@@ -1,6 +1,8 @@
+using PcBuilderBackend.Application.Catalog.Cpus;
+
 namespace PcBuilderBackend.Application.Catalog.Cpus.Dto;
 
-public record CpuListItemDto
+public record CpuListItemDto : ICpuFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

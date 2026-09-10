@@ -9,16 +9,8 @@ public class CreateChipsetCommandValidator : AbstractValidator<CreateChipsetComm
 {
     public CreateChipsetCommandValidator(IActiveEntityLookup db)
     {
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters.");
-
-        RuleFor(x => x.ManufacturerId)
-            .NotEmpty().WithMessage("ManufacturerId is required.")
-            .MustBeActiveManufacturer(db);
-
-        RuleFor(x => x.SocketId)
-            .NotEmpty().WithMessage("SocketId is required.")
-            .MustBeActiveSocket(db);
+        Include(new ChipsetFieldsValidator<CreateChipsetCommand>());
+        RuleFor(x => x.ManufacturerId).MustBeActiveManufacturer(db);
+        RuleFor(x => x.SocketId).MustBeActiveSocket(db);
     }
 }

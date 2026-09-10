@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Memories.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Memories;
 
 namespace PcBuilderBackend.Application.Catalog.Memories.Commands.CreateMemory;
 
-public record CreateMemoryCommand : IRequest<RamDto>
+public record CreateMemoryCommand : IRequest<RamDto>, IMemoryFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

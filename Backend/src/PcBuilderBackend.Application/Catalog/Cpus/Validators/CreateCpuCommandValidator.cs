@@ -10,30 +10,10 @@ public class CreateCpuCommandValidator : AbstractValidator<CreateCpuCommand>
 {
     public CreateCpuCommandValidator(IActiveEntityLookup db)
     {
-        RuleFor(x => x.ManufacturerId)
-            .NotEmpty().WithMessage("ManufacturerId is required")
-            .MustBeActiveManufacturer(db);
-
-        RuleFor(x => x.SocketId)
-            .NotEmpty().WithMessage("SocketId is required")
-            .MustBeActiveSocket(db);
-
-        RuleFor(x => x.SeriesId)
-            .NotEmpty().WithMessage("SeriesId is required")
-            .MustBeActiveCpuSeries(db);
-
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required")
-            .MaximumLength(200);
-
-        RuleFor(x => x.MaxMemoryGb)
-            .GreaterThan(0).WithMessage("MaxMemoryGb must be greater than 0");
-
-        RuleFor(x => x.ThermalDesignPower)
-            .GreaterThan(0).WithMessage("ThermalDesignPower must be greater than 0");
-
-        RuleFor(x => x.PowerConsumptionWatts)
-            .GreaterThan(0).WithMessage("PowerConsumptionWatts must be greater than 0");
+        Include(new CpuFieldsValidator<CreateCpuCommand>());
+        RuleFor(x => x.ManufacturerId).MustBeActiveManufacturer(db);
+        RuleFor(x => x.SocketId).MustBeActiveSocket(db);
+        RuleFor(x => x.SeriesId).MustBeActiveCpuSeries(db);
 
         RuleFor(x => x.RamCompats)
             .NotEmpty().WithMessage("At least one CPU RAM compatibility entry is required");
@@ -69,8 +49,6 @@ public class CreateCpuCommandValidator : AbstractValidator<CreateCpuCommand>
         });
     }
 
-    private static bool BeUniqueChipsetIds(List<CpuSupportChipsetDto> supports)
-    {
-        return supports.GroupBy(x => x.ChipsetId).All(g => g.Count() == 1);
-    }
+    private static bool BeUniqueChipsetIds(List<CpuSupportChipsetDto> supports) =>
+        supports.GroupBy(x => x.ChipsetId).All(g => g.Count() == 1);
 }

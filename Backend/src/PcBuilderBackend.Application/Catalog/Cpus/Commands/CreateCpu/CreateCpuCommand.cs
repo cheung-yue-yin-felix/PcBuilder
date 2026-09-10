@@ -1,9 +1,10 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Cpus.Dto;
+using PcBuilderBackend.Application.Catalog.Cpus;
 
 namespace PcBuilderBackend.Application.Catalog.Cpus.Commands.CreateCpu;
 
-public record CreateCpuCommand : IRequest<CpuDto>
+public record CreateCpuCommand : IRequest<CpuDto>, ICpuFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

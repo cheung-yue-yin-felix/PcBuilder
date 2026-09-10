@@ -1,9 +1,10 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Chassis.Dto;
+using PcBuilderBackend.Application.Catalog.Chassis;
 
 namespace PcBuilderBackend.Application.Catalog.Chassis.Commands.UpdateChassis;
 
-public record UpdateChassisCommand : IRequest<ChassisDto?>
+public record UpdateChassisCommand : IRequest<ChassisDto?>, IChassisFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

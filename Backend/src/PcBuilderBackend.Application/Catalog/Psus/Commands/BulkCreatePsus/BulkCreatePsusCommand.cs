@@ -1,12 +1,13 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Psus.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Psus;
 
 namespace PcBuilderBackend.Application.Catalog.Psus.Commands.BulkCreatePsus;
 
 public record BulkCreatePsusCommand(List<CreatePsuItem> Psus) : IRequest<List<PsuDto>>;
 
-public record CreatePsuItem
+public record CreatePsuItem : IPsuFields, IPsuCables
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

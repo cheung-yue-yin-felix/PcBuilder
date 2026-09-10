@@ -1,13 +1,14 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.ChassisFans.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.ChassisFans;
 
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.BulkCreateChassisFans;
 
 public record BulkCreateChassisFansCommand(List<CreateChassisFanItem> Fans)
     : IRequest<List<ChassisFanDto>>;
 
-public record CreateChassisFanItem
+public record CreateChassisFanItem : IChassisFanFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

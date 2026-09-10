@@ -13,12 +13,7 @@ public class BulkCreateChassisFansCommandValidator : AbstractValidator<BulkCreat
         RuleFor(x => x.Fans.Select(f => f.ManufacturerId))
             .MustAllBeActiveManufacturers(db)
             .When(x => x.Fans is { Count: > 0 });
-        RuleForEach(x => x.Fans).ChildRules(fan =>
-        {
-            fan.RuleFor(f => f.Name).NotEmpty().MaximumLength(200);
-            fan.RuleFor(f => f.ManufacturerId).NotEmpty();
-            fan.RuleFor(f => f.DiameterMm).IsInEnum();
-            fan.RuleFor(f => f.FansCountPerPack).GreaterThan(0);
-        });
+        RuleForEach(x => x.Fans)
+            .SetValidator(new ChassisFanFieldsValidator<CreateChassisFanItem>());
     }
 }

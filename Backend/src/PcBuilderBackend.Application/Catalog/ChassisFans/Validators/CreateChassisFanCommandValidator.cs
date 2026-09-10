@@ -9,9 +9,7 @@ public class CreateChassisFanCommandValidator : AbstractValidator<CreateChassisF
 {
     public CreateChassisFanCommandValidator(IActiveEntityLookup db)
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.ManufacturerId).NotEmpty().MustBeActiveManufacturer(db);
-        RuleFor(x => x.DiameterMm).IsInEnum();
-        RuleFor(x => x.FansCountPerPack).GreaterThan(0);
+        Include(new ChassisFanFieldsValidator<CreateChassisFanCommand>());
+        RuleFor(x => x.ManufacturerId).MustBeActiveManufacturer(db);
     }
 }

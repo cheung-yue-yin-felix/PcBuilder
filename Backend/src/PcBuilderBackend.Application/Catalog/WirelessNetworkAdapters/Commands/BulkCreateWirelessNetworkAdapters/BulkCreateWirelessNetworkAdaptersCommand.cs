@@ -1,13 +1,14 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters;
 
 namespace PcBuilderBackend.Application.Catalog.WirelessNetworkAdapters.Commands.BulkCreateWirelessNetworkAdapters;
 
 public record BulkCreateWirelessNetworkAdaptersCommand(List<CreateWirelessNetworkAdapterItem> Adapters)
     : IRequest<List<WirelessNetworkAdapterDto>>;
 
-public record CreateWirelessNetworkAdapterItem
+public record CreateWirelessNetworkAdapterItem : IWirelessNetworkAdapterFields
 {
     public string Name { get; init; } = string.Empty;
     public Guid ManufacturerId { get; init; }

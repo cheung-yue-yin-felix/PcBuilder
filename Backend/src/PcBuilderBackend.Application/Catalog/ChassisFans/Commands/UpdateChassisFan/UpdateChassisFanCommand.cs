@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.ChassisFans.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.ChassisFans;
 
 namespace PcBuilderBackend.Application.Catalog.ChassisFans.Commands.UpdateChassisFan;
 
-public record UpdateChassisFanCommand : IRequest<ChassisFanDto?>
+public record UpdateChassisFanCommand : IRequest<ChassisFanDto?>, IChassisFanFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;

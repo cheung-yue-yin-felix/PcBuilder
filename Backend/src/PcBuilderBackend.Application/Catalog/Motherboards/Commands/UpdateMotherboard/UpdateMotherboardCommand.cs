@@ -1,10 +1,11 @@
 using MediatR;
 using PcBuilderBackend.Application.Catalog.Motherboards.Dto;
 using PcBuilderBackend.Domain.Enums;
+using PcBuilderBackend.Application.Catalog.Motherboards;
 
 namespace PcBuilderBackend.Application.Catalog.Motherboards.Commands.UpdateMotherboard;
 
-public record UpdateMotherboardCommand : IRequest<MotherboardDto?>
+public record UpdateMotherboardCommand : IRequest<MotherboardDto?>, IMotherboardFields
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
