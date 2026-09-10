@@ -18,7 +18,7 @@ public static class AuthenticationExtensions
         services.AddScoped<ICurrentUser, CurrentUser>();
 
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
-            ?? throw new InvalidOperationException("Jwt configuration section is missing.");
+                  ?? throw new InvalidOperationException("Jwt configuration section is missing.");
         jwt.Validate();
 
         services
@@ -40,12 +40,10 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(AuthPolicies.MasterDataWrite, policy => policy.RequireRole(AuthRoles.Admin));
-            options.AddPolicy(AuthPolicies.CatalogWrite, policy => policy.RequireRole(AuthRoles.Admin));
-            options.AddPolicy(AuthPolicies.BuildWrite, policy => policy.RequireRole(AuthRoles.Member));
-        });
+        services.AddAuthorizationBuilder()
+            .AddPolicy(AuthPolicies.MasterDataWrite, policy => policy.RequireRole(AuthRoles.Admin))
+            .AddPolicy(AuthPolicies.CatalogWrite, policy => policy.RequireRole(AuthRoles.Admin))
+            .AddPolicy(AuthPolicies.BuildWrite, policy => policy.RequireRole(AuthRoles.Member));
 
         return services;
     }

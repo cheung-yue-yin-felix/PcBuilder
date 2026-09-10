@@ -104,8 +104,8 @@ public static class GpuEndpoints
     private static async Task<Created<GpuDto>> CreateGpu(
         [Validate] [FromBody] CreateGpuCommand command,
         [FromServices] ISender sender,
-        CancellationToken cancellationToken,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
         return TypedResults.Created($"{httpContext.Request.Path}/{result.Id}", result);
@@ -141,8 +141,8 @@ public static class GpuEndpoints
     private static async Task<Created<List<GpuDto>>> BulkCreateGpus(
         [Validate] [FromBody] BulkCreateGpusCommand command,
         [FromServices] ISender sender,
-        CancellationToken cancellationToken,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
         return TypedResults.Created($"{httpContext.Request.Path}", result);

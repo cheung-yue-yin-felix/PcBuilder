@@ -18,7 +18,17 @@ public class CpuHandlerTests : IDisposable
 {
     private readonly AppFixture _fx = new();
 
-    public void Dispose() => _fx.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fx.Dispose();
+    }
 
     [Fact]
     public async Task Update_and_soft_delete_cpu()

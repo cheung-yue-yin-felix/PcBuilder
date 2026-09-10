@@ -59,5 +59,9 @@ public sealed class AppFixture : IDisposable
     public GpuSeries GpuSeries { get; }
     public Gpu Gpu { get; }
 
-    public void Dispose() => Context.Dispose();
+    public void Dispose()
+    {
+        Context.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

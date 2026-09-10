@@ -21,7 +21,17 @@ public class CpuAndMemoryTests : IDisposable
 {
     private readonly AppFixture _fx = new();
 
-    public void Dispose() => _fx.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fx.Dispose();
+    }
 
     [Fact]
     public async Task Create_cpu_validator_requires_related_master_data_and_child_rows()

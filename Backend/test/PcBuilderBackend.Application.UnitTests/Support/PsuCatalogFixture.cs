@@ -80,5 +80,9 @@ public sealed class PsuCatalogFixture : IDisposable
         return psu;
     }
 
-    public void Dispose() => Context.Dispose();
+    public void Dispose()
+    {
+        Context.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

@@ -7,6 +7,9 @@ namespace PcBuilderBackend.Infrastructure.UnitTests.Persistence;
 
 public class PcBuildModelTests
 {
+    private static readonly string[] PcBuildPartIndexProperties = ["PcBuildId", "Type", "PartId"];
+    private static readonly string[] MotherboardM2IndexProperties = ["MotherboardId"];
+
     [Fact]
     public void Parts_use_one_table_and_split_by_type()
     {
@@ -28,7 +31,7 @@ public class PcBuildModelTests
             .Should()
             .Contain(index => index.IsUnique
                 && index.Properties.Select(p => p.Name)
-                    .SequenceEqual(new[] { "PcBuildId", "Type", "PartId" }));
+                    .SequenceEqual(PcBuildPartIndexProperties));
     }
 
     [Fact]
@@ -42,7 +45,7 @@ public class PcBuildModelTests
             .NotContain(index => index.IsUnique);
         m2.GetIndexes()
             .Should()
-            .Contain(index => index.Properties.Select(p => p.Name).SequenceEqual(new[] { "MotherboardId" }));
+            .Contain(index => index.Properties.Select(p => p.Name).SequenceEqual(MotherboardM2IndexProperties));
     }
 
     private static PcBuilderDbContext CreateContext()

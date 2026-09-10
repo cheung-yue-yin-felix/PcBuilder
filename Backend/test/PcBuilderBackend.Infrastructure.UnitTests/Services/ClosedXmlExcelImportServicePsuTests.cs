@@ -115,13 +115,19 @@ public class ClosedXmlExcelImportServicePsuTests
     [Fact]
     public async Task Parse_throws_for_invalid_enum()
     {
-        await using var stream = CreateWorkbook(
+        var stream = CreateWorkbook(
             psuRows: [["RM850x", _manufacturerId.ToString(), 850, "NotAModularity", "Atx", 160, 150, 86]],
             cableRows: null);
 
-        var act = () => _sut.ParsePsuImportAsync(stream, CancellationToken.None);
-
-        await act.Should().ThrowAsync<ArgumentException>();
+        try
+        {
+            var act = () => _sut.ParsePsuImportAsync(stream, CancellationToken.None);
+            await act.Should().ThrowAsync<ArgumentException>();
+        }
+        finally
+        {
+            await stream.DisposeAsync();
+        }
     }
 
     [Fact]
@@ -160,15 +166,15 @@ public class ClosedXmlExcelImportServicePsuTests
         return stream;
     }
 
-    private static void WriteHeader(IXLWorksheet sheet, IReadOnlyList<string> headers)
+    private static void WriteHeader(IXLWorksheet sheet, string[] headers)
     {
-        for (var i = 0; i < headers.Count; i++)
+        for (var i = 0; i < headers.Length; i++)
             sheet.Cell(1, i + 1).Value = headers[i];
     }
 
-    private static void WriteRow(IXLWorksheet sheet, int row, IReadOnlyList<object> values)
+    private static void WriteRow(IXLWorksheet sheet, int row, object[] values)
     {
-        for (var i = 0; i < values.Count; i++)
+        for (var i = 0; i < values.Length; i++)
         {
             sheet.Cell(row, i + 1).Value = values[i] switch
             {
@@ -176,7 +182,7 @@ public class ClosedXmlExcelImportServicePsuTests
                 double d => d,
                 decimal m => m,
                 string s => s,
-                _ => values[i]?.ToString() ?? string.Empty
+                _ => values[i].ToString() ?? string.Empty
             };
         }
     }

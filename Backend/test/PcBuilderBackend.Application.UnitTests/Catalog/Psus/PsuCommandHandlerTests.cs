@@ -22,7 +22,17 @@ public class PsuCommandHandlerTests : IDisposable
 {
     private readonly PsuCatalogFixture _fixture = new();
 
-    public void Dispose() => _fixture.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fixture.Dispose();
+    }
 
     [Fact]
     public async Task Create_persists_psu_and_cables()

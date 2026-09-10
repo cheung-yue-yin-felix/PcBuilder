@@ -8,7 +8,17 @@ public class ActiveEntityGuardTests : IDisposable
 {
     private readonly AppFixture _fx = new();
 
-    public void Dispose() => _fx.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fx.Dispose();
+    }
 
     [Fact]
     public async Task Ensure_manufacturers_accepts_known_ids_and_empty_sets()

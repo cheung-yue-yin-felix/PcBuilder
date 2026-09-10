@@ -12,7 +12,17 @@ public class MotherboardValidatorTests : IDisposable
 {
     private readonly AppFixture _fx = new();
 
-    public void Dispose() => _fx.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fx.Dispose();
+    }
 
     [Fact]
     public async Task Create_allows_m2_groups_that_differ_by_sata_or_form_factor()

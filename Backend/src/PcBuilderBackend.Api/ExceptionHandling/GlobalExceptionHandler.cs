@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PcBuilderBackend.Api.ExceptionHandling;
 
-public sealed class GlobalExceptionHandler(
+public sealed partial class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IHostEnvironment environment,
     IProblemDetailsService problemDetailsService) : IExceptionHandler
@@ -16,11 +16,7 @@ public sealed class GlobalExceptionHandler(
     {
         if (exception is OperationCanceledException)
         {
-            logger.LogDebug(
-                exception,
-                "Request cancelled for {Method} {Path}",
-                httpContext.Request.Method,
-                httpContext.Request.Path);
+            RequestCancelled(logger, exception, httpContext.Request.Method, httpContext.Request.Path);
 
             httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             return true;
@@ -107,4 +103,7 @@ public sealed class GlobalExceptionHandler(
             ProblemDetails = problemDetails
         });
     }
+    
+    [LoggerMessage(EventId = 1001, Level = LogLevel.Debug, Message = "Request cancelled for {Method} {Path}")]
+    private static partial void RequestCancelled(ILogger logger, Exception exception, string method, string path);
 }

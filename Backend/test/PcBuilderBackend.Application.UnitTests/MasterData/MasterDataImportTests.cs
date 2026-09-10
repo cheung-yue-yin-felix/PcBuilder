@@ -25,7 +25,17 @@ public class MasterDataImportTests : IDisposable
     private readonly AppFixture _fx = new();
     private readonly IExcelImportService _excel = Substitute.For<IExcelImportService>();
 
-    public void Dispose() => _fx.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fx.Dispose();
+    }
 
     [Fact]
     public async Task Import_manufacturers()

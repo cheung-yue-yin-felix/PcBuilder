@@ -17,7 +17,17 @@ public class PsuValidatorTests : IDisposable
 {
     private readonly PsuCatalogFixture _fixture = new();
 
-    public void Dispose() => _fixture.Dispose();
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fixture.Dispose();
+    }
 
     [Fact]
     public async Task Create_accepts_a_valid_command()

@@ -7,7 +7,7 @@ namespace PcBuilderBackend.Infrastructure.Services;
 public class StorageService : IStorageService
 {
     private readonly string _bucketName;
-    private readonly IAmazonS3 _s3Client;
+    private readonly AmazonS3Client _s3Client;
 
     public StorageService(IConfiguration configuration)
     {
