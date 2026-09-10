@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth.ts'
-import { Header } from './Header.tsx'
+import { Header } from '@/components/header'
 
 export function AppHeader() {
   const { isReady, isAuthenticated, user, isAdmin, isMember, logout } = useAuth()

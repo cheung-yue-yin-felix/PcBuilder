@@ -12,6 +12,7 @@ using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.ImportManuf
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.UpdateManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Queries;
+using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Api.Endpoints.MasterData;
 
@@ -29,7 +30,14 @@ public static class ManufacturerEndpoints
             .WithSummary("Browse Manufacturers")
             .WithDescription("\n    GET /master-data/manufacturer");
 
-        subgroup.MapGet("/{id}", GetManufacturerById)
+        subgroup.MapGet("/{productType}", GetManufacturersByProductType)
+            .Produces<List<ManufacturerDto>>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status500InternalServerError)
+            .WithSummary("Browse Manufacturers by product type")
+            .WithDescription("\n    GET /master-data/manufacturer/cpu");
+
+        subgroup.MapGet("/{id:guid}", GetManufacturerById)
             .Produces<ManufacturerDto>()
             .Produces(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status500InternalServerError)
@@ -90,6 +98,30 @@ public static class ManufacturerEndpoints
         CancellationToken cancellationToken)
     {
         return TypedResults.Ok(await sender.Send(new GetManufacturersQuery(), cancellationToken));
+    }
+
+    private static async Task<Results<Ok<List<ManufacturerDto>>, ProblemHttpResult>> GetManufacturersByProductType(
+        [FromRoute] string productType,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken)
+    {
+        if (!TryParseProductType(productType, out var parsed))
+        {
+            return TypedResults.Problem(
+                detail: "Unknown product type.",
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+        return TypedResults.Ok(
+            await sender.Send(new GetManufacturersByProductTypeQuery(parsed), cancellationToken));
+    }
+
+    private static bool TryParseProductType(string productType, out ProductType parsed)
+    {
+        parsed = default;
+        return !int.TryParse(productType, out _)
+            && Enum.TryParse(productType, ignoreCase: true, out parsed)
+            && Enum.IsDefined(parsed);
     }
 
     private static async Task<Results<Ok<ManufacturerDto>, NotFound>> GetManufacturerById(

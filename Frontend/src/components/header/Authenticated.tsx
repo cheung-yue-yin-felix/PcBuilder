@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 
-export function AuthenticatedHeader({ user, isAdmin, isMember, handleLogout }: Readonly<{ user: { email: string } | null, isAdmin: boolean, isMember: boolean, handleLogout: () => Promise<void> }>) {
+export function Authenticated({ user, isAdmin, isMember, handleLogout }: Readonly<{ user: { email: string } | null, isAdmin: boolean, isMember: boolean, handleLogout: () => Promise<void> }>) {
   return (
     <>
         <span className="nav-user">

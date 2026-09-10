@@ -57,4 +57,5 @@ export type AuthContextValue = {
   hasRole: (role: AuthRole) => boolean
   forgotPassword: (input: ForgotPasswordInput) => Promise<void>
   resetPassword: (input: ResetPasswordInput) => Promise<void>
+  changePassword: (input: ChangePasswordInput) => Promise<void>
 }

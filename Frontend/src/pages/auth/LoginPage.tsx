@@ -1,17 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { parseApiError } from "../api/errors.ts";
-import { getPostLoginPath } from "../auth/redirect.ts";
-import { loginSchema, type LoginValues } from "../auth/schemas.ts";
-import { useAuth } from "../auth/useAuth.ts";
-import { FormTextField } from "../components/FormTextField.tsx";
+import { parseApiError } from "../../api/errors.ts";
+import { getPostLoginPath } from "../../auth/redirect.ts";
+import { loginSchema, type LoginValues } from "../../auth/schemas.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { FormTextField } from "../../components/FormTextField.tsx";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import {
   applyApiFieldErrors,
   applyApiFormError,
-} from "../lib/rhf-api-errors.ts";
+} from "../../lib/rhf-api-errors.ts";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -80,7 +80,8 @@ export function LoginPage() {
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
         <p className="auth-switch">
-          New here? <Link to="/register">Create an account</Link><br />
+          New here? <Link to="/register">Create an account</Link>
+          <br />
           Forgot your password? <Link to="/forgot-password">Reset it</Link>
         </p>
       </form>

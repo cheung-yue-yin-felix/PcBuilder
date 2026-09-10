@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { loginRequest, logoutRequest, registerRequest, forgotPasswordRequest, resetPasswordRequest } from '../api/auth.ts'
+import { loginRequest, logoutRequest, registerRequest, forgotPasswordRequest, resetPasswordRequest, changePasswordRequest } from '../api/auth.ts'
 import { bindAuthBridge, refreshSession } from '../api/client.ts'
 import { AuthContext } from './auth-context.ts'
 import {
@@ -19,6 +19,7 @@ import {
   type RegisterInput,
   type ForgotPasswordInput,
   type ResetPasswordInput,
+  type ChangePasswordInput,
 } from './types.ts'
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -97,6 +98,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     },
     [clearSession],
   )
+  
+  const changePassword = useCallback(
+    async (input: ChangePasswordInput) => {
+      await changePasswordRequest(input)
+      clearSession()
+    },
+    [clearSession],
+  )
 
   const hasRole = useCallback(
     (role: AuthRole) => user?.roles.includes(role) ?? false,
@@ -117,8 +126,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       resetPassword,
       logout,
       hasRole,
+      changePassword,
     }),
-    [user, accessToken, isReady, hasRole, login, register, logout, forgotPassword, resetPassword],
+    [user, accessToken, isReady, hasRole, login, register, logout, forgotPassword, resetPassword, changePassword],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -86,6 +86,7 @@
   border: 1px solid var(--accent-border);
 }
 
+.catalog-page,
 .page-status,
 .auth-page,
 .account-page {
@@ -99,6 +100,83 @@
 
 .page-status {
   align-items: center;
+}
+
+.catalog-page {
+  display: block;
+  padding: 32px;
+}
+
+.catalog-page h1 {
+  font-size: 36px;
+  letter-spacing: -0.8px;
+  margin: 0 0 8px;
+}
+
+.catalog-lead {
+  margin: 0 0 24px;
+  color: var(--text);
+}
+
+.catalog-filters {
+  margin-bottom: 24px;
+}
+
+.catalog-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px 16px;
+}
+
+.catalog-filter-actions,
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.catalog-pagination {
+  justify-content: space-between;
+}
+
+.catalog-details {
+  margin: 0 0 32px;
+}
+
+.catalog-details > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.catalog-details dt {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.catalog-details dd {
+  margin: 0;
+  color: var(--text-h);
+}
+
+.catalog-empty {
+  margin: 0 0 24px;
+  color: var(--text);
+}
+
+.catalog-page h2 {
+  margin: 24px 0 12px;
+}
+
+.catalog-page a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.catalog-page a:hover {
+  text-decoration: underline;
 }
 
 .auth-card,

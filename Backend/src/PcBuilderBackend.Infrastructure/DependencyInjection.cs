@@ -20,6 +20,7 @@ using PcBuilderBackend.Application.MasterData.Chipsets.Dto;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Dto;
+using PcBuilderBackend.Application.MasterData.Manufacturers;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
 using PcBuilderBackend.Application.MasterData.Sockets.Dto;
 using PcBuilderBackend.Domain.Entities;
@@ -63,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IReadStore<GpuSeriesDto>, EfReadStore<GpuSeries, GpuSeriesDto>>();
 
         // Read Stores
+        services.AddScoped<IManufacturerReadStore, ManufacturerReadStore>();
         services.AddScoped<IChassisReadStore, ChassisReadStore>();
         services.AddScoped<IChassisFanReadStore, ChassisFanReadStore>();
         services.AddScoped<ICpuReadStore, CpuReadStore>();

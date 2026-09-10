@@ -1,14 +1,17 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { RequireAuth } from './auth/RequireAuth.tsx'
-import { RequireGuest } from './auth/RequireGuest.tsx'
-import { AppLayout } from './components/AppLayout.tsx'
-import { AccountPage } from './pages/AccountPage.tsx'
-import { HomePage } from './pages/HomePage.tsx'
-import { LoginPage } from './pages/LoginPage.tsx'
-import { RegisterPage } from './pages/RegisterPage.tsx'
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage.tsx'
-import { ResetPasswordPage } from './pages/ResetPasswordPage.tsx'
-import './AppShell.css'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage.tsx";
+import { RequireAuth } from "./auth/RequireAuth.tsx";
+import { RequireGuest } from "./auth/RequireGuest.tsx";
+import { AppLayout } from "./components/AppLayout.tsx";
+import { AccountPage } from "./pages/auth/AccountPage.tsx";
+import { HomePage } from "./pages/HomePage.tsx";
+import { LoginPage } from "./pages/auth/LoginPage.tsx";
+import { RegisterPage } from "./pages/auth/RegisterPage.tsx";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage.tsx";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage.tsx";
+import { CpuDetailPage } from "./pages/catalog/CpuDetailPage.tsx";
+import { CpuListPage } from "./pages/catalog/CpuListPage.tsx";
+import "./AppShell.css";
 
 export default function App() {
   return (
@@ -21,11 +24,14 @@ export default function App() {
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
         </Route>
         <Route path="reset-password" element={<ResetPasswordPage />} />
+        <Route path="catalog/cpus" element={<CpuListPage />} />
+        <Route path="catalog/cpus/:cpuId" element={<CpuDetailPage />} />
         <Route element={<RequireAuth />}>
           <Route path="account" element={<AccountPage />} />
+          <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
-  )
+  );
 }

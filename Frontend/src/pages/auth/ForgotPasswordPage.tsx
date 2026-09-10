@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { parseApiError } from "../api/errors.ts";
+import { parseApiError } from "../../api/errors.ts";
 import {
   forgotPasswordSchema,
   type ForgotPasswordValues,
-} from "../auth/schemas.ts";
-import { useAuth } from "../auth/useAuth.ts";
+} from "../../auth/schemas.ts";
+import { useAuth } from "../../auth/useAuth.ts";
 import { FormTextField } from "@/components/FormTextField.tsx";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import {
   applyApiFieldErrors,
   applyApiFormError,
-} from "../lib/rhf-api-errors.ts";
+} from "../../lib/rhf-api-errors.ts";
 
 export function ForgotPasswordPage() {
   const { forgotPassword } = useAuth();

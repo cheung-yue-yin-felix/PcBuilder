@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using PcBuilderBackend.Application.MasterData.Chipsets.Commands.CreateChipset;
 using PcBuilderBackend.Application.MasterData.CpuSeries.Commands.CreateCpuSeries;
 using PcBuilderBackend.Application.MasterData.Gpus.Commands.CreateGpu;
@@ -8,6 +9,7 @@ using PcBuilderBackend.Application.MasterData.Gpus.Dto;
 using PcBuilderBackend.Application.MasterData.Gpus.Validators;
 using PcBuilderBackend.Application.MasterData.GpuSeries.Commands.CreateGpuSeries;
 using PcBuilderBackend.Application.MasterData.Chipsets.Validators;
+using PcBuilderBackend.Application.MasterData.Manufacturers;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.CreateManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Commands.DeleteManufacturer;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
@@ -17,6 +19,7 @@ using PcBuilderBackend.Application.MasterData.Sockets.Commands.CreateSocket;
 using PcBuilderBackend.Application.MasterData.Sockets.Validators;
 using PcBuilderBackend.Application.UnitTests.Support;
 using PcBuilderBackend.Domain.Entities;
+using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Application.UnitTests.MasterData;
 
@@ -73,6 +76,20 @@ public class MasterDataTests : IDisposable
             .Handle(new GetManufacturersQuery(), CancellationToken.None);
 
         list.Should().Contain(x => x.Name == "AMD");
+    }
+
+    [Fact]
+    public async Task Get_manufacturers_by_product_type_delegates_to_read_store()
+    {
+        var store = Substitute.For<IManufacturerReadStore>();
+        var expected = new List<ManufacturerDto> { new(_fx.Manufacturer.Id, "AMD") };
+        store.ListByProductTypeAsync(ProductType.Cpu, Arg.Any<CancellationToken>()).Returns(expected);
+
+        var result = await new GetManufacturersByProductTypeHandler(store)
+            .Handle(new GetManufacturersByProductTypeQuery(ProductType.Cpu), CancellationToken.None);
+
+        result.Should().BeSameAs(expected);
+        await store.Received(1).ListByProductTypeAsync(ProductType.Cpu, Arg.Any<CancellationToken>());
     }
 
     [Fact]

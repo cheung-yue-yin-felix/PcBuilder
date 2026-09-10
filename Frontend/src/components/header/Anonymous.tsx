@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 
-export function AnonymousHeader() {
+export function Anonymous() {
     return (
         <>
             <NavLink
