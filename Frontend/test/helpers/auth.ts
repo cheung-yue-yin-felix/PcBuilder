@@ -23,6 +23,7 @@ export function authValue(overrides: Partial<AuthContextValue> = {}): AuthContex
     hasRole: vi.fn().mockReturnValue(false),
     forgotPassword: vi.fn().mockResolvedValue(undefined),
     resetPassword: vi.fn().mockResolvedValue(undefined),
+    changePassword: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   }
 }

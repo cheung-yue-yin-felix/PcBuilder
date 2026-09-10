@@ -54,4 +54,13 @@ describe('cpu list search params', () => {
       filter: emptyCpuFilter,
     }).toString()).toBe('')
   })
+
+  it('treats blank manufacturer ids as unset', () => {
+    expect(
+      cpuListParamsFromSearch(new URLSearchParams('manufacturerId=&socketId=%20')).filter,
+    ).toMatchObject({
+      manufacturerId: undefined,
+      socketId: undefined,
+    })
+  })
 })

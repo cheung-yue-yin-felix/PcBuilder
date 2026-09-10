@@ -106,4 +106,83 @@ describe('CpuListPage', () => {
     renderWithQuery(<CpuListPage />, { route: '/catalog/cpus?name=nope' })
     expect(await screen.findByText('No CPUs match these filters.')).toBeInTheDocument()
   })
+
+  it('shows an empty catalog state', async () => {
+    listCpus.mockResolvedValue({ items: [], totalCount: 0, pageIndex: 0, pageSize: 10 })
+    renderWithQuery(<CpuListPage />, { route: '/catalog/cpus' })
+    expect(await screen.findByText('No CPUs in the catalog yet.')).toBeInTheDocument()
+  })
+
+  it('shows a loading state', async () => {
+    listCpus.mockReturnValue(new Promise(() => {}))
+    renderWithQuery(<CpuListPage />, { route: '/catalog/cpus' })
+    expect(await screen.findByText('Loading CPUs…')).toBeInTheDocument()
+  })
+
+  it('shows an API error', async () => {
+    listCpus.mockRejectedValue(new Error('fail'))
+    renderWithQuery(<CpuListPage />, { route: '/catalog/cpus' })
+    expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument()
+  })
+
+  it('filters by manufacturer, socket, series, and ranges', async () => {
+    listCpus.mockResolvedValue({
+      items: [{ ...cpu, integratedGraphics: true }],
+      totalCount: 1,
+      pageIndex: 0,
+      pageSize: 10,
+    })
+    const user = userEvent.setup()
+    renderWithQuery(<CpuListPage />, { route: '/catalog/cpus' })
+    await screen.findByRole('link', { name: 'Ryzen 7 7800X3D' })
+    expect(screen.getByText('Yes')).toBeInTheDocument()
+
+    await user.selectOptions(screen.getByLabelText('Manufacturer'), 'amd')
+    await user.selectOptions(screen.getByLabelText('Socket'), 'am5')
+    await user.selectOptions(screen.getByLabelText('Series'), 'r7')
+    await user.type(screen.getByLabelText('TDP (W)'), '65')
+    await user.type(screen.getByLabelText('TDP max'), '170')
+    await user.type(screen.getByLabelText('Power (W)'), '80')
+    await user.type(screen.getByLabelText('Power max'), '150')
+    await user.click(screen.getByRole('button', { name: 'Apply filters' }))
+
+    expect(listCpus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageIndex: 0,
+        filter: expect.objectContaining({
+          manufacturerId: 'amd',
+          socketId: 'am5',
+          seriesId: 'r7',
+          thermalDesignPower: { min: 65, max: 170 },
+          powerConsumptionWatts: { min: 80, max: 150 },
+        }),
+      }),
+    )
+  })
+
+  it('clears filters and paginates', async () => {
+    listCpus.mockResolvedValue({
+      items: [cpu],
+      totalCount: 21,
+      pageIndex: 0,
+      pageSize: 10,
+    })
+    const user = userEvent.setup()
+    renderWithQuery(<CpuListPage />, { route: '/catalog/cpus?name=7800' })
+    await screen.findByRole('link', { name: 'Ryzen 7 7800X3D' })
+    expect(screen.getByText('Page 1 of 3 (21 CPUs)')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    expect(listCpus).toHaveBeenCalledWith(expect.objectContaining({ pageIndex: 1 }))
+    await user.click(screen.getByRole('button', { name: 'Previous' }))
+    expect(listCpus).toHaveBeenCalledWith(expect.objectContaining({ pageIndex: 0 }))
+
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(listCpus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageIndex: 0,
+        filter: expect.objectContaining({ name: '' }),
+      }),
+    )
+  })
 })

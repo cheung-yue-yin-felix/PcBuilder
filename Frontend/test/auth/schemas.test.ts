@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -49,6 +50,22 @@ describe('auth schemas', () => {
         password: 'Password1!',
         confirmPassword: 'other',
       }).success,
+    ).toBe(false)
+  })
+
+  it('requires matching change-password values of at least 10 characters', () => {
+    const valid = {
+      currentPassword: 'OldPassword1!',
+      newPassword: 'Password1!',
+      confirmNewPassword: 'Password1!',
+    }
+    expect(changePasswordSchema.safeParse(valid).success).toBe(true)
+    expect(
+      changePasswordSchema.safeParse({ ...valid, newPassword: 'short', confirmNewPassword: 'short' })
+        .success,
+    ).toBe(false)
+    expect(
+      changePasswordSchema.safeParse({ ...valid, confirmNewPassword: 'Password2!' }).success,
     ).toBe(false)
   })
 })

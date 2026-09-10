@@ -8,7 +8,13 @@ vi.mock('@/api/client.ts', () => ({
   },
 }))
 
-import { listManufacturersByProductType } from '@/api/master-data.ts'
+import {
+  listCpuSeries,
+  listManufacturers,
+  listManufacturersByProductType,
+  listSockets,
+  masterDataKeys,
+} from '@/api/master-data.ts'
 
 describe('master-data API', () => {
   beforeEach(() => {
@@ -21,5 +27,48 @@ describe('master-data API', () => {
       { id: 'amd', name: 'AMD' },
     ])
     expect(get).toHaveBeenCalledWith('/master-data/manufacturer/cpu')
+    expect(masterDataKeys.manufacturersByProductType('cpu')).toEqual([
+      'master-data',
+      'manufacturers',
+      'cpu',
+    ])
+  })
+
+  it('lists manufacturers, sockets, and CPU series', async () => {
+    get.mockResolvedValueOnce({ data: [{ id: 'amd', name: 'AMD' }] })
+    await expect(listManufacturers()).resolves.toEqual([{ id: 'amd', name: 'AMD' }])
+    expect(get).toHaveBeenCalledWith('/master-data/manufacturer')
+
+    get.mockResolvedValueOnce({
+      data: [{ id: 'am5', name: 'AM5', manufacturerId: 'amd', manufacturerName: 'AMD' }],
+    })
+    await expect(listSockets()).resolves.toEqual([
+      { id: 'am5', name: 'AM5', manufacturerId: 'amd', manufacturerName: 'AMD' },
+    ])
+    expect(get).toHaveBeenCalledWith('/master-data/socket')
+
+    get.mockResolvedValueOnce({
+      data: [
+        {
+          id: 'r7',
+          name: 'Ryzen 7',
+          manufacturerId: 'amd',
+          manufacturerName: 'AMD',
+          socketId: 'am5',
+          socketName: 'AM5',
+        },
+      ],
+    })
+    await expect(listCpuSeries()).resolves.toEqual([
+      {
+        id: 'r7',
+        name: 'Ryzen 7',
+        manufacturerId: 'amd',
+        manufacturerName: 'AMD',
+        socketId: 'am5',
+        socketName: 'AM5',
+      },
+    ])
+    expect(get).toHaveBeenCalledWith('/master-data/cpu-series')
   })
 })

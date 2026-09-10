@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type ReactNode, type SyntheticEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { parseApiError } from "@/api/errors.ts";
 import { isCpuFilterActive, type CpuFilter, type CpuListItem } from "@/api/cpus.ts";
@@ -50,7 +50,7 @@ export function CpuListPage() {
     return true;
   });
 
-  function applyFilters(event: FormEvent<HTMLFormElement>) {
+  function applyFilters(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSearchParams(cpuListSearchFromParams({ ...params, pageIndex: 0, filter: draft }));
   }
@@ -236,73 +236,85 @@ export function CpuListPage() {
         </div>
       </form>
 
-      {query.isPending && !query.data ? (
-        <PageStatus>Loading CPUs…</PageStatus>
-      ) : query.isError ? (
-        <PageStatus>{parseApiError(query.error).message}</PageStatus>
-      ) : items.length === 0 ? (
+      {renderCatalog()}
+    </section>
+  );
+
+  function renderCatalog(): ReactNode {
+    if (query.isPending && !query.data) {
+      return <PageStatus>Loading CPUs…</PageStatus>;
+    }
+
+    if (query.isError) {
+      return <PageStatus>{parseApiError(query.error).message}</PageStatus>;
+    }
+
+    if (items.length === 0) {
+      return (
         <PageStatus>
           {filtering ? "No CPUs match these filters." : "No CPUs in the catalog yet."}
         </PageStatus>
-      ) : (
-        <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Manufacturer</TableHead>
-                <TableHead>Series</TableHead>
-                <TableHead>Socket</TableHead>
-                <TableHead>TDP</TableHead>
-                <TableHead>Power</TableHead>
-                <TableHead>Max RAM</TableHead>
-                <TableHead>iGPU</TableHead>
+      );
+    }
+
+    return (
+      <>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Manufacturer</TableHead>
+              <TableHead>Series</TableHead>
+              <TableHead>Socket</TableHead>
+              <TableHead>TDP</TableHead>
+              <TableHead>Power</TableHead>
+              <TableHead>Max RAM</TableHead>
+              <TableHead>iGPU</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((cpu) => (
+              <TableRow key={cpu.id}>
+                <TableCell>
+                  <Link to={`/catalog/cpus/${cpu.id}`}>{cpu.name}</Link>
+                </TableCell>
+                <TableCell>{cpu.manufacturerName}</TableCell>
+                <TableCell>{cpu.seriesName}</TableCell>
+                <TableCell>{cpu.socketName}</TableCell>
+                <TableCell>{cpu.thermalDesignPower} W</TableCell>
+                <TableCell>{cpu.powerConsumptionWatts} W</TableCell>
+                <TableCell>{cpu.maxMemoryGb} GB</TableCell>
+                <TableCell>{cpu.integratedGraphics ? "Yes" : "No"}</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((cpu) => (
-                <TableRow key={cpu.id}>
-                  <TableCell>
-                    <Link to={`/catalog/cpus/${cpu.id}`}>{cpu.name}</Link>
-                  </TableCell>
-                  <TableCell>{cpu.manufacturerName}</TableCell>
-                  <TableCell>{cpu.seriesName}</TableCell>
-                  <TableCell>{cpu.socketName}</TableCell>
-                  <TableCell>{cpu.thermalDesignPower} W</TableCell>
-                  <TableCell>{cpu.powerConsumptionWatts} W</TableCell>
-                  <TableCell>{cpu.maxMemoryGb} GB</TableCell>
-                  <TableCell>{cpu.integratedGraphics ? "Yes" : "No"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="catalog-pagination">
-            <p>
-              Page {pageIndex + 1} of {pageCount} ({totalCount} CPUs)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={pageIndex === 0}
-                onClick={() => goToPage(pageIndex - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={pageIndex + 1 >= pageCount}
-                onClick={() => goToPage(pageIndex + 1)}
-              >
-                Next
-              </Button>
-            </div>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="catalog-pagination">
+          <p>
+            Page {pageIndex + 1} of {pageCount} ({totalCount} CPUs)
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pageIndex === 0}
+              onClick={() => goToPage(pageIndex - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pageIndex + 1 >= pageCount}
+              onClick={() => goToPage(pageIndex + 1)}
+            >
+              Next
+            </Button>
           </div>
-        </>
-      )}
-    </section>
-  );
+        </div>
+      </>
+    );
+  }
 }
 
 function toOptionalNumber(value: string): number | null {

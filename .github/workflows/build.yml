@@ -76,7 +76,7 @@ jobs:
             /d:sonar.projectBaseDir="${{ github.workspace }}" \
             /d:sonar.javascript.lcov.reportPaths="${{ github.workspace }}/Frontend/coverage/lcov.info" \
             /d:sonar.exclusions="**/.grok/**,**/node_modules/**,**/.sonarqube/**,**/bin/**,**/obj/**,**/wwwroot/**" \
-            /d:sonar.coverage.exclusions="**/*.test.ts,**/*.test.tsx,**/test/**,**/main.tsx"
+            /d:sonar.coverage.exclusions="**/*.test.ts,**/*.test.tsx,**/test/**,**/main.tsx,**/Persistence/Migrations/**"
 
       - name: Build backend
         run: dotnet build Backend/PcBuilderBackend.sln

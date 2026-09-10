@@ -63,5 +63,5 @@ function toInteger(value: string | null): number | undefined {
 }
 
 function emptyToUndefined(value: string | null): string | undefined {
-  return value && value.trim() ? value : undefined
+  return value?.trim() ? value : undefined
 }

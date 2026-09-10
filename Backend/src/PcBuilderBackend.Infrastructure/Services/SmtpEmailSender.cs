@@ -9,7 +9,7 @@ using PcBuilderBackend.Application.Common.Options;
 
 namespace PcBuilderBackend.Infrastructure.Services;
 
-public sealed class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender> logger) : IEmailSender
+public sealed partial class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender> logger) : IEmailSender
 {
     public async Task SendAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken)
     {
@@ -44,18 +44,27 @@ public sealed class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEmailSender
         }
     }
 
-    private SecureSocketOptions SocketOptions() =>
-        options.Port == 465
-            ? SecureSocketOptions.SslOnConnect
-            : options.UseStartTls
-                ? SecureSocketOptions.StartTls
-                : SecureSocketOptions.None;
+    private SecureSocketOptions SocketOptions()
+    {
+        if (options.Port == 465)
+            return SecureSocketOptions.SslOnConnect;
+
+        return options.UseStartTls
+            ? SecureSocketOptions.StartTls
+            : SecureSocketOptions.None;
+    }
 
     private static string ToPlainText(string html)
     {
-        var withoutTags = Regex.Replace(html, "<[^>]+>", " ");
-        return Regex.Replace(WebUtility.HtmlDecode(withoutTags), @"\s+", " ").Trim();
+        var withoutTags = HtmlTagRegex().Replace(html, " ");
+        return WhitespaceRegex().Replace(WebUtility.HtmlDecode(withoutTags), " ").Trim();
     }
+
+    [GeneratedRegex("<[^>]+>", RegexOptions.CultureInvariant, 1000)]
+    private static partial Regex HtmlTagRegex();
+
+    [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant, 1000)]
+    private static partial Regex WhitespaceRegex();
 }
 
 internal static partial class SmtpLog

@@ -149,9 +149,6 @@ public static class DependencyInjection
     private static void AddAppOptions(IServiceCollection services, IConfiguration configuration)
     {
         var app = configuration.GetSection(AppOptions.SectionName).Get<AppOptions>() ?? new AppOptions();
-        if (string.IsNullOrWhiteSpace(app.PublicBaseUrl))
-            app.PublicBaseUrl = "http://localhost:5173";
-
         services.AddSingleton(app);
     }
 

@@ -65,4 +65,25 @@ describe('CpuDetailPage', () => {
     renderDetail()
     expect(await screen.findByText('Something went wrong. Try again.')).toBeInTheDocument()
   })
+
+  it('shows a loading state', async () => {
+    getCpuById.mockReturnValue(new Promise(() => {}))
+    renderDetail()
+    expect(await screen.findByText('Loading CPU…')).toBeInTheDocument()
+  })
+
+  it('shows empty compatibility tables and included options', async () => {
+    getCpuById.mockResolvedValue({
+      ...cpu,
+      integratedGraphics: true,
+      includedStockCooler: true,
+      ramCompats: [],
+      supportChipsets: [],
+    })
+    renderDetail()
+    expect(await screen.findByText('Included')).toBeInTheDocument()
+    expect(screen.getByText('Yes')).toBeInTheDocument()
+    expect(screen.getByText('No RAM compatibility entries.')).toBeInTheDocument()
+    expect(screen.getByText('No supported chipsets.')).toBeInTheDocument()
+  })
 })

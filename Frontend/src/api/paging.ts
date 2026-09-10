@@ -18,5 +18,5 @@ export type PagedResult<T> = {
 }
 
 export function hasCompleteRange(range?: RangeFilter | null): boolean {
-  return range != null && range.min != null && range.max != null
+  return range?.min != null && range?.max != null
 }
