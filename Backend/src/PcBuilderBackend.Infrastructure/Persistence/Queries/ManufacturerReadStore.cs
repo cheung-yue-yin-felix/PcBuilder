@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using PcBuilderBackend.Application.MasterData.Manufacturers;
 using PcBuilderBackend.Application.MasterData.Manufacturers.Dto;
+using PcBuilderBackend.Domain.Entities;
 using PcBuilderBackend.Domain.Enums;
 
 namespace PcBuilderBackend.Infrastructure.Persistence.Queries;
@@ -13,9 +14,18 @@ public sealed class ManufacturerReadStore(PcBuilderDbContext db, IMapper mapper)
         ProductType productType,
         CancellationToken cancellationToken)
     {
-        var manufacturers = db.Manufacturers.AsNoTracking();
+        var filtered = FilterByProductType(db.Manufacturers.AsNoTracking(), productType);
 
-        var filtered = productType switch
+        return filtered
+            .OrderBy(m => m.Name)
+            .ProjectTo<ManufacturerDto>(mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+    }
+
+    internal static IQueryable<Manufacturer> FilterByProductType(
+        IQueryable<Manufacturer> manufacturers,
+        ProductType productType) =>
+        productType switch
         {
             ProductType.Chassis => manufacturers.Where(m => m.Chassis.Any()),
             ProductType.ChassisFan => manufacturers.Where(m => m.ChassisFans.Any()),
@@ -35,10 +45,4 @@ public sealed class ManufacturerReadStore(PcBuilderDbContext db, IMapper mapper)
             ProductType.WirelessNetworkAdapter => manufacturers.Where(m => m.WirelessNetworkAdapters.Any()),
             _ => throw new ArgumentOutOfRangeException(nameof(productType), productType, null)
         };
-
-        return filtered
-            .OrderBy(m => m.Name)
-            .ProjectTo<ManufacturerDto>(mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
-    }
 }

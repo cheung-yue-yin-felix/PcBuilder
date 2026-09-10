@@ -75,11 +75,20 @@ jobs:
             /d:sonar.host.url="${SONAR_HOST_URL}" \
             /d:sonar.projectBaseDir="${{ github.workspace }}" \
             /d:sonar.javascript.lcov.reportPaths="${{ github.workspace }}/Frontend/coverage/lcov.info" \
+            /d:sonar.cs.opencover.reportsPaths="${{ github.workspace }}/coverage/dotnet/**/coverage.opencover.xml" \
             /d:sonar.exclusions="**/.grok/**,**/node_modules/**,**/.sonarqube/**,**/bin/**,**/obj/**,**/wwwroot/**" \
-            /d:sonar.coverage.exclusions="**/*.test.ts,**/*.test.tsx,**/test/**,**/main.tsx,**/Persistence/Migrations/**"
+            /d:sonar.coverage.exclusions="**/*.test.ts,**/*.test.tsx,**/test/**,**/main.tsx,**/Persistence/Migrations/**,**/Persistence/Identity/Migrations/**,**/Endpoints/**"
 
       - name: Build backend
         run: dotnet build Backend/PcBuilderBackend.sln
+
+      - name: Backend tests with coverage
+        run: |
+          dotnet test Backend/PcBuilderBackend.sln \
+            --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory "${{ github.workspace }}/coverage/dotnet" \
+            --settings Backend/coverlet.runsettings
 
       - name: Frontend tests with coverage
         working-directory: Frontend

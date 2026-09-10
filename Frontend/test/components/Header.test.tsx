@@ -96,4 +96,15 @@ describe('header chrome', () => {
     expect(render(<HomePage />).container).toBeInTheDocument()
     expect(render(<PageStatus>Wait</PageStatus>).getByText('Wait')).toBeInTheDocument()
   })
+
+  it('opens the catalog navigation menu', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <AppLayout />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Catalog' }))
+    expect(screen.getByRole('link', { name: 'CPUs' })).toHaveAttribute('href', '/catalog/cpus')
+  })
 })

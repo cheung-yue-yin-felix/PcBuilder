@@ -29,7 +29,11 @@ public sealed partial class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEma
         using var client = new SmtpClient();
         try
         {
-            await client.ConnectAsync(options.Host, options.Port, SocketOptions(), cancellationToken);
+            await client.ConnectAsync(
+                options.Host,
+                options.Port,
+                ResolveSocketOptions(options.Port, options.UseStartTls),
+                cancellationToken);
 
             if (!string.IsNullOrWhiteSpace(options.User))
                 await client.AuthenticateAsync(options.User, options.Password, cancellationToken);
@@ -44,17 +48,17 @@ public sealed partial class SmtpEmailSender(SmtpOptions options, ILogger<SmtpEma
         }
     }
 
-    private SecureSocketOptions SocketOptions()
+    internal static SecureSocketOptions ResolveSocketOptions(int port, bool useStartTls)
     {
-        if (options.Port == 465)
+        if (port == 465)
             return SecureSocketOptions.SslOnConnect;
 
-        return options.UseStartTls
+        return useStartTls
             ? SecureSocketOptions.StartTls
             : SecureSocketOptions.None;
     }
 
-    private static string ToPlainText(string html)
+    internal static string ToPlainText(string html)
     {
         var withoutTags = HtmlTagRegex().Replace(html, " ");
         return WhitespaceRegex().Replace(WebUtility.HtmlDecode(withoutTags), " ").Trim();

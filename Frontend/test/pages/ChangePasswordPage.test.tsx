@@ -118,4 +118,24 @@ describe("ChangePasswordPage", () => {
       "Cannot reach the server. Is the API running?",
     );
   });
+
+  it("shows a non-validation API error on the form", async () => {
+    const { AxiosError } = await import("axios");
+    const error = new AxiosError("fail");
+    error.response = {
+      status: 409,
+      data: { title: "Password recently used." },
+      statusText: "Conflict",
+      headers: {},
+      config: {} as never,
+    };
+    vi.mocked(auth.changePassword).mockRejectedValue(error);
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByLabelText("Current Password"), "OldPassword1!");
+    await user.type(screen.getByLabelText("New Password"), "Password1!");
+    await user.type(screen.getByLabelText("Confirm New Password"), "Password1!");
+    await user.click(screen.getByRole("button", { name: "Change Password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Password recently used.");
+  });
 });
