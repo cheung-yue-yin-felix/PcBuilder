@@ -17,6 +17,18 @@ export type CpuSeriesOption = NamedMasterData & {
   socketName: string
 }
 
+export type GpuSeriesOption = NamedMasterData & {
+  manufacturerId: string
+  manufacturerName: string
+}
+
+export type GpuOption = NamedMasterData & {
+  manufacturerId: string
+  manufacturerName: string
+  gpuSeriesId: string
+  gpuSeriesName: string
+}
+
 export type ProductType =
   | 'chassis'
   | 'chassisfan'
@@ -41,6 +53,8 @@ export const masterDataKeys = {
     ['master-data', 'manufacturers', productType] as const,
   sockets: ['master-data', 'sockets'] as const,
   cpuSeries: ['master-data', 'cpu-series'] as const,
+  gpuSeries: ['master-data', 'gpu-series'] as const,
+  gpus: ['master-data', 'gpu'] as const,
 }
 
 export function listManufacturers() {
@@ -59,4 +73,12 @@ export function listSockets() {
 
 export function listCpuSeries() {
   return api.get<CpuSeriesOption[]>('/master-data/cpu-series').then((response) => response.data)
+}
+
+export function listGpuSeries() {
+  return api.get<GpuSeriesOption[]>('/master-data/gpu-series').then((response) => response.data)
+}
+
+export function listGpus() {
+  return api.get<GpuOption[]>('/master-data/gpu').then((response) => response.data)
 }
