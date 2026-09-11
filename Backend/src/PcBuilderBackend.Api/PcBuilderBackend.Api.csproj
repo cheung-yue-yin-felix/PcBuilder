@@ -7,6 +7,7 @@
         <SpaRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\Frontend\'))</SpaRoot>
         <SpaProxyServerUrl>http://localhost:5173</SpaProxyServerUrl>
         <SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
+        <UserSecretsId>026c0908-51e8-4298-b558-52577039c853</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>

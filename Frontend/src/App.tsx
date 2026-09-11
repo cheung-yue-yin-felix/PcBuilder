@@ -11,6 +11,7 @@ import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage.tsx";
 import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage.tsx";
 import { CpuDetailPage } from "./pages/catalog/CpuDetailPage.tsx";
 import { CpuListPage } from "./pages/catalog/CpuListPage.tsx";
+import { GraphicsCardListPage } from "./pages/catalog/GraphicsCardListPage.tsx";
 import "./AppShell.css";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="reset-password" element={<ResetPasswordPage />} />
         <Route path="catalog/cpus" element={<CpuListPage />} />
         <Route path="catalog/cpus/:cpuId" element={<CpuDetailPage />} />
+        <Route path="catalog/graphics-cards" element={<GraphicsCardListPage />} />
         <Route element={<RequireAuth />}>
           <Route path="account" element={<AccountPage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />

@@ -1,7 +1,11 @@
 import { useMemo, useState, type ReactNode, type SyntheticEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { parseApiError } from "@/api/errors.ts";
-import { isCpuFilterActive, type CpuFilter, type CpuListItem } from "@/api/cpus.ts";
+import {
+  isCpuFilterActive,
+  type CpuFilter,
+  type CpuListItem,
+} from "@/api/catalog/cpus";
 import { PageStatus } from "@/components/PageStatus.tsx";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -20,7 +24,8 @@ import {
   cpuListParamsFromSearch,
   cpuListSearchFromParams,
   emptyCpuFilter,
-} from "@/api/cpu-list-params.ts";
+} from "@/api/catalog/params/cpu-list-params";
+import { toOptionalNumber } from "@/api/helper";
 
 const EMPTY_ITEMS: CpuListItem[] = [];
 const selectClassName =
@@ -45,19 +50,28 @@ export function CpuListPage() {
     ? sockets.filter((item) => item.manufacturerId === draft.manufacturerId)
     : sockets;
   const seriesOptions = series.filter((item) => {
-    if (draft.manufacturerId && item.manufacturerId !== draft.manufacturerId) return false;
+    if (draft.manufacturerId && item.manufacturerId !== draft.manufacturerId)
+      return false;
     if (draft.socketId && item.socketId !== draft.socketId) return false;
     return true;
   });
 
   function applyFilters(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSearchParams(cpuListSearchFromParams({ ...params, pageIndex: 0, filter: draft }));
+    setSearchParams(
+      cpuListSearchFromParams({ ...params, pageIndex: 0, filter: draft }),
+    );
   }
 
   function clearFilters() {
     setDraft(emptyCpuFilter);
-    setSearchParams(cpuListSearchFromParams({ ...params, pageIndex: 0, filter: emptyCpuFilter }));
+    setSearchParams(
+      cpuListSearchFromParams({
+        ...params,
+        pageIndex: 0,
+        filter: emptyCpuFilter,
+      }),
+    );
   }
 
   function goToPage(nextIndex: number) {
@@ -81,7 +95,10 @@ export function CpuListPage() {
               id="cpu-name"
               value={draft.name ?? ""}
               onChange={(event) =>
-                setDraft((current) => ({ ...current, name: event.target.value }))
+                setDraft((current) => ({
+                  ...current,
+                  name: event.target.value,
+                }))
               }
             />
           </Field>
@@ -252,7 +269,9 @@ export function CpuListPage() {
     if (items.length === 0) {
       return (
         <PageStatus>
-          {filtering ? "No CPUs match these filters." : "No CPUs in the catalog yet."}
+          {filtering
+            ? "No CPUs match these filters."
+            : "No CPUs in the catalog yet."}
         </PageStatus>
       );
     }
@@ -315,10 +334,4 @@ export function CpuListPage() {
       </>
     );
   }
-}
-
-function toOptionalNumber(value: string): number | null {
-  if (value.trim() === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 }

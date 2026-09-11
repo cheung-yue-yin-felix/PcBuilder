@@ -16,7 +16,7 @@ export function Navbar() {
     { name: "Motherboards", href: "#" },
     { name: "CPUs", href: "/catalog/cpus" },
     { name: "RAM", href: "#" },
-    { name: "Graphics Cards", href: "#" },
+    { name: "Graphics Cards", href: "/catalog/graphics-cards" },
     { name: "Storage", href: "#" },
     { name: "PSUs", href: "#" },
     { name: "CPU Coolers", href: "#" },
